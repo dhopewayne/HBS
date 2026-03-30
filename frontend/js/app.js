@@ -2469,19 +2469,6 @@ function renderPrintTable(invoices) {
     if (recordCountSpan) recordCountSpan.textContent = `${invoices.length} Records`;
     if (grandTotalSpan) grandTotalSpan.textContent = `GH¢${grandTotal.toFixed(2)}`;   
 
-       // Add this to ensure the table doesn't get clipped
-    // container.style.width = '100%';
-    // container.style.overflow = 'visible';
-
-
-    // const modalBody = document.querySelector('#printModal .modal-body');
-    // if (modalBody) {
-    //     modalBody.style.overflow = 'visible';
-    //     modalBody.style.width = '100%';
-    // }
-
-
-
 }
 
 function printPrintModal() {
