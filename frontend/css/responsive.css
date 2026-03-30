@@ -1,0 +1,2250 @@
+/* responsive.css */
+/* Comprehensive Responsive Styles for MediLedger Pro */
+/* Enhanced for Print Modal & Tables on All Devices */
+
+/* ============================================
+   GLOBAL RESPONSIVE RESETS & BASE ADJUSTMENTS
+   ============================================ */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+body {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ============================================
+   LOGIN SCREEN RESPONSIVENESS
+   ============================================ */
+@media (max-width: 1024px) {
+    .login-wrapper {
+        width: 95%;
+        max-width: 900px;
+    }
+    
+    .login-card {
+        padding: 36px;
+    }
+    
+    .login-illustration {
+        padding: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .login-wrapper {
+        flex-direction: column;
+        width: 90%;
+        max-width: 450px;
+    }
+    
+    .login-illustration {
+        display: none;
+    }
+    
+    .login-card {
+        padding: 32px 24px;
+    }
+    
+    .brand h1 {
+        font-size: 24px;
+    }
+    
+    .brand-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .brand-icon i {
+        font-size: 28px;
+    }
+    
+    .tagline {
+        font-size: 12px;
+    }
+    
+    .login-form input {
+        padding: 12px 12px 12px 40px;
+        font-size: 14px;
+    }
+    
+    .btn-login {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .demo-creds {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .cred-badge {
+        justify-content: center;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 24px 20px;
+    }
+    
+    .brand h1 {
+        font-size: 22px;
+    }
+    
+    .brand-icon {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .brand-icon i {
+        font-size: 24px;
+    }
+    
+    .login-form .input-group i {
+        left: 12px;
+    }
+    
+    .login-form input {
+        padding: 10px 10px 10px 36px;
+        font-size: 13px;
+    }
+    
+    .btn-login {
+        padding: 10px;
+        font-size: 13px;
+    }
+}
+
+/* ============================================
+   SIDEBAR NAVIGATION RESPONSIVENESS
+   ============================================ */
+@media (max-width: 992px) {
+    .sidebar {
+        width: 280px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        background: var(--black);
+        overflow-y: auto;
+    }
+    
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .main-content-area {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    /* HIDE THE SIDEBAR'S OWN TOGGLE BUTTON IN RESPONSIVE MODE */
+    .sidebar .sidebar-toggle {
+        display: none !important;
+    }
+}
+
+@media (min-width: 993px) {
+    .mobile-menu-toggle {
+        display: none;
+    }
+    
+    /* Show sidebar toggle only on desktop */
+    .sidebar .sidebar-toggle {
+        display: flex !important;
+    }
+}
+
+/* Sidebar Collapsed State on Desktop */
+@media (min-width: 993px) {
+    .sidebar.collapsed {
+        width: 80px;
+    }
+    
+    .sidebar.collapsed .logo span,
+    .sidebar.collapsed .user-details,
+    .sidebar.collapsed .nav-item span,
+    .sidebar.collapsed .logout-btn span,
+    .sidebar.collapsed .copyright-text {
+        display: none;
+    }
+    
+    .sidebar.collapsed .nav-item {
+        justify-content: center;
+        padding: 12px;
+    }
+    
+    .sidebar.collapsed .nav-item i {
+        margin: 0;
+        font-size: 20px;
+    }
+    
+    .sidebar.collapsed .user-profile {
+        justify-content: center;
+        padding: 20px 12px;
+    }
+    
+    .sidebar.collapsed .avatar {
+        margin: 0;
+    }
+    
+    .sidebar.collapsed .logout-btn {
+        justify-content: center;
+        padding: 10px;
+    }
+    
+    .sidebar.collapsed .logout-btn i {
+        margin: 0;
+    }
+    
+    .sidebar.collapsed .copyright {
+        padding: 8px;
+    }
+    
+    .sidebar.collapsed .copyright-brand i {
+        font-size: 16px;
+    }
+    
+    .sidebar.collapsed + .main-content-area {
+        margin-left: 80px;
+    }
+}
+
+/* ============================================
+   MOBILE MENU BUTTON - BOTTOM RIGHT POSITION
+   ============================================ */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+    animation: floatUp 0.5s ease;
+}
+
+@keyframes floatUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mobile-menu-toggle:hover {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.mobile-menu-toggle:active {
+    transform: scale(0.98);
+}
+
+.mobile-menu-toggle i {
+    font-size: 18px;
+}
+
+/* Show menu button on mobile and tablet */
+@media (max-width: 992px) {
+    .mobile-menu-toggle {
+        display: flex;
+    }
+}
+
+/* Adjust for very small screens */
+@media (max-width: 480px) {
+    .mobile-menu-toggle {
+        bottom: 15px;
+        right: 15px;
+        padding: 12px 16px;
+    }
+    
+    .mobile-menu-toggle span {
+        display: inline;
+        font-size: 12px;
+    }
+    
+    .mobile-menu-toggle i {
+        font-size: 16px;
+    }
+}
+
+/* Adjust for landscape orientation */
+@media (max-width: 896px) and (orientation: landscape) {
+    .mobile-menu-toggle {
+        bottom: 10px;
+        right: 10px;
+        padding: 10px 14px;
+    }
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+@media (max-width: 992px) {
+    body.sidebar-open {
+        overflow: hidden;
+    }
+}
+
+/* ============================================
+   MAIN CONTENT & HEADER RESPONSIVENESS
+   ============================================ */
+@media (max-width: 768px) {
+    .top-header {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .header-left h2 {
+        font-size: 20px;
+    }
+    
+    .header-right {
+        gap: 15px;
+    }
+    
+    .user-name {
+        display: none;
+    }
+    
+    .user-avatar-small {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-header {
+        padding: 12px 15px;
+    }
+    
+    .header-left h2 {
+        font-size: 18px;
+    }
+    
+    .user-avatar-small {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* ============================================
+   CONTENT SECTIONS & CARDS
+   ============================================ */
+@media (max-width: 768px) {
+    .content-section {
+        padding: 20px 16px;
+    }
+    
+    .data-card {
+        padding: 20px 16px;
+        margin-bottom: 20px;
+        border-radius: 16px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .section-header h2 {
+        font-size: 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+    
+    .stat-info h3 {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-section {
+        padding: 16px 12px;
+    }
+    
+    .data-card {
+        padding: 16px 12px;
+    }
+    
+    .section-header h2 {
+        font-size: 18px;
+    }
+    
+    .stat-info h3 {
+        font-size: 22px;
+    }
+}
+
+/* ============================================
+   INVOICES SECTION - FILTERS & BUTTONS
+   ============================================ */
+@media (max-width: 768px) {
+    .filter-section .filter-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .filter-row {
+        flex-direction: column;
+        gap: 12px !important;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .view-toggle-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .view-toggle-btn {
+        flex: 1;
+        justify-content: center;
+        font-size: 11px;
+        padding: 8px 10px;
+    }
+    
+    .btn-primary.create-invoice-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .section-header > div {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+    }
+}
+
+/* ============================================
+   TABLES RESPONSIVENESS
+   ============================================ */
+@media (max-width: 1024px) {
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #invoicesTable,
+    #serviceColumnsTable {
+        min-width: 700px;
+    }
+}
+
+@media (max-width: 768px) {
+    #invoicesTable,
+    #serviceColumnsTable {
+        min-width: 600px;
+        font-size: 11px;
+    }
+    
+    #invoicesTable th,
+    #invoicesTable td,
+    #serviceColumnsTable th,
+    #serviceColumnsTable td {
+        padding: 8px 6px;
+    }
+    
+    .fixed-col-date { min-width: 110px; }
+    .fixed-col-name { min-width: 100px; }
+    .fixed-col-gcr { min-width: 80px; }
+    .fixed-col-account { min-width: 80px; }
+    .fixed-col-amount { min-width: 80px; }
+    .fixed-col-actions { min-width: 70px; }
+}
+
+/* ============================================
+   PAGINATION RESPONSIVENESS
+   ============================================ */
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+    }
+    
+    .pagination-info {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .pagination-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination-btn {
+        padding: 6px 10px;
+    }
+}
+
+/* ============================================
+   MODALS RESPONSIVENESS
+   ============================================ */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 16px;
+        border-radius: 20px;
+    }
+    
+    .modal-header {
+        padding: 16px 20px;
+    }
+    
+    .modal-header h3 {
+        font-size: 18px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .services-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        max-height: 200px;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
+   PRINT MODAL & TABLE - ENHANCED RESPONSIVE
+   ============================================ */
+
+/* Print Modal Container */
+#printModal .modal-content {
+    max-width: 1400px;
+    width: 95%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#printModal .modal-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+/* Responsive Table Container */
+.print-table-responsive {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(70vh - 120px);
+    border-radius: 12px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Print Table Base Styles */
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 800px;
+}
+
+.print-table th,
+.print-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-border);
+    vertical-align: middle;
+}
+
+.print-table th {
+    background: var(--gray-light);
+    font-weight: 600;
+    color: var(--gray-text);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+.print-table tbody tr:hover {
+    background: var(--gray-light);
+}
+
+/* Column Widths */
+.print-col-date { min-width: 140px; }
+.print-col-name { min-width: 150px; }
+.print-col-gcr { min-width: 100px; }
+.print-col-account { min-width: 120px; }
+.print-col-amount { min-width: 100px; text-align: right; }
+.print-col-service { min-width: 100px; text-align: center; }
+
+/* Badge Styles */
+.account-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-drugs {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-nondrugs {
+    background: #fed7aa;
+    color: #92400e;
+}
+
+/* Service Indicators */
+.service-check {
+    color: #10b981;
+    font-size: 16px;
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.service-price {
+    font-size: 11px;
+    color: var(--blue-600);
+    display: inline-block;
+}
+
+.service-cross {
+    color: #ef4444;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.has-service {
+    text-align: center;
+}
+
+/* Subtotal and Grand Total Rows */
+.subtotal-row {
+    background: #eef2ff;
+    border-top: 2px solid var(--blue-600);
+}
+
+.subtotal-row td {
+    padding: 12px 10px;
+    font-weight: 600;
+}
+
+.subtotal-label {
+    text-align: right;
+    font-weight: bold;
+    color: var(--blue-700);
+}
+
+.subtotal-value {
+    text-align: center;
+    color: var(--blue-600);
+    font-weight: 600;
+}
+
+.grand-total-row {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
+    border-top: 2px solid var(--blue-600);
+    border-bottom: 2px solid var(--blue-600);
+}
+
+.grand-total-label {
+    text-align: right;
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--blue-800);
+}
+
+.grand-total-value {
+    text-align: right;
+    font-size: 16px;
+    color: var(--blue-700);
+}
+
+/* ============================================
+   TABLET RESPONSIVE - PRINT TABLE (768px - 1024px)
+   ============================================ */
+@media (max-width: 1024px) {
+    .print-table {
+        font-size: 12px;
+        min-width: 700px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 10px 8px;
+    }
+    
+    .print-col-date { min-width: 120px; }
+    .print-col-name { min-width: 130px; }
+    .print-col-gcr { min-width: 90px; }
+    .print-col-account { min-width: 100px; }
+    .print-col-service { min-width: 80px; }
+    
+    .account-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+    }
+    
+    .service-price {
+        font-size: 10px;
+    }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE - PRINT TABLE (max-width: 768px)
+   ============================================ */
+@media (max-width: 768px) {
+    #printModal .modal-content {
+        width: 98%;
+        max-height: 95vh;
+    }
+    
+    #printModal .modal-header {
+        padding: 12px 16px;
+    }
+    
+    #printModal .modal-header h3 {
+        font-size: 16px;
+    }
+    
+    #printModal .modal-body {
+        padding: 12px;
+    }
+    
+    /* Action buttons stack vertically */
+    #printModal .modal-body > div:first-child {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    #printModal .modal-body > div:first-child > div {
+        text-align: center;
+    }
+    
+    #printModal .modal-body button {
+        width: 100%;
+        justify-content: center;
+        padding: 10px;
+    }
+    
+    .print-table-responsive {
+        max-height: calc(70vh - 180px);
+    }
+    
+    .print-table {
+        font-size: 11px;
+        min-width: 600px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 8px 6px;
+    }
+    
+    .print-col-date { min-width: 100px; }
+    .print-col-name { min-width: 110px; }
+    .print-col-gcr { min-width: 80px; }
+    .print-col-account { min-width: 90px; }
+    .print-col-service { min-width: 70px; }
+    
+    .account-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+        white-space: normal;
+        word-break: break-word;
+    }
+    
+    .service-check,
+    .service-cross {
+        font-size: 14px;
+    }
+    
+    .service-price {
+        font-size: 9px;
+        display: block;
+        margin-top: 2px;
+    }
+    
+    .subtotal-label,
+    .grand-total-label {
+        font-size: 11px;
+    }
+    
+    .subtotal-value,
+    .grand-total-value {
+        font-size: 11px;
+    }
+}
+
+/* ============================================
+   SMALL MOBILE - PRINT TABLE (max-width: 480px)
+   ============================================ */
+@media (max-width: 480px) {
+    #printModal .modal-header h3 {
+        font-size: 14px;
+    }
+    
+    .print-table-responsive {
+        max-height: calc(70vh - 200px);
+    }
+    
+    .print-table {
+        font-size: 10px;
+        min-width: 550px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 6px 4px;
+    }
+    
+    .print-col-date { min-width: 90px; }
+    .print-col-name { min-width: 100px; }
+    .print-col-gcr { min-width: 70px; }
+    .print-col-account { min-width: 80px; }
+    .print-col-service { min-width: 60px; }
+    
+    .account-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+    
+    .service-check,
+    .service-cross {
+        font-size: 12px;
+    }
+    
+    .service-price {
+        font-size: 8px;
+    }
+    
+    .grand-total-value {
+        font-size: 12px;
+    }
+}
+
+/* ============================================
+   EXTRA SMALL DEVICES (max-width: 360px)
+   ============================================ */
+@media (max-width: 360px) {
+    .print-table {
+        min-width: 500px;
+        font-size: 9px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 5px 3px;
+    }
+    
+    .print-col-date { min-width: 80px; }
+    .print-col-name { min-width: 90px; }
+    .print-col-gcr { min-width: 65px; }
+    .print-col-account { min-width: 75px; }
+    .print-col-service { min-width: 55px; }
+    
+    .service-check,
+    .service-cross {
+        font-size: 11px;
+    }
+}
+
+/* ============================================
+   ACTIVITY LOG RESPONSIVENESS
+   ============================================ */
+@media (max-width: 768px) {
+    .log-container {
+        max-height: 400px;
+    }
+    
+    .log-entry {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .log-entry {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+    
+    .log-entry strong {
+        display: block;
+        margin: 4px 0;
+    }
+}
+
+/* ============================================
+   SERVICES GRID & BADGES
+   ============================================ */
+@media (max-width: 768px) {
+    .services-badge-list {
+        gap: 8px;
+    }
+    
+    .service-badge {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .info-card {
+        padding: 16px;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+@media (max-width: 768px) {
+    button, 
+    .btn-primary, 
+    .btn-secondary,
+    .nav-item,
+    .view-toggle-btn,
+    .pagination-btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Landscape Mode */
+@media (max-width: 896px) and (orientation: landscape) {
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .services-grid {
+        max-height: 180px;
+    }
+    
+    .mobile-menu-toggle {
+        bottom: 10px;
+        right: 10px;
+        padding: 10px 14px;
+    }
+} 
+
+
+
+@media (min-width: 993px) {
+    /* Show sidebar toggle only on desktop */
+    .sidebar .sidebar-toggle {
+        display: flex !important;
+    }
+}
+ 
+
+/* Smooth transition for sidebar and overlay */
+.sidebar,
+.sidebar-overlay {
+    transition: all 0.3s ease;
+}
+
+/* Ensure content doesn't shift when sidebar opens/closes */
+.main-content-area {
+    transition: margin-left 0.3s ease;
+}
+
+/* Disable body scroll when sidebar is open on mobile */
+body.sidebar-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+} 
+
+
+
+/* input service assignment styles */  
+
+/* ============================================
+   USER SERVICE ASSIGNMENT STYLES
+   ============================================ */
+
+/* User Service Assignment Container */
+#userServicesSection .data-card {
+    margin-bottom: 20px;
+}
+
+/* Select dropdown styles */
+#userSelectForServices,
+#serviceToAssign {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--gray-border);
+    border-radius: 12px;
+    font-size: 14px;
+    background-color: var(--white);
+    color: var(--black);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+#userSelectForServices:focus,
+#serviceToAssign:focus {
+    outline: none;
+    border-color: var(--blue-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#userSelectForServices:hover,
+#serviceToAssign:hover {
+    border-color: var(--blue-400);
+}
+
+/* Button styles for assignment */
+#userServicesSection .btn-primary {
+    background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
+    color: var(--white);
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+#userServicesSection .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+#userServicesSection .btn-primary:active {
+    transform: translateY(0);
+}
+
+/* User Service Management Container */
+#userServiceManagement {
+    margin-top: 20px;
+}
+
+/* User assigned services list */
+#userAssignedServices .data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--white);
+    border: 1px solid var(--gray-border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+#userAssignedServices .data-item:hover {
+    background: var(--gray-light);
+    transform: translateX(4px);
+}
+
+#userAssignedServices .data-info {
+    flex: 1;
+}
+
+#userAssignedServices .data-info strong {
+    font-size: 15px;
+    color: var(--black);
+    display: block;
+    margin-bottom: 4px;
+}
+
+#userAssignedServices .data-info small {
+    font-size: 12px;
+    color: var(--gray-text);
+}
+
+#userAssignedServices .data-actions {
+    display: flex;
+    gap: 10px;
+}
+
+#userAssignedServices .btn-secondary {
+    background: #ef4444;
+    color: var(--white);
+    padding: 6px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#userAssignedServices .btn-secondary:hover {
+    background: #dc2626;
+    transform: scale(1.02);
+}
+
+/* Empty state for user services */
+#userAssignedServices .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray-text);
+    font-size: 14px;
+    background: var(--gray-light);
+    border-radius: 12px;
+}
+
+/* Layout for assignment form */
+#userServiceManagement .data-card:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+@media (min-width: 768px) {
+    #userServiceManagement .data-card:first-child {
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 16px;
+    }
+    
+    #userServiceManagement .data-card:first-child select {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    
+    #userServiceManagement .data-card:first-child button {
+        margin-top: 0;
+        white-space: nowrap;
+    }
+}
+
+/* Label styling for selects */
+#userServicesSection .data-card label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-text);
+    margin-bottom: 6px;
+}
+
+/* Section header in user services */
+#userServicesSection .section-header {
+    margin-bottom: 24px;
+}
+
+#userServicesSection .section-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#userServicesSection .section-header h2 i {
+    color: var(--blue-600);
+    font-size: 24px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #userSelectForServices,
+    #serviceToAssign {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+    
+    #userServicesSection .btn-primary {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 20px;
+    }
+    
+    #userAssignedServices .data-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    #userAssignedServices .data-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    #userAssignedServices .btn-secondary {
+        width: auto;
+        padding: 6px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    #userSelectForServices,
+    #serviceToAssign {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    #userServicesSection .btn-primary {
+        font-size: 13px;
+        padding: 8px 16px;
+    }
+    
+    #userAssignedServices .data-info strong {
+        font-size: 14px;
+    }
+    
+    #userAssignedServices .data-info small {
+        font-size: 11px;
+    }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+#userAssignedServices .loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Success/error message styles for assignment */
+.assignment-message {
+    padding: 10px 16px;
+    border-radius: 10px;
+    margin-top: 12px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.assignment-message.success {
+    background: #d1fae5;
+    color: #065f46;
+    border-left: 3px solid #10b981;
+}
+
+.assignment-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-left: 3px solid #ef4444;
+}
+
+.assignment-message i {
+    font-size: 14px;
+}
+
+
+/* ============================================
+   GLOBAL BUTTON STYLES
+   ============================================ */
+
+/* Base button styles */
+.btn-primary,
+.btn-secondary,
+button[class*="btn"] {
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-800) 100%);
+    color: var(--white);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: var(--gray-text);
+    color: var(--white);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover {
+    background: var(--gray-600);
+    transform: translateY(-2px);
+}
+
+/* Select dropdown global styles */
+select {
+    font-family: inherit;
+    background-color: var(--white);
+    border: 2px solid var(--gray-border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--black);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--blue-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+select:hover {
+    border-color: var(--blue-400);
+} 
+
+
+/* ============================================
+   PRINT TABLE ENHANCED STYLES
+   ============================================ */
+
+/* Print Table Container */
+#printTableContainer {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.print-table-responsive {
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+/* Print Table Styles */
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    border: 1px solid var(--gray-border);
+}
+
+.print-table th,
+.print-table td {
+    border: 1px solid var(--gray-border);
+    padding: 10px 8px;
+    vertical-align: middle;
+}
+
+.print-table th {
+    background: var(--gray-light);
+    font-weight: 600;
+    color: var(--gray-text);
+    white-space: nowrap;
+}
+
+.print-table tbody tr:hover {
+    background: var(--gray-light);
+}
+
+/* Column Widths */
+.print-table th:first-child,
+.print-table td:first-child {
+    min-width: 140px;
+}
+
+.print-table th:nth-child(2),
+.print-table td:nth-child(2) {
+    min-width: 150px;
+}
+
+.print-table th:nth-child(3),
+.print-table td:nth-child(3) {
+    min-width: 100px;
+}
+
+.print-table th:nth-child(4),
+.print-table td:nth-child(4) {
+    min-width: 120px;
+}
+
+/* Zebra striping for better readability */
+.print-table tbody tr:nth-child(even) {
+    background: var(--gray-light);
+}
+
+/* Service column styles */
+.print-table td .service-check {
+    color: #10b981;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.print-table td .service-cross {
+    color: #ef4444;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.print-table td .service-price {
+    display: block;
+    font-size: 10px;
+    color: var(--blue-600);
+    margin-top: 2px;
+}
+
+/* Subtotal and Grand Total rows */
+.subtotal-row,
+.grand-total-row {
+    background: #eef2ff;
+}
+
+.subtotal-row td,
+.grand-total-row td {
+    padding: 12px 8px;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .print-table {
+        font-size: 11px;
+        min-width: 700px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 8px 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .print-table {
+        font-size: 10px;
+        min-width: 600px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 6px 4px;
+    }
+}
+
+
+
+/* ============================================
+   PRINT TABLE ENHANCED STYLES - WIDER COLUMNS
+   ============================================ */
+
+/* Print Table Container */
+#printTableContainer {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.print-table-responsive {
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+/* Print Table Styles */
+.print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    border: 1px solid var(--gray-border);
+}
+
+.print-table th,
+.print-table td {
+    border: 1px solid var(--gray-border);
+    padding: 12px 12px;
+    vertical-align: middle;
+}
+
+.print-table th {
+    background: var(--gray-light);
+    font-weight: 600;
+    color: var(--gray-text);
+    white-space: nowrap;
+}
+
+.print-table tbody tr:hover {
+    background: var(--gray-light);
+}
+
+/* Column Widths - WIDER ACCOUNT AND AMOUNT CELLS */
+.print-table th:first-child,
+.print-table td:first-child {
+    min-width: 150px;
+    width: 150px;
+}
+
+.print-table th:nth-child(2),
+.print-table td:nth-child(2) {
+    min-width: 180px;
+    width: 180px;
+}
+
+.print-table th:nth-child(3),
+.print-table td:nth-child(3) {
+    min-width: 110px;
+    width: 110px;
+}
+
+/* ACCOUNT COLUMN - WIDER */
+.print-table th:nth-child(4),
+.print-table td:nth-child(4) {
+    min-width: 160px;
+    width: 160px;
+    white-space: normal;
+}
+
+/* AMOUNT COLUMN - WIDER */
+.print-table th:last-child,
+.print-table td:last-child {
+    min-width: 130px;
+    width: 130px;
+    text-align: right;
+    font-weight: bold;
+}
+
+/* Service columns - maintain consistent width */
+.print-table th:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child),
+.print-table td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child) {
+    min-width: 110px;
+    width: 110px;
+    text-align: center;
+}
+
+/* Zebra striping for better readability */
+.print-table tbody tr:nth-child(even) {
+    background: var(--gray-light);
+}
+
+/* Account Badge Styles - Enhanced */
+.print-table td:nth-child(4) span {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 120px;
+}
+
+/* Drugs Account Badge */
+.print-table td:nth-child(4) span[style*="#d1fae5"],
+.print-table td:nth-child(4) span.badge-drugs {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* Non-Drugs Account Badge */
+.print-table td:nth-child(4) span[style*="#fed7aa"],
+.print-table td:nth-child(4) span.badge-nondrugs {
+    background: #fed7aa;
+    color: #92400e;
+}
+
+/* Service column styles */
+.print-table td .service-check {
+    color: #10b981;
+    font-size: 18px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.print-table td .service-cross {
+    color: #ef4444;
+    font-size: 18px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.print-table td .service-price {
+    display: block;
+    font-size: 11px;
+    color: var(--blue-600);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* Subtotal and Grand Total rows */
+.subtotal-row,
+.grand-total-row {
+    background: #eef2ff;
+}
+
+.subtotal-row td,
+.grand-total-row td {
+    padding: 14px 12px;
+    font-weight: bold;
+}
+
+/* Amount column in subtotal/grand total */
+.subtotal-row td:last-child,
+.grand-total-row td:last-child {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* Grand Total Amount - Extra Emphasis */
+.grand-total-row td:last-child {
+    font-size: 18px;
+    color: var(--blue-700);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .print-table {
+        font-size: 12px;
+        min-width: 800px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 10px 10px;
+    }
+    
+    /* Adjust widths for tablet */
+    .print-table th:first-child,
+    .print-table td:first-child {
+        min-width: 130px;
+    }
+    
+    .print-table th:nth-child(2),
+    .print-table td:nth-child(2) {
+        min-width: 160px;
+    }
+    
+    .print-table th:nth-child(4),
+    .print-table td:nth-child(4) {
+        min-width: 150px;
+    }
+    
+    .print-table td:nth-child(4) span {
+        padding: 5px 12px;
+        font-size: 11px;
+        min-width: 110px;
+    }
+}
+
+@media (max-width: 768px) {
+    .print-table {
+        font-size: 11px;
+        min-width: 750px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 8px 8px;
+    }
+    
+    /* Adjust widths for mobile */
+    .print-table th:first-child,
+    .print-table td:first-child {
+        min-width: 120px;
+    }
+    
+    .print-table th:nth-child(2),
+    .print-table td:nth-child(2) {
+        min-width: 140px;
+    }
+    
+    .print-table th:nth-child(4),
+    .print-table td:nth-child(4) {
+        min-width: 140px;
+    }
+    
+    .print-table td:nth-child(4) span {
+        padding: 4px 10px;
+        font-size: 10px;
+        min-width: 100px;
+    }
+    
+    .print-table td .service-check,
+    .print-table td .service-cross {
+        font-size: 16px;
+    }
+    
+    .print-table td .service-price {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .print-table {
+        font-size: 10px;
+        min-width: 700px;
+    }
+    
+    .print-table th,
+    .print-table td {
+        padding: 6px 6px;
+    }
+    
+    .print-table th:nth-child(4),
+    .print-table td:nth-child(4) {
+        min-width: 130px;
+    }
+    
+    .print-table td:nth-child(4) span {
+        padding: 3px 8px;
+        font-size: 9px;
+        min-width: 90px;
+    }
+}
+
+
+
+/* ============================================
+   PRINT MEDIA STYLES - FIXED FOR PAPER PRINTING
+   ============================================ */
+/* ============================================
+   PRINT MEDIA STYLES - FIXED FOR PAPER PRINTING
+   ============================================ */
+@media print {
+    /* Force all elements to be visible but prevent duplicates */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Hide non-print elements - but NOT the print modal content */
+    .mobile-menu-toggle,
+    .sidebar,
+    .top-header,
+    .notification-bell,
+    .user-menu,
+    .btn-primary,
+    .btn-secondary,
+    .view-toggle-group,
+    .filter-section,
+    #showCreateInvoiceBtn,
+    .sidebar-overlay,
+    .copyright,
+    .logout-btn,
+    #dashboardScreen > *:not(#printModal),
+    .content-section:not(#invoicesSection) {
+        display: none !important;
+    }
+    
+    /* Hide modal header and footer but keep body content */
+    #printModal .modal-header,
+    #printModal .modal-footer {
+        display: none !important;
+    }
+    
+    /* Hide print buttons inside the modal */
+    #printModal button,
+    #printModal .btn-primary,
+    #printModal .btn-secondary {
+        display: none !important;
+    }
+    
+    /* Ensure print modal and its content are visible */
+    #printModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: white !important;
+        display: block !important;
+        z-index: 9999 !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    #printModal .modal-content {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: white !important;
+        overflow: visible !important;
+        display: block !important;
+        position: relative !important; 
+        height: auto !important;            /* ADD THIS */
+        max-height: none !important;        /* ADD THIS */
+    }
+    
+    #printModal .modal-body {
+        padding: 0.2cm !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+        display: block !important;  
+        height: auto !important;            /* ADD THIS */
+        max-height: none !important;        /* ADD THIS */
+    }
+    
+    /* Table container - allow page breaks */
+    .print-table-responsive {
+        overflow: visible !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        page-break-inside: auto !important;
+    }
+    
+    /* Table styling for print - REMOVE table-layout: fixed */
+    .print-table {
+        font-size: 9px !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        /* REMOVED: table-layout: fixed !important; */
+        margin: 0 auto !important;
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+    }
+/* from other  */
+    /* Allow table rows to break across pages */
+    .print-table tbody {
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+    }
+    
+
+
+    /* Allow rows to break across pages */
+    .print-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        /* new  */ 
+        page-break-after: auto !important;
+    }
+
+
+    /* new from other  2*/
+    
+    /* Force thead to repeat on every page */
+    .print-table thead {
+        display: table-header-group !important;
+        page-break-inside: avoid !important;
+    }
+    
+    /* Force tfoot to appear at the bottom of each page if needed */
+    .print-table tfoot {
+        display: table-footer-group !important;
+    }
+         
+
+    /* Allow the table to break naturally */
+    .print-table tbody {
+        page-break-inside: auto !important;
+    }
+    
+    .print-table th,
+    .print-table td {
+        border: 1px solid #ccc !important;
+        padding: 6px 4px !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        font-size: 8px !important;
+    }
+    
+    .print-table th {
+        background: #f2f2f2 !important;
+        font-weight: bold !important;
+    }
+    
+    /* Set approximate widths for better fit */
+    .print-table th:first-child,
+    .print-table td:first-child {
+        width: 12% !important;
+        min-width: 0 !important;
+    }
+    
+    .print-table th:nth-child(2),
+    .print-table td:nth-child(2) {
+        width: 14% !important;
+        min-width: 0 !important;
+    }
+    
+    .print-table th:nth-child(3),
+    .print-table td:nth-child(3) {
+        width: 8% !important;
+        min-width: 0 !important;
+    }
+    
+    .print-table th:nth-child(4),
+    .print-table td:nth-child(4) {
+        width: 10% !important;
+        min-width: 0 !important;
+    }
+    
+    /* Service columns */
+    .print-table th:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child),
+    .print-table td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child) {
+        width: 8% !important;
+        min-width: 0 !important;
+    }
+    
+    .print-table th:last-child,
+    .print-table td:last-child {
+        width: 10% !important;
+        min-width: 0 !important;
+    }
+    
+    /* Account badge in print */
+    .print-table td:nth-child(4) span {
+        padding: 2px 6px !important;
+        font-size: 7px !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Service indicators in print */
+    .print-table td .service-check,
+    .print-table td span[style*="color: #10b981"] {
+        font-size: 10px !important;
+    }
+    
+    .print-table td .service-cross,
+    .print-table td span[style*="color: #ef4444"] {
+        font-size: 10px !important;
+    }
+    
+    .print-table td .service-price,
+    .print-table td small {
+        font-size: 7px !important;
+        display: block !important;
+    }
+    
+    /* Subtotal and grand total rows */ 
+
+    /* from other  */ 
+     .subtotal-row,
+    .grand-total-row {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    
+
+    .subtotal-row td,
+    .grand-total-row td {
+        padding: 4px 3px !important;
+        font-size: 8px !important;
+    }
+    
+    .grand-total-row td:last-child {
+        font-size: 10px !important;
+    }
+    
+ 
+    /* Handle wide tables - use portrait with automatic overflow */
+    @page {
+        size: portrait !important;
+        margin: 0.8cm !important;
+    }
+    
+    /* Force body to use appropriate orientation */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    
+    /* Ensure badges print correctly */
+    .badge,
+    span[style*="background"] {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Subtotal and grand total rows */
+    tr.subtotal-row td,
+    tr.grand-total-row td {
+        background: #eef2ff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Ensure all content is visible */
+    .table-wrapper {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+    } 
+     /* Prevent any hidden overflow */
+    div, section, article {
+        overflow: visible !important;
+    }  
+
+    #printTableContainer {
+        overflow: visible !important; 
+        height: auto !important; 
+        max-height: none !important;
+    }
+}  
+
+
+   @media print {
+    /* 1. Force exact color printing */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 2. Hide everything except the print modal */
+    body * {
+        visibility: hidden !important;
+    }
+
+    #printModal,
+    #printModal * {
+        visibility: visible !important;
+    }
+
+    /* 3. Make modal full page */
+    #printModal {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: white !important;
+        overflow: visible !important;
+        z-index: 9999 !important;
+    }
+
+    #printModal .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    #printModal .modal-header,
+    #printModal .modal-footer,
+    #printModal button {
+        display: none !important;
+    }
+
+    #printModal .modal-body {
+        padding: 15px !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    /* 4. Critical Table Pagination Rules */
+    .print-table-responsive {
+        overflow: visible !important;
+        max-height: none !important;
+        page-break-inside: auto !important;
+        width: 100% !important;
+    }
+
+    .print-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 8.5pt !important;
+        table-layout: auto !important;           /* Important: let browser decide widths */
+        page-break-inside: auto !important;
+        margin: 0 auto !important;
+    }
+
+    .print-table thead {
+        /* display: table-header-group !important;   Repeat header on every page */
+        page-break-inside: avoid !important;
+    }
+
+    .print-table tfoot {
+        /* display: table-footer-group !important; */  
+            page-break-inside: avoid !important;
+    }
+
+    .print-table tr {
+        page-break-inside: avoid !important;      /* Try not to break rows */
+        break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+
+    .print-table td,
+    .print-table th {
+        border: 1px solid #999 !important;
+        padding: 5px 4px !important;
+        font-size: 8pt !important;
+        vertical-align: middle !important;
+        word-break: break-word !important;
+    }
+
+    /* 5. Keep subtotal and grand total together */
+    .subtotal-row,
+    .grand-total-row {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* 6. Column width hints (adjust if you have very many services) */
+    .print-table th:first-child,  .print-table td:first-child  { width: 11% !important; }
+    .print-table th:nth-child(2), .print-table td:nth-child(2) { width: 13% !important; }
+    .print-table th:nth-child(3), .print-table td:nth-child(3) { width: 7%  !important; }
+    .print-table th:nth-child(4), .print-table td:nth-child(4) { width: 9%  !important; }
+
+    .print-table th:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child),
+    .print-table td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child) {
+        min-width: 65px !important;
+        max-width: 85px !important;
+    }
+
+    .print-table th:last-child,
+    .print-table td:last-child {
+        width: 10% !important;
+    }
+
+    /* 7. Page setup - LANDSCAPE is usually better for wide service tables */
+    @page {
+        size: landscape !important;
+        margin: 0.7cm !important;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Final safety */
+    #printTableContainer,
+    .table-wrapper,
+    div, section {
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+    }
+}

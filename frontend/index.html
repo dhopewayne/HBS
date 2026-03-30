@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="description" content="Medical Service Invoice Management System">
+    <title>MediLedger Pro | Premium Healthcare Invoice Manager</title>
+    <link rel="stylesheet" href="/css/style.css">  
+    <link rel="stylesheet" href="/css/excel.css">  
+    <link rel="stylesheet" href="/css/responsive.css">  
+    <link rel="stylesheet" href="/fontawesome-free-7.2.0-web/css/all.min.css"> 
+     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
+
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-wrapper">
+                <div class="login-illustration">
+                    <div class="floating-shapes">
+                        <div class="shape shape-1"></div>
+                        <div class="shape shape-2"></div>
+                        <div class="shape shape-3"></div>
+                    </div>
+                    <div class="illustration-content">
+                        <i class="fas fa-hospital-user"></i>
+                        <h2>Welcome Back</h2>
+                        <p>Sign in to manage your healthcare services</p>
+                    </div>
+                </div>
+                <div class="login-card">
+                    <div class="brand">
+                        <div class="brand-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h1>MediLedger<span>Pro</span></h1>
+                        <p class="tagline">Healthcare Service Management System</p>
+                    </div>
+                    <div class="login-form">
+                        <div class="input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="username" placeholder="Username" autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" placeholder="Password">
+                        </div>
+                        <button id="loginBtn" class="btn-login">
+                            <span>Login</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <div class="demo-creds">
+                            <div class="cred-badge admin-badge">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Admin: admin / admin123</span>
+                            </div>
+                            <div class="cred-badge user-badge">
+                                <i class="fas fa-user-check"></i>
+                                <span>User: user / user123</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboardScreen" style="display: none;"> 
+            <!-- Mobile Menu Toggle Button - MOVED OUTSIDE SIDEBAR -->
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+                <span>Menu</span>
+            </button>
+
+            <!-- Sidebar Overlay for Mobile - MOVED OUTSIDE SIDEBAR -->
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+            <!-- Sidebar Navigation -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>MediLedger<span>Pro</span></span>
+                    </div>
+                    <button class="sidebar-toggle" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+
+                <div class="user-profile">
+                    <div class="avatar" id="userAvatar">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="user-details">
+                        <h4 id="sidebarUserName">Loading...</h4>
+                        <span class="role-badge-sidebar" id="sidebarUserRole"></span>
+                    </div>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="invoices">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>All Records</span>
+                    </a>
+                    <a href="#" class="nav-item admin-only" data-section="accounts" style="display: none;">
+                        <i class="fas fa-building"></i>
+                        <span>Accounts</span>
+                    </a>
+                    <a href="#" class="nav-item admin-only" data-section="services" style="display: none;">
+                        <i class="fas fa-stethoscope"></i>
+                        <span>Services</span>
+                    </a>
+                    <a href="#" class="nav-item admin-only" data-section="user-services" style="display: none;">
+                        <i class="fas fa-user-tag"></i>
+                        <span>User Services</span>
+                    </a>
+                    <a href="#" class="nav-item admin-only" data-section="users" style="display: none;">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="activity">
+                        <i class="fas fa-history"></i>
+                        <span>Activity Log</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <button id="logoutBtnSidebar" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                    
+                    <div class="copyright">
+                        <div class="copyright-content">
+                            <div class="copyright-text">
+                                <p class="copyright-note">Designed & Developed by NarhEmpire</p>
+                                <p>© <span id="currentYear"></span> | <strong>ML</strong> | All rights reserved.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Main Content Area -->
+            <div class="main-content-area">
+                <!-- Top Header -->
+                <header class="top-header">
+                    <div class="header-left">
+                        <h2 id="currentSectionTitle">Dashboard</h2>
+                    </div>   
+                    <div class="header-right"> 
+                        <div class="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-dot"></span>
+                        </div>
+                        <div class="user-menu">
+                            <span class="user-name" id="topUserName"></span>
+                            <div class="user-avatar-small" id="userAvatarSmall">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+
+                    <!-- activity Section -->
+                <div id="activitySection" class="content-section">
+                    <div class="section-header log-section">
+                        <h2><i class="fas fa-history"></i> Activity Log</h2>
+                    </div> 
+                    <div class="data-card"> 
+                        <h3>All Activities</h3>
+                        <div id="activityLogContainer" class="log-container"></div>
+                    </div>
+                </div>  
+
+
+                <!-- Dashboard Section -->
+                <div id="dashboardSection" class="content-section active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon blue-bg">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalInvoices">0</h3>
+                                <p>Total Invoices</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue-bg">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="grandTotal">$0</h3>
+                                <p>Grand Total</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue-bg">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="drugsTotal">$0</h3>
+                                <p>Drugs Account</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon blue-bg">
+                                <i class="fas fa-notes-medical"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="nonDrugsTotal">$0</h3>
+                                <p>Non-Drugs Account</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="userServicesInfo" class="info-card" style="display: none;">
+                        <div class="info-header">
+                            <i class="fas fa-key"></i>
+                            <h3>Your Available Services</h3>
+                        </div>
+                        <div id="userServicesList" class="services-badge-list"></div>
+                    </div>
+
+                    <div class="recent-activity">
+                        <div class="card-header">
+                            <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                            <button class="view-all-btn" onclick="switchSection('activity')">View All <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                        <div id="recentActivityPreview" class="activity-preview"></div>
+                    </div>
+                </div>
+
+                <!-- Invoices / records  Section -->
+                <div id="invoicesSection" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-file-invoice-dollar"></i> Invoice Management</h2>
+                        <div style="display: flex; gap: 12px;">
+                            <!-- View Toggle Buttons -->
+                            <div class="view-toggle-group">
+                                <button id="standardViewBtn" class="view-toggle-btn" onclick="switchInvoiceView('standard')">
+                                    <i class="fas fa-table"></i> Standard View
+                                </button>
+                                <button id="serviceColumnsViewBtn" class="view-toggle-btn active" onclick="switchInvoiceView('serviceColumns')">
+                                    <i class="fas fa-chart-simple"></i> Service Columns View
+                                </button> 
+                                <button id="viewRecordsBtn" class="view-toggle-btn" onclick="openPrintModal()">
+                                    <i class="fas fa-file-excel"></i> Records Check
+                                </button>
+                            </div>
+                           <button class="btn-primary create-invoice-btn" id="showCreateInvoiceBtn">
+                            <i class="fas fa-plus"></i> New Invoice
+                        </button>
+                        </div>
+                    </div>
+
+
+
+
+                    <!-- Update the filter-section div in invoicesSection -->
+                    <div class="filter-section data-card" style="margin-bottom: 20px; padding: 16px;">
+                        <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; cursor: pointer;" id="filterHeaderToggle">
+                            <h3 style="font-size: 16px; margin: 0;">
+                                <i class="fas fa-filter"></i> Filter Invoices
+                                <i class="fas fa-chevron-down filter-toggle-icon" id="filterToggleIcon" style="margin-left: 8px; font-size: 14px; transition: transform 0.3s ease;"></i>
+                            </h3>
+                            <button id="clearFiltersBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="event.stopPropagation();">
+                                <i class="fas fa-eraser"></i> Clear All
+                            </button>
+                        </div>
+                        <div id="filterContent" style="transition: all 0.3s ease;">
+                            <div class="filter-row" style="display: flex; flex-wrap: wrap; gap: 16px;">
+                                <div class="filter-group" style="flex: 1; min-width: 180px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--gray-text);">
+                                        <i class="fas fa-chart-pie"></i> Account Type
+                                    </label>
+                                    <select id="filterAccountType" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--gray-border);">
+                                        <option value="all">All Accounts</option>
+                                        <option value="Drugs Account">Drugs Account</option>
+                                        <option value="Non-Drugs Account">Non-Drugs Account</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group" style="flex: 2; min-width: 250px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--gray-text);">
+                                        <i class="fas fa-stethoscope"></i> Filter by Service
+                                    </label>
+                                    <select id="filterService" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--gray-border);">
+                                        <option value="all">All Services</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group" style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--gray-text);">
+                                        <i class="fas fa-search"></i> Search
+                                    </label>
+                                    <input type="text" id="filterSearch" placeholder="Patient or GCR..." style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--gray-border);"
+                                    onkeypress="return onlyNumbers(event)" oninput="validateGCRNumber(this)">
+                                </div>
+                            </div>
+                            <!-- ADD DATE RANGE FILTER ROW -->
+                            <div class="filter-row" style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px;">
+                                <div class="filter-group" style="flex: 1; min-width: 200px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--gray-text);">
+                                        <i class="fas fa-calendar-alt"></i> From Date
+                                    </label>
+                                    <input type="date" id="filterDateFrom" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--gray-border);">
+                                </div>
+                                <div class="filter-group" style="flex: 1; min-width: 200px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--gray-text);">
+                                        <i class="fas fa-calendar-alt"></i> To Date
+                                    </label>
+                                    <input type="date" id="filterDateTo" style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--gray-border);">
+                                </div>
+                                <div class="filter-group" style="flex: 0 0 auto; display: flex; align-items: flex-end;">
+                                    <button id="applyDateFilterBtn" class="btn-secondary" style="padding: 10px 20px;" onclick="event.stopPropagation();">
+                                        <i class="fas fa-calendar-check"></i> Apply Date Range
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="filterStats" style="margin-top: 12px; font-size: 12px; color: var(--gray-text); padding: 8px 0; border-top: 1px solid var(--gray-border);">
+                                <i class="fas fa-chart-line"></i> Showing <span id="filteredCount">0</span> of <span id="totalCount">0</span> invoices
+                            </div>
+                        </div>
+                    </div>
+                    <!-- END OF FILTER SECTION -->  
+
+
+                   <!-- ADD INVOICE MODAL -->
+                    <div id="invoiceModal" class="modal">
+                        <div class="modal-content" style="max-width: 700px;">
+                            <div class="modal-header">
+                                <h3><i class="fas fa-file-invoice"></i> Create New Invoice</h3>
+                                <button class="close-modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="invoiceForm">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label><i class="fas fa-user"></i> Name <span class="ast">*</span></label>
+                                            <input type="text" id="patientName" required placeholder="Enter patient name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="fas fa-id-card"></i> GCR Number (8 digits)<span class="ast">*</span></label>
+                                            <input type="text" id="gcrNumber" maxlength="8" pattern="\d{8}" placeholder="12345678" required onkeypress="return onlyNumbers(event)" oninput="validateGCRNumber(this)">
+                                            <small class="input-hint">Only numbers allowed (0-9)</small>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="fas fa-building"></i> Account Type <span class="ast">*</span></label>
+                                            <select id="accountSelect" required></select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label><i class="fas fa-coins"></i> Amount ($) <span class="ast">*</span></label>
+                                            <input type="text" id="price" placeholder="0.00" required onkeypress="return onlyNumbersAndDecimal(event)" oninput="validateAmount(this)">
+                                            <small class="input-hint">Only numbers and decimal point allowed</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label><i class="fas fa-stethoscope"></i> Medical Services</label>
+                                        <div class="services-grid" id="servicesGrid"></div>
+                                    </div>
+                                    <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                                        <button type="submit" class="btn-primary">Save Invoice</button>
+                                        <button type="button" id="cancelInvoiceBtn" class="btn-secondary">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                   <!-- END ADD OF INVOICE MODAL -->
+
+                    <!-- Standard View Container  -->
+                    <div id="standardViewContainer" class="data-card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-list"></i> Standard View</h3>
+                            <span id="recordCount" class="badge"></span>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="invoicesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Name</th>
+                                        <th>GCR #</th>
+                                        <th>Account</th>
+                                        <th>Services</th>
+                                        <th>Amount</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoicesTableBody">
+                                    <tr><td colspan="7" class="empty-state">No records found</td></tr>
+                                </tbody>
+                                <tfoot id="tableFooter" style="display: none;">
+                                    <tr class="grand-total-row">
+                                        <td colspan="5"><strong>TOTAL AMOUNT:</strong></td>
+                                        <td><strong id="filteredGrandTotal">$0.00</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Service Columns View Container (Dynamic Columns for Each Service) -->
+                    <div id="serviceColumnsViewContainer" class="data-card" style="display: none;">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-simple"></i> Service Columns View</h3>
+                            <span id="serviceColumnsRecordCount" class="badge"></span>
+                        </div>
+                        <div class="table-wrapper" style="overflow-x: auto;">
+                            <table id="serviceColumnsTable">
+                                <thead id="serviceColumnsHeader">
+                                    <!-- Dynamic headers will be inserted here -->
+                                </thead>
+                                <tbody id="serviceColumnsBody">
+                                    <tr><td colspan="10" class="empty-state">No records found</td></tr>
+                                </tbody>
+                                <tfoot id="serviceColumnsFooter" style="display: none;">
+                                    <tr class="grand-total-row">
+                                        <td colspan="5"><strong>TOTAL AMOUNT:</strong></td>
+                                        <td colspan="2"><strong id="serviceColumnsGrandTotal">$0.00</strong></td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <!-- pagination container  -->
+                        <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 16px 0; border-top: 1px solid var(--gray-border);">
+                            <div class="pagination-info">
+                                <span class="pagination-stats">
+                                    Showing <span id="serviceColumnsStartRange">0</span> to <span id="serviceColumnsEndRange">0</span> of <span id="serviceColumnsTotalRecords">0</span> records
+                                </span>
+                                <select id="serviceColumnsPageSize" class="page-size-select" style="margin-left: 12px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--gray-border); background: var(--white); cursor: pointer;">
+                                    <option value="50">50 per page</option>
+                                    <option value="100" selected>100 per page</option>
+                                    <option value="200">200 per page</option>
+                                    <option value="500">500 per page</option>
+                                </select>
+                            </div>
+                            <div class="pagination-controls" style="display: flex; gap: 8px; align-items: center;">
+                                <button id="serviceColumnsFirstPage" class="pagination-btn" style="padding: 8px 12px; border: 1px solid var(--gray-border); background: var(--white); border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </button>
+                                <button id="serviceColumnsPrevPage" class="pagination-btn" style="padding: 8px 12px; border: 1px solid var(--gray-border); background: var(--white); border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    <i class="fas fa-angle-left"></i>
+                                </button>
+                                <span class="page-indicator" style="padding: 6px 12px; background: var(--gray-light); border-radius: 8px; font-weight: 500;">
+                                    Page <span id="serviceColumnsCurrentPage">1</span> of <span id="serviceColumnsTotalPages">1</span>
+                                </span>
+                                <button id="serviceColumnsNextPage" class="pagination-btn" style="padding: 8px 12px; border: 1px solid var(--gray-border); background: var(--white); border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    <i class="fas fa-angle-right"></i>
+                                </button>
+                                <button id="serviceColumnsLastPage" class="pagination-btn" style="padding: 8px 12px; border: 1px solid var(--gray-border); background: var(--white); border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Accounts section  -->
+                <div id="accountsSection" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-building"></i> Account Management</h2>
+                    </div>
+                    <div class="data-card">
+                        <form id="accountForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Account Name</label>
+                                    <input type="text" id="accountName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Account Description</label>
+                                    <input type="text" id="accountDescription" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Account Type</label>
+                                    <select id="accountTypeSelect">
+                                        <option value="drugs">Drugs Account</option>
+                                        <option value="nondrugs">Non-Drugs Account</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary">Create Account</button>
+                        </form>
+                    </div>
+                    <div class="data-card">
+                        <h3>Existing Accounts</h3>
+                        <div id="accountsList" class="data-list"></div>
+                    </div>
+                </div>
+
+                <!-- Service Section -->
+                <div id="servicesSection" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-stethoscope"></i> Service Management</h2>
+                    </div>
+                    <div class="data-card">
+                        <form id="serviceForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Service Name</label>
+                                    <input type="text" id="serviceName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Service Description</label>
+                                    <input type="text" id="serviceDescription" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary">Add Service</button>
+                        </form>
+                    </div>
+                    <div class="data-card">
+                        <h3>Available Services</h3>
+                        <div id="servicesList" class="data-list"></div>
+                    </div>
+                </div>
+
+                <!-- User Services section -->
+                <div id="userServicesSection" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-tag"></i> User Service Assignments</h2>
+                    </div>
+                    <div class="data-card">
+                        <select id="userSelectForServices" onchange="loadUserServices()">
+                            <option value="">Select a user...</option>
+                        </select>
+                    </div>
+                    <div id="userServiceManagement" style="display: none;">
+                        <div class="data-card">
+                            <select id="serviceToAssign">
+                                <option value="">Choose a service...</option>
+                            </select>
+                            <button onclick="assignServiceToUser()" class="btn-primary">Assign Service</button>
+                        </div>
+                        <div class="data-card">
+                            <h3>User's Assigned Services</h3>
+                            <div id="userAssignedServices" class="data-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- user Section  -->
+                <div id="usersSection" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i> User Management</h2>
+                    </div>
+                    <div class="data-card">
+                        <form id="userForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Username</label>
+                                    <input type="text" id="newUsername" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Password</label>
+                                    <input type="password" id="newPassword" required>
+                                </div>
+                                <div class="form-group"> 
+                                    <label>Level</label>
+                                <select id="userRoleSelect">
+                                    <option value="user">Regular User</option>
+                                    <option value="user=admin">User Admin</option>
+                                    <option value="admin">Administrator</option> 
+                                    <option value="master">Master</option>
+                                </select>
+                            </div>
+                            <div class="form-group"> 
+                                <label>Services</label>
+                                <select id="userServicesListSelect">  
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary">Create User</button>
+                        </form>
+                    </div>
+                    <div class="data-card">
+                        <h3>System Users</h3>
+                        <div id="usersList" class="data-list"></div>
+                    </div>
+                </div>
+             
+                
+            </div>
+        </div>
+    </div> 
+
+
+
+    <!-- Message Modal -->
+<div id="messageModal" class="message-modal">
+    <div class="message-modal-content">
+        <div class="message-modal-header">
+            <i class="fas" id="messageIcon"></i>
+            <h3 id="messageTitle">Message</h3>
+            <button class="message-close-btn">&times;</button>
+        </div>
+        <div class="message-modal-body">
+            <p id="messageText"></p>
+        </div>
+        <div class="message-modal-footer">
+            <button id="messageConfirmBtn" class="message-btn message-btn-primary">OK</button>
+        </div>
+    </div>
+</div>  
+
+
+<!-- start of  Edit Invoice Modal -->
+    <div id="editInvoiceModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Invoice</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editInvoiceForm">
+                    <input type="hidden" id="editInvoiceId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Patient Name *</label>
+                            <input type="text" id="editPatientName" required placeholder="Enter patient name">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-id-card"></i> GCR Number (8 digits) *</label>
+                            <input type="text" id="editGcrNumber" maxlength="8" pattern="\d{8}" placeholder="12345678" required onkeypress="return onlyNumbers(event)" oninput="validateGCRNumber(this)">
+                            <small class="input-hint">Only numbers allowed (0-9)</small>
+                        </div>
+                        <div class="form-group">
+                        <label><i class="fas fa-building"></i> Account Type *</label>
+                        <select id="editAccountSelect" required></select>
+                    </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-stethoscope"></i> Medical Services (Read Only)</label>
+                        <div class="services-readonly" id="editServicesReadOnly">
+                            <div class="empty-state">Loading services...</div>
+                        </div>
+                    </div>
+                    <!-- <div class="form-group">
+                        <label><i class="fas fa-dollar-sign"></i> Subtotal</label>
+                        <input type="text" id="editSubtotal" readonly style="background: var(--gray-light); font-weight: bold;">
+                    </div> -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Update Invoice</button>
+                        <button type="button" id="cancelEditInvoiceBtn" class="btn-secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<!-- End of Edit modal -->  
+
+
+
+<!-- print records -->
+ <!-- Print Modal for View Records -->
+<div id="printModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px; width: 95%;">
+        <div class="modal-header">
+            <h3><i class="fas fa-print"></i> Filtered Records - Print/Excel View</h3>
+            <button class="close-modal" onclick="closePrintModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 20px;">
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <span class="badge" style="background: var(--blue-600);" id="printRecordCount">0 Records</span>
+                    <span class="badge" style="background: var(--secondary); margin-left: 8px;" id="printGrandTotal">$0.00</span>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="exportToExcel()" class="btn-primary" style="background: #10b981;">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                    <button onclick="printPrintModal()" class="btn-primary">
+                        <i class="fas fa-print"></i> Print / Save as PDF
+                    </button>
+                </div>
+            </div>
+            <div class="table-wrapper" id="printTableContainer" style="max-height: 70vh; overflow: auto;">
+                <!-- Dynamic print table will be inserted here -->
+            </div>
+        </div>
+        <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--gray-border); display: flex; justify-content: flex-end;">
+            <button onclick="closePrintModal()" class="btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+ 
+    <script src="/js/app.js"></script>
+</body>
+</html>

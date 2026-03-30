@@ -1,0 +1,265 @@
+/* ============================================
+   PRINT MEDIA STYLES - FIXED FOR MULTI-PAGE PRINTING
+   ============================================ */
+@media print {
+    /* Force all elements to be visible but prevent duplicates */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Hide non-print elements */
+    .mobile-menu-toggle,
+    .sidebar,
+    .top-header,
+    .notification-bell,
+    .user-menu,
+    .btn-primary,
+    .btn-secondary,
+    .view-toggle-group,
+    .filter-section,
+    #showCreateInvoiceBtn,
+    .sidebar-overlay,
+    .copyright,
+    .logout-btn,
+    #dashboardScreen > *:not(#printModal),
+    .content-section:not(#invoicesSection) {
+        display: none !important;
+    }
+    
+    /* Hide modal header and footer */
+    #printModal .modal-header,
+    #printModal .modal-footer {
+        display: none !important;
+    }
+    
+    /* Hide print buttons */
+    #printModal button,
+    #printModal .btn-primary,
+    #printModal .btn-secondary {
+        display: none !important;
+    }
+    
+    /* Print modal setup */
+    #printModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: white !important;
+        display: block !important;
+        z-index: 9999 !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    #printModal .modal-content {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: white !important;
+        overflow: visible !important;
+        display: block !important;
+        position: relative !important;
+    }
+    
+    #printModal .modal-body {
+        padding: 0.2cm !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+        display: block !important;
+    }
+    
+    /* Table container - allow page breaks */
+    .print-table-responsive {
+        overflow: visible !important;
+        max-height: none !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        page-break-inside: auto !important;
+    }
+    
+    /* Table styling for print */
+    .print-table {
+        font-size: 9px !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin: 0 auto !important;
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+    }
+    
+    /* Allow table rows to break across pages */
+    .print-table tbody {
+        page-break-inside: auto !important;
+        page-break-after: auto !important;
+    }
+    
+    /* Allow rows to break across pages */
+    .print-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+    
+    /* Force thead to repeat on every page */
+    .print-table thead {
+        display: table-header-group !important;
+        page-break-inside: avoid !important;
+    }
+    
+    /* Force tfoot to appear at the bottom of each page if needed */
+    .print-table tfoot {
+        display: table-footer-group !important;
+    }
+    
+    .print-table th,
+    .print-table td {
+        border: 1px solid #ccc !important;
+        padding: 6px 4px !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        font-size: 8px !important;
+    }
+    
+    .print-table th {
+        background: #f2f2f2 !important;
+        font-weight: bold !important;
+    }
+    
+    /* Column widths */
+    .print-table th:first-child,
+    .print-table td:first-child {
+        width: 12% !important;  
+        /* new from other */
+        min-width: 0 !important;
+    }
+    
+    .print-table th:nth-child(2),
+    .print-table td:nth-child(2) {
+        width: 14% !important; 
+        /* new from other */ 
+        min-width: 0 !important;
+    }
+    
+    .print-table th:nth-child(3),
+    .print-table td:nth-child(3) {
+        width: 8% !important; 
+        /* new from other */
+        min-width: 0 !important;
+    }
+    
+    .print-table th:nth-child(4),
+    .print-table td:nth-child(4) {
+        width: 10% !important; 
+        /* new from other */
+        min-width: 0 !important;
+    }
+    
+    /* Service columns */
+    .print-table th:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child),
+    .print-table td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:last-child) {
+        width: 8% !important; 
+        /* new from other */
+        min-width: 0 !important;
+    }
+    
+    .print-table th:last-child,
+    .print-table td:last-child {
+        width: 10% !important; 
+        /* new from other */
+        min-width: 0 !important;
+    }
+    
+    /* Account badge */
+    .print-table td:nth-child(4) span {
+        padding: 2px 6px !important;
+        font-size: 7px !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+    }
+    
+    /* Service indicators */
+    .print-table td .service-check,
+    .print-table td span[style*="color: #10b981"] {
+        font-size: 10px !important;
+    }
+    
+    .print-table td .service-cross,
+    .print-table td span[style*="color: #ef4444"] {
+        font-size: 10px !important;
+    }
+    
+    .print-table td .service-price,
+    .print-table td small {
+        font-size: 7px !important;
+        display: block !important;
+    }
+    
+    /* Subtotal and grand total rows - ensure they print properly */
+    .subtotal-row,
+    .grand-total-row {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    
+    .subtotal-row td,
+    .grand-total-row td {
+        padding: 4px 3px !important;
+        font-size: 8px !important;
+    }
+    
+    .grand-total-row td:last-child {
+        font-size: 10px !important;
+    }
+    
+    /* Page settings */
+    @page {
+        size: portrait !important;
+        margin: 0.8cm !important;
+    }
+    
+    /* Ensure body doesn't constrain content */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    
+    /* Ensure badges print correctly */
+    .badge,
+    span[style*="background"] {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Subtotal and grand total rows background */
+    tr.subtotal-row td,
+    tr.grand-total-row td {
+        background: #eef2ff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Ensure all content is visible and can overflow */
+    .table-wrapper {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+    
+    /* Prevent any hidden overflow */
+    div, section, article {
+        overflow: visible !important;
+    }
+}
