@@ -21,6 +21,7 @@ db.serialize(() => {
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             role TEXT NOT NULL,
+            special_id TEXT UNIQUE,  -- New column for special user ID
             services TEXT DEFAULT '[]',  -- JSON array of service IDs or names
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -66,7 +67,8 @@ db.serialize(() => {
     // Invoices table
     db.run(`
         CREATE TABLE IF NOT EXISTS invoices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
+            identification_number TEXT UNIQUE,  -- New column for special invoice ID
             patient_name TEXT NOT NULL,
             gcr_number TEXT NOT NULL,
             account_id INTEGER,
@@ -147,9 +149,12 @@ db.serialize(() => {
     db.run(`INSERT OR IGNORE INTO accounts (account_name, account_type, description) VALUES (?, ?, ?)`,
         ['Drugs Account', 'drugs', 'Pharmaceutical and medication services']);
     db.run(`INSERT OR IGNORE INTO accounts (account_name, account_type, description) VALUES (?, ?, ?)`,
-        ['Non-Drugs Account', 'nondrugs', 'Non-medication medical services']);
+        ['Non-Drugs Account', 'nondrugs', 'Non-medication medical services']); 
 
-    // Insert default services with prices in dollars
+    // db.run(`ALTER TABLE users ADD COLUMN special_id TEXT UNIQUE`);
+    // db.run(`ALTER TABLE invoices ADD COLUMN identification_number TEXT UNIQUE`);
+
+    // Insert default services
     const services = [
         'Eye', 'Dental', 'Dressing', 'Physio', 'Blood Bank', 'Peadics', 
         'OBS', 'GYE', 'A & E', 'ENT', 'L/W', 'Scan', 'Theature', 'X-Ray'

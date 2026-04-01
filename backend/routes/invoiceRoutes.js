@@ -54,6 +54,14 @@ router.get('/users/:username/account-totals', invoiceController.getUserAccountTo
 router.get('/activity-log', invoiceController.getActivityLog);
 router.get('/summary', invoiceController.getSummary); 
 
+// User routes with special ID
+router.get('/users/special/:specialId', invoiceController.getUserBySpecialId);
+
+// Invoice routes with identification number
+router.get('/invoices/identification/:identificationNumber', invoiceController.getInvoiceByIdentificationNumber);
+
+// Updated create user route
+router.post('/users', invoiceController.createUser);
 
 
 module.exports = router;

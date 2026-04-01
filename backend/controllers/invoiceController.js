@@ -1,49 +1,5 @@
 const { getDatabase } = require('../models/database');
 
-// Get all invoices with details
-exports.getAllInvoices = async (req, res) => {
-    try {
-        const db = await getDatabase();
-        const userRole = req.headers['x-user-role'];
-        const username = req.headers['x-username'];
-        
-        let invoices;
-        if (userRole === 'admin') {
-            // Admin sees all invoices
-            invoices = await db.all(`
-                SELECT i.*, a.account_name 
-                FROM invoices i
-                LEFT JOIN accounts a ON i.account_id = a.id
-                ORDER BY i.timestamp DESC
-            `);
-        } else {
-            // Regular users only see their own invoices
-            invoices = await db.all(`
-                SELECT i.*, a.account_name 
-                FROM invoices i
-                LEFT JOIN accounts a ON i.account_id = a.id
-                WHERE i.created_by = ?
-                ORDER BY i.timestamp DESC
-            `, username);
-        }
-        
-        // Get services for each invoice
-        for (let invoice of invoices) {
-            const services = await db.all(`
-                SELECT service_name, price 
-                FROM invoice_services 
-                WHERE invoice_id = ?
-            `, invoice.id);
-            invoice.services = services;
-        }
-        
-        res.json({ success: true, data: invoices });
-    } catch (error) {
-        console.error('Error fetching invoices:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-};
-
 // Get single invoice
 exports.getInvoiceById = async (req, res) => {
     try {
@@ -80,54 +36,10 @@ exports.getInvoiceById = async (req, res) => {
     }
 };
 
-// Create new invoice
-exports.createInvoice = async (req, res) => {
-    const { patientName, gcrNumber, accountId, accountType, amount , services, createdBy } = req.body;
-    
-    try {
-        const db = await getDatabase();
-        
-        // Validation
-        if (!patientName || !gcrNumber || !services || services.length === 0 || !amount || amount <= 0) {
-            return res.status(400).json({ success: false, error: 'Missing required fields' });
-        }
-        
-        if (!/^\d{8}$/.test(gcrNumber)) {
-            return res.status(400).json({ success: false, error: 'GCR number must be 8 digits' });
-        }
-        
-        // const subtotal = services.reduce((sum, s) => sum + s.price, 0);
-        
-        // Insert invoice
-        const result = await db.run(`
-            INSERT INTO invoices (patient_name, gcr_number, account_id, account_type, price, created_by)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `, [patientName, gcrNumber, accountId, accountType, amount, createdBy || 'system']);
-        
-        const invoiceId = result.lastID;
-        
-        // Insert invoice services
-        for (const service of services) {
-            await db.run(`
-                INSERT INTO invoice_services (invoice_id, service_name, price)
-                VALUES (?, ?, ?)
-            `, [invoiceId, service.name , amount]);
-        }
-        
-        // Log activity
-        await logActivity(createdBy || 'system', `Created invoice #${invoiceId} for ${patientName} - $${amount}`);
-        
-        res.status(201).json({ success: true, data: { id: invoiceId } });
-    } catch (error) {
-        console.error('Error creating invoice:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-};
-
 // Update invoice (Admin only)
 exports.updateInvoice = async (req, res) => {
     const id = req.params.id;
-    const { patientName, gcrNumber, accountId, accountType, services, subtotal, updatedBy } = req.body;
+    const { patientName, gcrNumber, accountId, accountType, services, amount, updatedBy } = req.body;
     
     try {
         const db = await getDatabase();
@@ -140,11 +52,11 @@ exports.updateInvoice = async (req, res) => {
         // Update invoice
         await db.run(`
             UPDATE invoices 
-            SET patient_name = ?, gcr_number = ?, account_id = ?, account_type = ?, subtotal = ?
+            SET patient_name = ?, gcr_number = ?, account_id = ?, account_type = ?, price = ?
             WHERE id = ?
         `, [patientName || invoice.patient_name, gcrNumber || invoice.gcr_number, 
             accountId || invoice.account_id, accountType || invoice.account_type, 
-            subtotal || invoice.subtotal, id]);
+            amount || invoice.price, id]);
         
         // Update services if provided
         if (services) {
@@ -466,58 +378,6 @@ async function logActivity(user, action) {
     }
 }
 
-// Get all users with their details (Admin only)
-exports.getUsers = async (req, res) => {
-    try {
-        const db = await getDatabase();
-        const users = await db.all(`
-            SELECT u.id, u.username, u.role, u.created_at,
-                   COUNT(DISTINCT us.service_id) as assigned_services_count,
-                   COUNT(DISTINCT i.id) as invoices_count
-            FROM users u
-            LEFT JOIN user_services us ON u.id = us.user_id
-            LEFT JOIN invoices i ON u.username = i.created_by
-            GROUP BY u.id
-            ORDER BY u.created_at DESC
-        `);
-        res.json({ success: true, data: users });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-};
-
-// Create user with role-based permissions (Admin only)
-exports.createUser = async (req, res) => {
-    const { username, password, role , userServices } = req.body;
-    
-    try {
-        const db = await getDatabase();
-        
-        if (!username || !password || !role) {
-            return res.status(400).json({ success: false, error: 'All fields are required' });
-        }
-        
-        // Validate role
-        if (!['admin', 'user'].includes(role)) {
-            return res.status(400).json({ success: false, error: 'Invalid role. Must be admin or user' });
-        }
-        
-        const result = await db.run(`
-            INSERT INTO users (username, password, role , services)
-            VALUES (?, ?, ? ,?)
-        `, [username, password, role , userServices]);
-        
-        await logActivity(req.body.createdBy, `Created new user: ${username} with :(${role}) permission`);
-        
-        res.status(201).json({ success: true, message: 'User created successfully', userId: result.lastID });
-    } catch (error) {
-        if (error.message.includes('UNIQUE')) {
-            res.status(400).json({ success: false, error: 'Username already exists' });
-        } else {
-            res.status(500).json({ success: false, error: error.message });
-        }
-    }
-};
 
 // Get user-specific account totals
 exports.getUserAccountTotals = async (req, res) => {
@@ -760,6 +620,322 @@ exports.getUserWithServices = async (req, res) => {
                 services
             }
         });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+}; 
+
+
+
+// Helper function to generate unique 8-digit number
+async function generateUniqueNumber(table, column, prefix, length = 8) {
+    const db = await getDatabase();
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (attempts < maxAttempts) {
+        // Generate random number with specified length
+        const min = Math.pow(10, length - 1);
+        const max = Math.pow(10, length) - 1;
+        const randomNum = Math.floor(Math.random() * (max - min + 1) + min);
+        const formattedNum = randomNum.toString().padStart(length, '0');
+        
+        // Check if this number already exists in the table
+        const exists = await db.get(
+            `SELECT 1 FROM ${table} WHERE ${column} LIKE ?`,
+            [`%${formattedNum}%`]
+        );
+        
+        if (!exists) {
+            return formattedNum;
+        }
+        attempts++;
+    }
+    
+    // If we can't generate a unique number after max attempts, use timestamp-based approach
+    const timestamp = Date.now().toString().slice(-length);
+    return timestamp.padStart(length, '0');
+}
+
+// Helper function to generate unique invoice identification number
+async function generateUniqueInvoiceNumber() {
+    const db = await getDatabase();
+    let attempts = 0;
+    const maxAttempts = 10;
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    
+    while (attempts < maxAttempts) {
+        // Generate 10-digit random number
+        const random10Digit = Math.floor(Math.random() * 9000000000 + 1000000000).toString();
+        const identificationNumber = `SIN-${random10Digit}-${dateStr}-WGMH`;
+        
+        // Check if this identification number already exists
+        const exists = await db.get(
+            `SELECT 1 FROM invoices WHERE identification_number = ?`,
+            [identificationNumber]
+        );
+        
+        if (!exists) {
+            return identificationNumber;
+        }
+        attempts++;
+    }
+    
+    // Fallback: use timestamp to ensure uniqueness
+    const timestamp = Date.now().toString();
+    const random10Digit = timestamp.slice(-10).padStart(10, '0');
+    return `SIN-${random10Digit}-${dateStr}-WGMH`;
+}
+
+// Helper function to generate user special ID based on role
+async function generateUserSpecialId(role) {
+    let prefix;
+    switch(role) {
+        case 'admin':
+            prefix = 'AABMA';
+            break;
+        case 'master':
+            prefix = 'MABMA';
+            break;
+        case 'user-admin':
+            prefix = 'UABMA';
+            break;
+        default:
+            prefix = 'CHBMA';
+    }
+    
+    const uniqueNumber = await generateUniqueNumber('users', 'special_id', prefix, 8);
+    return `${prefix}-${uniqueNumber}-WGMH`;
+}
+
+// Update the createUser function
+exports.createUser = async (req, res) => {
+    const { username, password, role, userServices } = req.body;
+    
+    try {
+        const db = await getDatabase();
+        
+        if (!username || !password || !role) {
+            return res.status(400).json({ success: false, error: 'All fields are required' });
+        }
+        
+        // Validate role
+        const validRoles = ['admin', 'user', 'user-admin', 'master'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Invalid role. Must be admin, user, user-admin, or master' 
+            });
+        }
+        
+        // Generate unique special ID
+        const specialId = await generateUserSpecialId(role);
+        
+        const result = await db.run(`
+            INSERT INTO users (username, password, role, special_id, services)
+            VALUES (?, ?, ?, ?, ?)
+        `, [username, password, role, specialId, userServices || '[]']);
+        
+        await logActivity(req.body.createdBy, `Created new user: ${username} with role: ${role} and ID: ${specialId}`);
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'User created successfully', 
+            userId: result.lastID,
+            specialId: specialId
+        });
+    } catch (error) {
+        if (error.message.includes('UNIQUE')) {
+            if (error.message.includes('special_id')) {
+                res.status(400).json({ success: false, error: 'Failed to generate unique user ID. Please try again.' });
+            } else {
+                res.status(400).json({ success: false, error: 'Username already exists' });
+            }
+        } else {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    }
+};
+
+// Update the getUsers function to include special_id
+exports.getUsers = async (req, res) => {
+    try {
+        const db = await getDatabase();
+        const users = await db.all(`
+            SELECT u.id, u.username, u.role, u.special_id, u.created_at,
+                   COUNT(DISTINCT us.service_id) as assigned_services_count,
+                   COUNT(DISTINCT i.id) as invoices_count
+            FROM users u
+            LEFT JOIN user_services us ON u.id = us.user_id
+            LEFT JOIN invoices i ON u.username = i.created_by
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+        `);
+        res.json({ success: true, data: users });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Update the createInvoice function
+exports.createInvoice = async (req, res) => {
+    const { patientName, gcrNumber, accountId, accountType, amount, services, createdBy } = req.body;
+    
+    try {
+        const db = await getDatabase();
+        
+        // Validation
+        if (!patientName || !gcrNumber || !services || services.length === 0 || !amount || amount <= 0) {
+            return res.status(400).json({ success: false, error: 'Missing required fields' });
+        }
+        
+        if (!/^\d{8}$/.test(gcrNumber)) {
+            return res.status(400).json({ success: false, error: 'GCR number must be 8 digits' });
+        }
+        
+        // Generate unique identification number for the invoice
+        const identificationNumber = await generateUniqueInvoiceNumber();
+        
+        // Insert invoice with identification number
+        const result = await db.run(`
+            INSERT INTO invoices (patient_name, gcr_number, account_id, account_type, price, identification_number, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [patientName, gcrNumber, accountId, accountType, amount, identificationNumber, createdBy || 'system']);
+        
+        const invoiceId = result.lastID;
+        
+        // Insert invoice services
+        for (const service of services) {
+            await db.run(`
+                INSERT INTO invoice_services (invoice_id, service_name, price)
+                VALUES (?, ?, ?)
+            `, [invoiceId, service.name, amount]);
+        }
+        
+        // Log activity
+        await logActivity(createdBy || 'system', `Created invoice #${invoiceId} (${identificationNumber}) for ${patientName} - GH¢${amount}`);
+        
+        res.status(201).json({ 
+            success: true, 
+            data: { 
+                id: invoiceId,
+                identificationNumber: identificationNumber 
+            } 
+        });
+    } catch (error) {
+        console.error('Error creating invoice:', error);
+        
+        if (error.message.includes('UNIQUE') && error.message.includes('identification_number')) {
+            // Retry with a new number if there's a conflict
+            return res.status(409).json({ 
+                success: false, 
+                error: 'Identification number conflict. Please try again.' 
+            });
+        }
+        
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Update the getAllInvoices to include identification_number
+exports.getAllInvoices = async (req, res) => {
+    try {
+        const db = await getDatabase();
+        const userRole = req.headers['x-user-role'];
+        const username = req.headers['x-username'];
+        
+        let invoices;
+        if (userRole === 'admin') {
+            // Admin sees all invoices
+            invoices = await db.all(`
+                SELECT i.*, a.account_name 
+                FROM invoices i
+                LEFT JOIN accounts a ON i.account_id = a.id
+                ORDER BY i.timestamp DESC
+            `);
+        } else {
+            // Regular users only see their own invoices
+            invoices = await db.all(`
+                SELECT i.*, a.account_name 
+                FROM invoices i
+                LEFT JOIN accounts a ON i.account_id = a.id
+                WHERE i.created_by = ?
+                ORDER BY i.timestamp DESC
+            `, username);
+        }
+        
+        // Get services for each invoice
+        for (let invoice of invoices) {
+            const services = await db.all(`
+                SELECT service_name, price 
+                FROM invoice_services 
+                WHERE invoice_id = ?
+            `, invoice.id);
+            invoice.services = services;
+        }
+        
+        res.json({ success: true, data: invoices });
+    } catch (error) {
+        console.error('Error fetching invoices:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Add a new endpoint to get a user by their special ID
+exports.getUserBySpecialId = async (req, res) => {
+    try {
+        const db = await getDatabase();
+        const specialId = req.params.specialId;
+        
+        const user = await db.get(`
+            SELECT id, username, role, special_id, created_at 
+            FROM users 
+            WHERE special_id = ?
+        `, specialId);
+        
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
+        res.json({ success: true, data: user });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Add a new endpoint to get an invoice by its identification number
+exports.getInvoiceByIdentificationNumber = async (req, res) => {
+    try {
+        const db = await getDatabase();
+        const identificationNumber = req.params.identificationNumber;
+        const userRole = req.headers['x-user-role'];
+        const username = req.headers['x-username'];
+        
+        const invoice = await db.get(`
+            SELECT i.*, a.account_name 
+            FROM invoices i
+            LEFT JOIN accounts a ON i.account_id = a.id
+            WHERE i.identification_number = ?
+        `, identificationNumber);
+        
+        if (!invoice) {
+            return res.status(404).json({ success: false, error: 'Invoice not found' });
+        }
+        
+        // Check permission
+        if (userRole !== 'admin' && invoice.created_by !== username) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+        
+        const services = await db.all(`
+            SELECT service_name, price 
+            FROM invoice_services 
+            WHERE invoice_id = ?
+        `, invoice.id);
+        invoice.services = services;
+        
+        res.json({ success: true, data: invoice });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

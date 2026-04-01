@@ -70,6 +70,17 @@ function setupEventListeners() {
         }
     });
     
+    // document.querySelectorAll('.nav-item').forEach(item => {
+    //     item.addEventListener('click', (e) => {
+    //         e.preventDefault();
+    //         const section = item.dataset.section;
+    //         switchSection(section);
+    //         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    //         item.classList.add('active');
+    //     });
+    // });    
+
+
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -77,8 +88,13 @@ function setupEventListeners() {
             switchSection(section);
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
+            
+            // If switching to invoices section, ensure filter is collapsed
+            if (section === 'invoices' && !isFilterCollapsed) {
+                toggleFilterCollapse();
+            }
         });
-    });   
+    });
 
 
      // Add filter collapse toggle listener
@@ -115,7 +131,23 @@ function setupSidebarToggle() {
     const sidebar = document.getElementById('sidebar');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
+            sidebar.classList.toggle('collapsed'); 
+                if (sidebar.classList.contains('collapsed')) {  
+                    document.querySelectorAll('.logo').forEach(el => {                         
+                         el.style.display = 'none';  
+                        
+                        });  
+                    document.querySelectorAll('.copyright').forEach(el => { 
+                         el.style.display = 'none' ; 
+                    
+                    }); 
+                } else { 
+
+
+                    document.querySelectorAll('.logo').forEach(el => el.style.display = 'flex'); 
+                    document.querySelectorAll('.copyright').forEach(el => el.style.display = 'block');
+                 }
+
         });
     }
 }
@@ -135,7 +167,7 @@ function switchSection(section) {
     const targetSection = document.getElementById(sectionId);
     if (targetSection) targetSection.classList.add('active'); 
 
-    console.log('Active section' , targetSection)
+    // console.log('Active section' , targetSection)
     
     const sectionTitles = {
         dashboard: 'Dashboard',
@@ -170,7 +202,12 @@ function switchSection(section) {
         loadSummary();
         loadRecentActivity();
     }
-    if (section === 'invoices') loadInvoices();
+    if (section === 'invoices')  {
+        loadInvoices(); 
+        toggleFilterCollapse(); // Ensure filter is collapsed when navigating to invoices
+
+
+    } ;
 }
 
 function showModal(modalId) {
@@ -361,7 +398,7 @@ function handleLogin() {
         showDashboard();
         logActivity('User logged in as REGULAR USER');
     } else {
-        showMessageModal('Invalid credentials! Use admin/admin123 or user/user123', 'error');
+        showMessageModal('Invalid credentials!', 'error');
     }
 }
 
@@ -382,10 +419,11 @@ function displayServicesReadOnly(services) {
                 <i class="fas fa-stethoscope"></i>
                 <span class="service-name-readonly">${escapeHtml(service.service_name)}</span>
             </div>
-            <span class="service-price-readonly">$${service.price.toFixed(2)}</span>
+            <span id="servicePrice" class="service-price-readonly">GH¢${service.price.toFixed(2)}</span>
         </div>
     `).join('');
-}
+} 
+// Display services in read-only mode
 
 // Helper function to restrict input to numbers only
 function onlyNumbers(event) {
@@ -503,7 +541,7 @@ function buildUniqueServicesList() {
         a.name.localeCompare(b.name)
     );
     
-    console.log('Unique services built:', allUniqueServices);
+    // console.log('Unique services built:', allUniqueServices);
 }
 
 // Render the service columns view with subtotal and grand total rows
@@ -593,7 +631,7 @@ function renderServiceColumnsView(invoices, page = 1, pageSize = 100) {
                 });
             });
         }   
-        console.log('invoice account type:',invoice.account_type)
+        // console.log('invoice account type:',invoice.account_type)
         bodyHtml += `
             <tr>
                 <td class="fixed-col-date">${new Date(invoice.timestamp).toLocaleString()}</td>
@@ -1333,8 +1371,11 @@ function switchInvoiceView(view) {
 
 // Add this function to handle filter collapse/expand
 async function toggleFilterCollapse() {
+
+    // console.log('Toggling filter collapse. Current state:', isFilterCollapsed); 
+
     const filterContent = document.getElementById('filterContent');
-    const toggleIcon = document.getElementById('filterToggleIcon');
+    const toggleIcon = document.getElementById('filterToggleIcon');  
     
     if (!filterContent || !toggleIcon) return;
     
@@ -1409,9 +1450,9 @@ async function showDashboard() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboardScreen').style.display = 'block';
     
-    document.getElementById('sidebarUserName').textContent = currentUser.username;
-    document.getElementById('topUserName').textContent = currentUser.username;
-    document.getElementById('sidebarUserRole').textContent = currentUser.role.toUpperCase();
+    // document.getElementById('sidebarUserName').textContent = currentUser.username;  
+    // document.getElementById('topUserName').textContent = currentUser.username;
+    // document.getElementById('sidebarUserRole').textContent = currentUser.role.toUpperCase();
     
     const adminOnlyItems = document.querySelectorAll('.admin-only');
     if (currentUser.role === 'admin') {
@@ -1437,14 +1478,14 @@ async function showDashboard() {
 
 async function loadUserAssignedServices() { 
 
-    console.log('current user in assigned services:',currentUser)
+    // console.log('current user in assigned services:',currentUser)
     try {
         const response = await fetch(`${API_BASE_URL}/my-services`, {
             headers: { 'X-User-Role': currentUser.role, 'X-Username': currentUser.username }
         });
         const result = await response.json(); 
 
-        console.log('user services report' , result)
+        // console.log('user services report' , result)
         
         if (result.success) {
             userServices = result.data || [];
@@ -1645,7 +1686,7 @@ async function loadAccountsForSelect() {
         });
         const result = await response.json(); 
 
-        console.log('load Accounts:', result)
+        // console.log('load Accounts:', result)
         
         if (result.success) {
             const select = document.getElementById('accountSelect');
@@ -1722,13 +1763,7 @@ async function updateTotalCount(total) {
     }
 }  
 
-async function formatAmount(amount){ 
 
-
-
-
-
-}
 
 async function loadSummary() {
     try {
@@ -1737,7 +1772,7 @@ async function loadSummary() {
         });
         const result = await response.json();  
 
-        console.log('summary results' , result)
+        // console.log('summary results' , result)
         
         if (result.success) {
             document.getElementById('totalInvoices').textContent = result.data.totalInvoices;
@@ -2079,7 +2114,109 @@ async function handleSubmitInvoice(e) {
     }
 }
 
-// Update the loadInvoiceForEdit function to handle amount display
+function displayServicesEdit(invoiceServices) {
+    const container = document.getElementById('editServicesReadOnly');
+    
+    if (!container) return;
+    
+    if (!invoiceServices || invoiceServices.length === 0) {
+        container.innerHTML = '<div class="empty-state">No services associated with this invoice</div>';
+        return;
+    }   
+
+    console.log('Invoice services to edit:', invoiceServices);
+
+    // Fetch all available services from the server
+    fetch(`${API_BASE_URL}/services`, {
+        headers: { 'X-User-Role': currentUser.role, 'X-Username': currentUser.username }
+    }).then(response => response.json())
+      .then(result => {
+          if (result.success) {
+              const allAvailableServices = result.data;
+              console.log('All available services fetched:', allAvailableServices);
+              
+              // Render each invoice service as an editable row
+              container.innerHTML = invoiceServices.map((invoiceService, index) => `
+                  <div class="service-item-edit" data-service-index="${index}">
+                      <div style="flex: 1;">
+                          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                              <i class="fas fa-stethoscope" style="color: var(--blue-600);"></i>
+                              <select class="service-name-edit" data-service-index="${index}" 
+                                      style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--gray-border); flex: 1; min-width: 150px;">
+                                  <option value="">Select Service</option>    
+                                  ${allAvailableServices.map(availableService => `
+                                      <option value="${escapeHtml(availableService.service_name)}"
+                                              ${availableService.service_name === invoiceService.service_name ? 'selected' : ''}>
+                                          ${escapeHtml(availableService.service_name)}
+                                      </option>
+                                  `).join('')}
+                              </select>
+                              <div style="display: flex; align-items: center; gap: 8px;">
+                                  <label style="font-size: 12px; color: var(--gray-text);">GH¢</label>
+                                  <input type="text" class="service-price-edit" data-service-index="${index}" 
+                                         value="${(invoiceService.price || 0).toFixed(2)}" 
+                                         style="width: 100px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--gray-border); text-align: right;"
+                                         onkeypress="return onlyNumbersAndDecimal(event)" 
+                                         oninput="validateAmount(this)">
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              `).join('');
+              
+              // Attach event listeners for service selection changes
+              document.querySelectorAll('.service-name-edit').forEach(select => {
+                  select.addEventListener('change', function() {
+                      const index = parseInt(this.dataset.serviceIndex);
+                      const selectedOption = this.options[this.selectedIndex];
+                      const price = parseFloat(selectedOption.dataset.price) || 0;
+                      const priceInput = document.querySelector(`.service-price-edit[data-service-index="${index}"]`);
+                      if (priceInput) {
+                          priceInput.value = price.toFixed(2);
+                      }
+                      updateEditSubtotal();
+                  });
+              });
+              
+              // Attach event listeners for price changes
+              document.querySelectorAll('.service-price-edit').forEach(input => {
+                  input.addEventListener('input', function() {
+                      updateEditSubtotal();
+                  });
+              });
+              
+              // Initialize subtotal
+              updateEditSubtotal();
+          } else {
+              console.error('Error fetching services for edit:', result.error);
+              showMessageModal('Error fetching services for edit', 'error');
+          }
+      }).catch(error => {
+          console.error('Error fetching services:', error);
+          showMessageModal('Error loading services for editing', 'error');
+      });
+}
+
+// Function to update subtotal in edit modal
+function updateEditSubtotal() {
+    const priceInputs = document.querySelectorAll('.service-price-edit');
+    let subtotal = 0;
+    
+    priceInputs.forEach(input => {
+        const price = parseFloat(input.value) || 0;
+        subtotal += price;
+    });
+    
+    const subtotalField = document.getElementById('servicePrice');
+    if (subtotalField) {
+        subtotalField.value = subtotal.toFixed(2);
+    }
+}
+
+
+
+
+// Update loadInvoiceForEdit to use the editable display
 async function loadInvoiceForEdit(invoiceId) {
     try {
         const response = await fetch(`${API_BASE_URL}/invoices/${invoiceId}`, {
@@ -2101,8 +2238,14 @@ async function loadInvoiceForEdit(invoiceId) {
             // Load accounts for select
             await loadAccountsForEditSelect(invoice.account_id);
             
-            // Display services as read-only
-            displayServicesReadOnly(invoice.services);
+            // Display services in EDITABLE mode (not read-only)
+            displayServicesEdit(invoice.services);
+            
+            // Set the initial subtotal
+            const subtotalField = document.getElementById('servicePrice');
+            if (subtotalField && invoice.price) {
+                subtotalField.value = invoice.price.toFixed(2);
+            }
         }
     } catch (error) {
         console.error('Error loading invoice for edit:', error);
@@ -2110,7 +2253,8 @@ async function loadInvoiceForEdit(invoiceId) {
     }
 }
 
-// Update handleEditInvoice to validate GCR number
+
+// Update handleEditInvoice to collect edited services
 async function handleEditInvoice(e) {
     e.preventDefault();
     
@@ -2134,12 +2278,43 @@ async function handleEditInvoice(e) {
         return;
     }
     
+    // Collect services from the editable list
+    const selectedServices = [];
+    const serviceItems = document.querySelectorAll('.service-item-edit');
+    
+    serviceItems.forEach(item => {
+        const select = item.querySelector('.service-name-edit');
+        const priceInput = item.querySelector('.service-price-edit');
+        
+        if (select && select.value && priceInput) {
+            const serviceName = select.value;
+            const price = parseFloat(priceInput.value) || 0;
+            
+            selectedServices.push({
+                name: serviceName,
+                price: price
+            });
+        }
+    });
+    
+    if (selectedServices.length === 0) {
+        showMessageModal('Please add at least one service', 'warning');
+        return;
+    }
+    
+    // Calculate total from services
+    const subtotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
+    
     const updatedInvoice = {
         patientName,
         gcrNumber,
         accountId: parseInt(accountId),
+        services: selectedServices,
+        amount: subtotal,
         updatedBy: currentUser.username
     };
+    
+    console.log('Updated invoice data:', updatedInvoice);
     
     try {
         const response = await fetch(`${API_BASE_URL}/invoices/${invoiceId}`, {
@@ -2167,7 +2342,24 @@ async function handleEditInvoice(e) {
         console.error('Error updating invoice:', error);
         showMessageModal('Error updating invoice', 'error');
     }
-}   
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// End update 
+
 
 async function loadActivityLog() {
     try {        

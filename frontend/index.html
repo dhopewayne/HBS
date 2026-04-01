@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <meta name="description" content="Medical Service Invoice Management System">
-    <title>MediLedger Pro | Premium Healthcare Invoice Manager</title>
+    <title>GHS | Ghana Health Service Management System</title>
     <link rel="stylesheet" href="/css/style.css">  
     <link rel="stylesheet" href="/css/excel.css">  
     <link rel="stylesheet" href="/css/responsive.css">  
     <link rel="stylesheet" href="/fontawesome-free-7.2.0-web/css/all.min.css"> 
-     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
-
 </head>
 <body>
     <div id="app">
@@ -26,16 +24,16 @@
                     <div class="illustration-content">
                         <i class="fas fa-hospital-user"></i>
                         <h2>Welcome Back</h2>
-                        <p>Sign in to manage your healthcare services</p>
+                        <p>Sign in here !!!</p>
                     </div>
                 </div>
                 <div class="login-card">
                     <div class="brand">
                         <div class="brand-icon">
-                            <i class="fas fa-chart-line"></i>
+                           <img class="ghsml" src="/images/GHs.png" alt="Ghana Health Service Logo" srcset="">
                         </div>
-                        <h1>MediLedger<span>Pro</span></h1>
-                        <p class="tagline">Healthcare Service Management System</p>
+                        <h1>Ghana Health Service <span>Management System</span></h1>
+                        <p class="tagline">Your Health our concern</p>
                     </div>
                     <div class="login-form">
                         <div class="input-group">
@@ -50,16 +48,6 @@
                             <span>Login</span>
                             <i class="fas fa-arrow-right"></i>
                         </button>
-                        <div class="demo-creds">
-                            <div class="cred-badge admin-badge">
-                                <i class="fas fa-shield-alt"></i>
-                                <span>Admin: admin / admin123</span>
-                            </div>
-                            <div class="cred-badge user-badge">
-                                <i class="fas fa-user-check"></i>
-                                <span>User: user / user123</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -79,24 +67,24 @@
             <!-- Sidebar Navigation -->
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-header">
-                    <div class="logo">
-                        <i class="fas fa-heartbeat"></i>
-                        <span>MediLedger<span>Pro</span></span>
+                    <div class="logo"> 
+                        <img class="ghsml" src="/images/GHs.png" alt="Ghana Health Service Logo" srcset="">
+                        <span>G.H.S.<span>M.s</span></span>
                     </div>
                     <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
 
-                <div class="user-profile">
-                    <div class="avatar" id="userAvatar">
-                        <i class="fas fa-user-md"></i>
+                <!-- <div class="user-profile">
+                     <div class="avatar" id="userAvatar">
+                        <i class="fas fa-user"></i>
                     </div>
                     <div class="user-details">
-                        <h4 id="sidebarUserName">Loading...</h4>
-                        <span class="role-badge-sidebar" id="sidebarUserRole"></span>
-                    </div>
-                </div>
+                        <h4 id="sidebarUserName">Loading...</h4> 
+                         <p id="sidebarUserRole">Loading...</p> 
+                    </div> 
+                </div> -->
 
                 <nav class="sidebar-nav">
                     <a href="#" class="nav-item active" data-section="dashboard">
@@ -242,7 +230,7 @@
                 <!-- Invoices / records  Section -->
                 <div id="invoicesSection" class="content-section">
                     <div class="section-header">
-                        <h2><i class="fas fa-file-invoice-dollar"></i> Invoice Management</h2>
+                        <h2><i class="fas fa-file-invoice-dollar"></i> Entry </h2>
                         <div style="display: flex; gap: 12px;">
                             <!-- View Toggle Buttons -->
                             <div class="view-toggle-group">
@@ -257,7 +245,7 @@
                                 </button>
                             </div>
                            <button class="btn-primary create-invoice-btn" id="showCreateInvoiceBtn">
-                            <i class="fas fa-plus"></i> New Invoice
+                            <i class="fas fa-plus"></i> New Entry
                         </button>
                         </div>
                     </div>
@@ -269,7 +257,7 @@
                     <div class="filter-section data-card" style="margin-bottom: 20px; padding: 16px;">
                         <div class="filter-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; cursor: pointer;" id="filterHeaderToggle">
                             <h3 style="font-size: 16px; margin: 0;">
-                                <i class="fas fa-filter"></i> Filter Invoices
+                                <i class="fas fa-filter"></i> Filter 
                                 <i class="fas fa-chevron-down filter-toggle-icon" id="filterToggleIcon" style="margin-left: 8px; font-size: 14px; transition: transform 0.3s ease;"></i>
                             </h3>
                             <button id="clearFiltersBtn" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="event.stopPropagation();">
@@ -344,7 +332,7 @@
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label><i class="fas fa-user"></i> Name <span class="ast">*</span></label>
-                                            <input type="text" id="patientName" required placeholder="Enter patient name">
+                                            <input type="text" id="patientName" required placeholder="Enter  client name">
                                         </div>
                                         <div class="form-group">
                                             <label><i class="fas fa-id-card"></i> GCR Number (8 digits)<span class="ast">*</span></label>
@@ -356,7 +344,7 @@
                                             <select id="accountSelect" required></select>
                                         </div>
                                         <div class="form-group">
-                                            <label><i class="fas fa-coins"></i> Amount ($) <span class="ast">*</span></label>
+                                            <label><i class="fas fa-coins"></i> Amount (GH¢) <span class="ast">*</span></label>
                                             <input type="text" id="price" placeholder="0.00" required onkeypress="return onlyNumbersAndDecimal(event)" oninput="validateAmount(this)">
                                             <small class="input-hint">Only numbers and decimal point allowed</small>
                                         </div>
@@ -624,8 +612,8 @@
                     <input type="hidden" id="editInvoiceId">
                     <div class="form-row">
                         <div class="form-group">
-                            <label><i class="fas fa-user"></i> Patient Name *</label>
-                            <input type="text" id="editPatientName" required placeholder="Enter patient name">
+                            <label><i class="fas fa-user"></i> Name *</label>
+                            <input type="text" id="editPatientName" required placeholder="Enter client name">
                         </div>
                         <div class="form-group">
                             <label><i class="fas fa-id-card"></i> GCR Number (8 digits) *</label>
