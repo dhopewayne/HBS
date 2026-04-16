@@ -790,9 +790,25 @@ exports.createInvoice = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Missing required fields' });
         }
         
-        if (!/^\d{8}$/.test(gcrNumber)) {
+       
+        if(gcrNumber){    
+
+
+        if (!/^\d{8}$/.test(gcrNumber)) { 
+            
             return res.status(400).json({ success: false, error: 'GCR number must be 8 digits' });
+        } 
+        const check = await db.get(
+                `
+                SELECT identification_number FROM invoices WHERE gcr_number = ? 
+                ` , gcrNumber );   
+        console.log('GCR number Check results:',check);
+        if(check){ 
+         return res.status(400).json({ success: false, error: 'GCR number can only be used once' });
+            }
         }
+
+    
         
         // Generate unique identification number for the invoice
         const identificationNumber = await generateUniqueInvoiceNumber();

@@ -70,7 +70,7 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
             identification_number TEXT UNIQUE,  -- New column for special invoice ID
             patient_name TEXT NOT NULL,
-            gcr_number TEXT NOT NULL,
+            gcr_number TEXT UNIQUE NOT NULL,
             account_id INTEGER,
             account_type TEXT,
             price REAL NOT NULL,
