@@ -2,11 +2,11 @@
   "name": "medical-invoice-backend",
   "version": "2.0.0",
   "description": "Medical Invoice Management System with SQLite",
-  "main": "nodemon server.js",
+  "main": "node server.js",
   "bin": "server.js",
   "scripts": {
-    "start": "nodemon server.js",
-    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "dev": "node server.js",
     "init-db": "node database/init.js"
   },
   "dependencies": {

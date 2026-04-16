@@ -70,16 +70,6 @@ function setupEventListeners() {
         }
     });
     
-    // document.querySelectorAll('.nav-item').forEach(item => {
-    //     item.addEventListener('click', (e) => {
-    //         e.preventDefault();
-    //         const section = item.dataset.section;
-    //         switchSection(section);
-    //         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-    //         item.classList.add('active');
-    //     });
-    // });    
-
 
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
@@ -2343,23 +2333,7 @@ async function handleEditInvoice(e) {
         showMessageModal('Error updating invoice', 'error');
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // End update 
-
 
 async function loadActivityLog() {
     try {        
@@ -2773,7 +2747,7 @@ function exportToExcel() {
     const uniqueServices = buildPrintServicesList(filteredInvoices);
     
     // Prepare CSV data
-    const headers = ['Date & Time', 'Patient Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount ($)'];
+    const headers = ['Date & Time', 'Patient Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount (Gh₵)'];
     
     const rows = filteredInvoices.map(invoice => {
         // Create service map for this invoice
