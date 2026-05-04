@@ -3383,3 +3383,19 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background: #10b981;
     width: 100%;
 }
+
+
+
+.service-checkbox.disabled,
+.service-checkbox input:disabled + span {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.service-checkbox input:disabled {
+    cursor: not-allowed;
+}
+
+.service-checkbox {
+    transition: opacity 0.2s ease;
+}

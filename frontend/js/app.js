@@ -1532,6 +1532,25 @@ async function loadUserAssignedServices() {
     }
 }
 
+// function updateServicesGridWithUserServices() {
+//     const container = document.getElementById('servicesGrid');
+//     if (!container) return;
+    
+//     if (userServices.length === 0) {
+//         container.innerHTML = '<div class="empty-state">No services assigned. Contact admin.</div>';
+//         return;
+//     }
+    
+//     container.innerHTML = userServices.map(service => `
+//         <label class="service-checkbox">
+//             <input type="checkbox" name="service" value="${service.service_name}" data-price="${service.price}">
+//             <span>${escapeHtml(service.service_name)}</span>
+//         </label>
+//     `).join('');
+// } 
+
+
+
 function updateServicesGridWithUserServices() {
     const container = document.getElementById('servicesGrid');
     if (!container) return;
@@ -1541,12 +1560,49 @@ function updateServicesGridWithUserServices() {
         return;
     }
     
+    // Render checkboxes
     container.innerHTML = userServices.map(service => `
         <label class="service-checkbox">
             <input type="checkbox" name="service" value="${service.service_name}" data-price="${service.price}">
             <span>${escapeHtml(service.service_name)}</span>
         </label>
     `).join('');
+    
+    // Add event listeners to handle single selection and disable others
+    const checkboxes = container.querySelectorAll('input[name="service"]');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.removeEventListener('change', handleServiceSelection);
+        checkbox.addEventListener('change', handleServiceSelection);
+    });
+}
+
+// New function to handle single service selection
+function handleServiceSelection(event) {
+    const clickedCheckbox = event.target;
+    const allCheckboxes = document.querySelectorAll('input[name="service"]');
+    
+    if (clickedCheckbox.checked) {
+        // Disable all other checkboxes
+        allCheckboxes.forEach(checkbox => {
+            if (checkbox !== clickedCheckbox) {
+                checkbox.disabled = true;
+                // Add visual style for disabled checkboxes
+                checkbox.parentElement.style.opacity = '0.6';
+                checkbox.parentElement.style.cursor = 'not-allowed';
+            } else {
+                checkbox.parentElement.style.opacity = '1';
+                checkbox.parentElement.style.cursor = 'pointer';
+            }
+        });
+    } else {
+        // If unchecked, enable all checkboxes back
+        allCheckboxes.forEach(checkbox => {
+            checkbox.disabled = false;
+            checkbox.parentElement.style.opacity = '1';
+            checkbox.parentElement.style.cursor = 'pointer';
+        });
+    }
 }
 
 async function loadAccounts() { 
@@ -3410,7 +3466,97 @@ async function addUserServiceSelect() {
     
 }
 
-// Enhanced handleSubmitInvoice with amount validation
+// // Enhanced handleSubmitInvoice with amount validation
+// async function handleSubmitInvoice(e) {
+//     e.preventDefault();
+    
+//     const patientName = document.getElementById('patientName').value.trim();
+//     const gcrNumber = document.getElementById('gcrNumber').value.trim();
+//     const accountSelect = document.getElementById('accountSelect');
+//     const accountId = accountSelect.value;
+//     const priceInput = document.getElementById('price').value.trim();
+    
+//     // Validate patient name
+//     if (!patientName) {
+//         showMessageModal('Please enter patient name', 'warning');
+//         return;
+//     }
+    
+//     // Validate GCR number
+//     if (!gcrNumber || gcrNumber.length !== 8 || !/^\d{8}$/.test(gcrNumber)) {
+//         showMessageModal('Please enter a valid 8-digit GCR number (numbers only)', 'warning');
+//         return;
+//     }
+    
+//     // Validate amount
+//     if (!priceInput) {
+//         showMessageModal('Please enter an amount', 'warning');
+//         return;
+//     }
+    
+//     const amount = parseFloat(priceInput);
+//     if (isNaN(amount) || amount <= 0) {
+//         showMessageModal('Please enter a valid positive amount', 'warning');
+//         return;
+//     }
+    
+//     if (!accountId) {
+//         showMessageModal('Please select an account type', 'warning');
+//         return;
+//     }
+    
+//     const selectedServices = [];
+//     document.querySelectorAll('input[name="service"]:checked').forEach(cb => {
+//         selectedServices.push({
+//             name: cb.value,
+//             price: parseFloat(cb.dataset.price)
+//         });
+//     });
+    
+//     if (selectedServices.length === 0) {
+//         showMessageModal('Please select at least one service', 'warning');
+//         return;
+//     }
+    
+//     const newInvoice = {
+//         patientName,
+//         gcrNumber,
+//         accountId: parseInt(accountId),
+//         services: selectedServices,
+//         amount: amount,
+//         createdBy: currentUser.username
+//     };
+    
+//     try {
+//         const response = await fetch(`${API_BASE_URL}/invoices`, {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 'X-User-Role': currentUser.role,
+//                 'X-Username': currentUser.username
+//             },
+//             body: JSON.stringify(newInvoice)
+//         });
+        
+//         const result = await response.json();
+        
+//         if (result.success) {
+//             closeModal('invoiceModal');
+//             document.getElementById('invoiceForm').reset();
+//             loadInvoices();
+//             loadSummary();
+//             showMessageModal('Invoice saved successfully!', 'success');
+//             logActivity(`Created new invoice for ${patientName}`);
+//         } else {
+//             showMessageModal('Error: ' + result.error, 'error');
+//         }
+//     } catch (error) {
+//         console.error('Error saving invoice:', error);
+//         showMessageModal('Error saving invoice', 'error');
+//     }
+// }  
+
+
 async function handleSubmitInvoice(e) {
     e.preventDefault();
     
@@ -3449,6 +3595,7 @@ async function handleSubmitInvoice(e) {
         return;
     }
     
+    // Get selected services (should be only one)
     const selectedServices = [];
     document.querySelectorAll('input[name="service"]:checked').forEach(cb => {
         selectedServices.push({
@@ -3457,8 +3604,14 @@ async function handleSubmitInvoice(e) {
         });
     });
     
+    // Validate exactly one service is selected
     if (selectedServices.length === 0) {
-        showMessageModal('Please select at least one service', 'warning');
+        showMessageModal('Please select a service', 'warning');
+        return;
+    }
+    
+    if (selectedServices.length > 1) {
+        showMessageModal('Only one service can be selected per invoice', 'warning');
         return;
     }
     
@@ -3487,6 +3640,16 @@ async function handleSubmitInvoice(e) {
         if (result.success) {
             closeModal('invoiceModal');
             document.getElementById('invoiceForm').reset();
+            
+            // Re-enable all checkboxes when form is reset
+            const allCheckboxes = document.querySelectorAll('input[name="service"]');
+            allCheckboxes.forEach(checkbox => {
+                checkbox.disabled = false;
+                checkbox.checked = false;
+                checkbox.parentElement.style.opacity = '1';
+                checkbox.parentElement.style.cursor = 'pointer';
+            });
+            
             loadInvoices();
             loadSummary();
             showMessageModal('Invoice saved successfully!', 'success');
@@ -4688,5 +4851,112 @@ window.deleteUser = deleteUser;
 
   
 
-// update edit 
+// // update edit 
 
+
+
+// async function handleSubmitInvoice(e) {
+//     e.preventDefault();
+    
+//     const patientName = document.getElementById('patientName').value.trim();
+//     const gcrNumber = document.getElementById('gcrNumber').value.trim();
+//     const accountSelect = document.getElementById('accountSelect');
+//     const accountId = accountSelect.value;
+//     const priceInput = document.getElementById('price').value.trim();
+    
+//     // Validate patient name
+//     if (!patientName) {
+//         showMessageModal('Please enter patient name', 'warning');
+//         return;
+//     }
+    
+//     // Validate GCR number
+//     if (!gcrNumber || gcrNumber.length !== 8 || !/^\d{8}$/.test(gcrNumber)) {
+//         showMessageModal('Please enter a valid 8-digit GCR number (numbers only)', 'warning');
+//         return;
+//     }
+    
+//     // Validate amount
+//     if (!priceInput) {
+//         showMessageModal('Please enter an amount', 'warning');
+//         return;
+//     }
+    
+//     const amount = parseFloat(priceInput);
+//     if (isNaN(amount) || amount <= 0) {
+//         showMessageModal('Please enter a valid positive amount', 'warning');
+//         return;
+//     }
+    
+//     if (!accountId) {
+//         showMessageModal('Please select an account type', 'warning');
+//         return;
+//     }
+    
+//     // Get selected services (should be only one)
+//     const selectedServices = [];
+//     document.querySelectorAll('input[name="service"]:checked').forEach(cb => {
+//         selectedServices.push({
+//             name: cb.value,
+//             price: parseFloat(cb.dataset.price)
+//         });
+//     });
+    
+//     // Validate exactly one service is selected
+//     if (selectedServices.length === 0) {
+//         showMessageModal('Please select a service', 'warning');
+//         return;
+//     }
+    
+//     if (selectedServices.length > 1) {
+//         showMessageModal('Only one service can be selected per invoice', 'warning');
+//         return;
+//     }
+    
+//     const newInvoice = {
+//         patientName,
+//         gcrNumber,
+//         accountId: parseInt(accountId),
+//         services: selectedServices,
+//         amount: amount,
+//         createdBy: currentUser.username
+//     };
+    
+//     try {
+//         const response = await fetch(`${API_BASE_URL}/invoices`, {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 'X-User-Role': currentUser.role,
+//                 'X-Username': currentUser.username
+//             },
+//             body: JSON.stringify(newInvoice)
+//         });
+        
+//         const result = await response.json();
+        
+//         if (result.success) {
+//             closeModal('invoiceModal');
+//             document.getElementById('invoiceForm').reset();
+            
+//             // Re-enable all checkboxes when form is reset
+//             const allCheckboxes = document.querySelectorAll('input[name="service"]');
+//             allCheckboxes.forEach(checkbox => {
+//                 checkbox.disabled = false;
+//                 checkbox.checked = false;
+//                 checkbox.parentElement.style.opacity = '1';
+//                 checkbox.parentElement.style.cursor = 'pointer';
+//             });
+            
+//             loadInvoices();
+//             loadSummary();
+//             showMessageModal('Invoice saved successfully!', 'success');
+//             logActivity(`Created new invoice for ${patientName}`);
+//         } else {
+//             showMessageModal('Error: ' + result.error, 'error');
+//         }
+//     } catch (error) {
+//         console.error('Error saving invoice:', error);
+//         showMessageModal('Error saving invoice', 'error');
+//     }
+// }
