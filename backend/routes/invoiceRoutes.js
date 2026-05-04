@@ -20,7 +20,13 @@ router.get('/invoices', invoiceController.getAllInvoices);
 router.get('/invoices/:id', invoiceController.getInvoiceById);
 router.post('/invoices', invoiceController.createInvoice);
 router.put('/invoices/:id', checkAdmin, invoiceController.updateInvoice);
-router.delete('/invoices/:id', checkAdmin, invoiceController.deleteInvoice);
+router.delete('/invoices/:id', checkAdmin, invoiceController.deleteInvoice); 
+
+router.post('/user/login', invoiceController.loginUser);
+router.post('/user/register', invoiceController.registerUser);   
+// router.post('/user/logout', invoiceController.logoutUser); 
+
+
 
 // Account management routes (Admin only)
 router.get('/accounts', invoiceController.getAllAccounts);
@@ -37,7 +43,15 @@ router.delete('/services/:id', checkAdmin, invoiceController.deleteService);
 // User Service management routes (Admin only)
 router.get('/users/:userId/services', checkAdmin, invoiceController.getUserServices);
 router.post('/users/services/assign', checkAdmin, invoiceController.assignServiceToUser);
-router.delete('/users/:userId/services/:serviceId', checkAdmin, invoiceController.removeUserService);
+router.delete('/users/:userId/services/:serviceId', checkAdmin, invoiceController.removeUserService);  
+
+
+
+// User management routes (Admin only)
+// router.get('/users', checkAdmin, invoiceController.getUsers);
+// router.post('/users', checkAdmin, invoiceController.createUser);
+
+
 
 // Get services available to current user (filtered by assigned services)
 router.get('/my-services', invoiceController.getAvailableServicesForUser);  
@@ -49,6 +63,18 @@ router.get('/users/:username/with-services', invoiceController.getUserWithServic
 router.get('/users', checkAdmin, invoiceController.getUsers);
 router.post('/users', checkAdmin, invoiceController.createUser);
 router.get('/users/:username/account-totals', invoiceController.getUserAccountTotals);
+router.put('/users/change-username/:userId', checkAdmin, invoiceController.changeUserName);
+router.put('/users/change-password/:userId', checkAdmin, invoiceController.changeUserPassword);
+router.put('/users/block/:userId', checkAdmin, invoiceController.blockUser);
+router.put('/users/unblock/:userId', checkAdmin, invoiceController.unblockUser);
+router.put('/users/suspend/:userId', checkAdmin, invoiceController.suspendUser);
+router.delete('/users/delete/:userId', checkAdmin, invoiceController.deleteUser);
+router.get('/users/status/:userId', checkAdmin, invoiceController.getUserStatus);
+router.get('/users/current', invoiceController.getCurrentUser);   
+router.put('/users/update-profile-username', invoiceController.updateProfileUsername);  
+router.put('/users/update-profile-password', invoiceController.updateProfilePassword); 
+
+
 
 // Public routes (with role-based filtering)
 router.get('/activity-log', invoiceController.getActivityLog);

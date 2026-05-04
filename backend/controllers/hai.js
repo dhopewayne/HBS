@@ -1,120 +1,14 @@
 const { getDatabase } = require('../models/database');
 
-// Cache for user special IDs to reduce database calls
-const userSpecialIdCache = new Map();
-const userSpecialIdByIdCache = new Map();
 
-// Helper function to get user's special_id by username with caching
-async function getUserSpecialId(username) {
-    try {
-        if (!username || username === 'undefined' || username === 'null') {
-            console.log(`Invalid username provided: ${username}`);
-            return 'Unknown User';
-        }
-        
-        // Check cache first
-        if (userSpecialIdCache.has(username)) {
-            return userSpecialIdCache.get(username);
-        }
-        
-        const db = await getDatabase();
-        const user = await db.get('SELECT special_id FROM users WHERE username = ?', username);
-        
-        let result = user ? user.special_id : 'Unknown User';
-        
-        // Cache the result
-        userSpecialIdCache.set(username, result);
-        
-        return result;
-    } catch (error) {
-        console.error('Error getting user special_id:', error);
-        return 'Unknown User';
-    }
-}
-
-// Helper function to get user's special_id by user_id with caching
-async function getUserSpecialIdById(userId) {
-    try {
-        if (!userId || userId === 'undefined' || userId === 'null') {
-            return 'Unknown User';
-        }
-        
-        // Check cache first
-        if (userSpecialIdByIdCache.has(userId)) {
-            return userSpecialIdByIdCache.get(userId);
-        }
-        
-        const db = await getDatabase();
-        const user = await db.get('SELECT special_id FROM users WHERE id = ?', userId);
-        
-        let result = user ? user.special_id : 'Unknown User';
-        
-        // Cache the result
-        userSpecialIdByIdCache.set(userId, result);
-        
-        return result;
-    } catch (error) {
-        console.error('Error getting user special_id by id:', error);
-        return 'Unknown User';
-    }
-}
-
-// Helper function to clear cache
-function clearUserSpecialIdCache(username) {
-    if (username) {
-        userSpecialIdCache.delete(username);
-        console.log(`Cache cleared for username: ${username}`);
-    } else {
-        userSpecialIdCache.clear();
-        userSpecialIdByIdCache.clear();
-        console.log('All user special ID caches cleared');
-    }
-}
-
-// Helper function to log username changes
-async function logUsernameChange(userId, oldUsername, newUsername, changedBy) {
-    try {
-        const db = await getDatabase();
-        const userSpecialId = await getUserSpecialIdById(userId);
-        
-        await db.run(`
-            INSERT INTO userNamesChanges (user, new_username, old_username, timestamp)
-            VALUES (?, ?, ?, datetime('now'))
-        `, [userSpecialId, newUsername, oldUsername]);
-        
-        // Clear cache for the old username
-        clearUserSpecialIdCache(oldUsername);
-    } catch (error) {
-        console.error('Error logging username change:', error);
-    }
-}
-
-// Helper function to log password changes
-async function logPasswordChange(userId, oldPassword, newPassword, passwordHint, changedBy) {
-    try {
-        const db = await getDatabase();
-        const userSpecialId = await getUserSpecialIdById(userId);
-        
-        await db.run(`
-            INSERT INTO passwordChanges (user, new_password, password_hint, old_password, timestamp)
-            VALUES (?, ?, ?, ?, datetime('now'))
-        `, [userSpecialId, newPassword, passwordHint, oldPassword]);
-    } catch (error) {
-        console.error('Error logging password change:', error);
-    }
-}
 
 // Helper function to log password attempts
 async function logPasswordAttempt(username, action) {
     try {
+        const db = await getDatabase();
         const userSpecialId = await getUserSpecialId(username);
         
-        if (userSpecialId === 'Unknown User') {
-            return;
-        }
-        
-        const db = await getDatabase();
-        
+        // Check if there's a recent attempt within last minute
         const recentAttempt = await db.get(`
             SELECT id, attempt_count FROM password_attempts 
             WHERE user = ? AND action = ? AND datetime(attempt_time) > datetime('now', '-1 minute')
@@ -141,13 +35,8 @@ async function logPasswordAttempt(username, action) {
 // Helper function to check password attempts
 async function checkPasswordAttempts(username, action, maxAttempts = 5) {
     try {
-        const userSpecialId = await getUserSpecialId(username);
-        
-        if (userSpecialId === 'Unknown User') {
-            return false;
-        }
-        
         const db = await getDatabase();
+        const userSpecialId = await getUserSpecialId(username);
         
         const attempts = await db.get(`
             SELECT SUM(attempt_count) as total_attempts 
@@ -209,13 +98,8 @@ async function logDeletedAccount(accountData, deletedBy) {
 // Helper function to log user login with device info
 async function logUserLoginDetails(username, req) {
     try {
-        const userSpecialId = await getUserSpecialId(username);
-        
-        if (userSpecialId === 'Unknown User') {
-            return null;
-        }
-        
         const db = await getDatabase();
+        const userSpecialId = await getUserSpecialId(username);
         const userAgent = req.headers['user-agent'] || 'Unknown';
         const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
         const location = req.headers['x-location'] || 'Unknown';
@@ -235,13 +119,8 @@ async function logUserLoginDetails(username, req) {
 // Helper function to get user's last login
 async function getUserLastLogin(username) {
     try {
-        const userSpecialId = await getUserSpecialId(username);
-        
-        if (userSpecialId === 'Unknown User') {
-            return null;
-        }
-        
         const db = await getDatabase();
+        const userSpecialId = await getUserSpecialId(username);
         
         const lastLogin = await db.get(`
             SELECT user_agent, ip_address, location, timestamp 
@@ -260,13 +139,8 @@ async function getUserLastLogin(username) {
 // Helper function to get user login history
 async function getUserLoginHistory(username, limit = 10) {
     try {
-        const userSpecialId = await getUserSpecialId(username);
-        
-        if (userSpecialId === 'Unknown User') {
-            return [];
-        }
-        
         const db = await getDatabase();
+        const userSpecialId = await getUserSpecialId(username);
         
         const history = await db.all(`
             SELECT user_agent, ip_address, location, timestamp 
@@ -285,13 +159,8 @@ async function getUserLoginHistory(username, limit = 10) {
 // Helper function to log activities
 async function logActivity(username, action) {
     try {
-        const userSpecialId = await getUserSpecialId(username);
-        
-        if (userSpecialId === 'Unknown User') {
-            return;
-        }
-        
         const db = await getDatabase();
+        const userSpecialId = await getUserSpecialId(username);
         
         await db.run(`
             INSERT INTO activity_log (user, action, timestamp)
@@ -383,7 +252,7 @@ async function generateUserSpecialId(role) {
     return specialId;
 }
 
-// ============= INVOICE CONTROLLER EXPORTS =============
+// ============= EXISTING EXPORTS (keeping all your existing code) =============
 
 // Get single invoice
 exports.getInvoiceById = async (req, res) => {
@@ -1252,9 +1121,6 @@ exports.changeUserName = async (req, res) => {
         await logUsernameChange(user.id, oldUsername, newUsername, changedBy || req.headers['x-username']);
         await logActivity(changedBy || req.headers['x-username'], `Changed username for user ${userId} from ${oldUsername} to ${newUsername}`);
         
-        // Clear cache for both old and new username
-        clearUserSpecialIdCache(oldUsername);
-        
         res.json({ success: true, message: 'Username changed successfully' });
     } catch (error) {
         console.error('Error changing username:', error);
@@ -1430,9 +1296,6 @@ exports.deleteUser = async (req, res) => {
         
         await logActivity(deletedBy || req.headers['x-username'], `Deleted user ${userId} (${user.username})`);
         
-        // Clear cache for this user
-        clearUserSpecialIdCache(user.username);
-        
         res.json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
         console.error('Error deleting user:', error);
@@ -1535,9 +1398,6 @@ exports.updateProfileUsername = async (req, res) => {
         
         await logUsernameChange(user.id, oldUsername, newUsername, currentUsername);
         await logActivity(currentUsername, `Changed profile username from ${oldUsername} to ${newUsername}`);
-        
-        // Clear cache for both old and new username
-        clearUserSpecialIdCache(oldUsername);
         
         res.json({ success: true, message: 'Username updated successfully' });
     } catch (error) {
@@ -1747,6 +1607,3 @@ exports.getPasswordChangeHistory = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
-
-// Export cache clearing function
-exports.clearUserCache = clearUserSpecialIdCache;

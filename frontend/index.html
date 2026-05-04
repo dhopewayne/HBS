@@ -76,16 +76,6 @@
                     </button>
                 </div>
 
-                <!-- <div class="user-profile">
-                     <div class="avatar" id="userAvatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-details">
-                        <h4 id="sidebarUserName">Loading...</h4> 
-                         <p id="sidebarUserRole">Loading...</p> 
-                    </div> 
-                </div> -->
-
                 <nav class="sidebar-nav">
                     <a href="#" class="nav-item active" data-section="dashboard">
                         <i class="fas fa-tachometer-alt"></i>
@@ -114,6 +104,11 @@
                     <a href="#" class="nav-item" data-section="activity">
                         <i class="fas fa-history"></i>
                         <span>Activity Log</span>
+                    </a> 
+
+                    <a href="#" class="nav-item" data-section="account">
+                        <i class="fas fa-user-circle"></i>
+                        <span>My Account</span>
                     </a>
                 </nav>
 
@@ -134,7 +129,6 @@
                 </div>
             </div>
 
-
             <!-- Main Content Area -->
             <div class="main-content-area">
                 <!-- Top Header -->
@@ -154,9 +148,100 @@
                             </div>
                         </div>
                     </div>
-                </header>
+                </header>   
 
+                  <!-- Account Profile Section -->
+                <div id="accountSection" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-circle"></i> My Account</h2>
+                    </div>
+                    
+                    <div class="profile-grid">
+                        <!-- Profile Information Card -->
+                        <div class="data-card profile-info-card">
+                            <div class="profile-header">
+                                <div class="profile-avatar" id="profileAvatar">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <div class="profile-status">
+                                    <span class="status-badge" id="profileStatus">Active</span>
+                                </div>
+                                <button class="btn-icon edit-avatar-btn" id="editAvatarBtn" title="Change Avatar">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <div class="profile-details">
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-user"></i> Username
+                                    </div>
+                                    <div class="detail-value" id="profileUsername">-</div>
+                                    <button class="btn-icon action-btn" onclick="openProfileModal('username')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-tag"></i> Account Number
+                                    </div>
+                                    <div class="detail-value" id="profileAccountNumber">-</div>
+                                    <button class="btn-icon copy-btn" onclick="copyToClipboard('profileAccountNumber')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-user-tag"></i> Role
+                                    </div>
+                                    <div class="detail-value">
+                                        <span class="role-badge" id="profileRole">-</span>
+                                    </div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-calendar-alt"></i> Member Since
+                                    </div>
+                                    <div class="detail-value" id="profileMemberSince">-</div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-clock"></i> Last Login
+                                    </div>
+                                    <div class="detail-value" id="profileLastLogin">-</div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-stethoscope"></i> Assigned Services
+                                    </div>
+                                    <div class="detail-value">
+                                        <div class="profile-services-list" id="profileServices">
+                                            <span class="empty-text">No services assigned</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="profile-actions">
+                                <button class="btn-secondary" onclick="openProfileModal('password')">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                                <button class="btn-secondary" onclick="openProfileModal('security')">
+                                    <i class="fas fa-shield-alt"></i> Security Settings
+                                </button>
+                            </div>
+                        </div>
 
+                        <!-- Recent Activity Card -->
+                        <div class="data-card profile-activity-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                                <button class="btn-text" onclick="switchSection('activity')">View All</button>
+                            </div>
+                            <div id="profileRecentActivity" class="profile-activity-list">
+                                <div class="empty-state">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                     <!-- activity Section -->
                 <div id="activitySection" class="content-section">
                     <div class="section-header log-section">
@@ -167,7 +252,6 @@
                         <div id="activityLogContainer" class="log-container"></div>
                     </div>
                 </div>  
-
 
                 <!-- Dashboard Section -->
                 <div id="dashboardSection" class="content-section active">
@@ -573,8 +657,10 @@
                         <h3>System Users</h3>
                         <div id="usersList" class="data-list"></div>
                     </div>
-                </div>
-             
+                </div>      
+
+              
+               
                 
             </div>
         </div>
@@ -582,22 +668,22 @@
 
 
 
-    <!-- Message Modal -->
-<div id="messageModal" class="message-modal">
-    <div class="message-modal-content">
-        <div class="message-modal-header">
-            <i class="fas" id="messageIcon"></i>
-            <h3 id="messageTitle">Message</h3>
-            <button class="message-close-btn">&times;</button>
+        <!-- Message Modal -->
+    <div id="messageModal" class="message-modal">
+        <div class="message-modal-content">
+            <div class="message-modal-header">
+                <i class="fas" id="messageIcon"></i>
+                <h3 id="messageTitle">Message</h3>
+                <button class="message-close-btn">&times;</button>
+            </div>
+            <div class="message-modal-body">
+                <p id="messageText"></p>
+            </div>
+            <div class="message-modal-footer">
+                <button id="messageConfirmBtn" class="message-btn message-btn-primary">OK</button>
+            </div>
         </div>
-        <div class="message-modal-body">
-            <p id="messageText"></p>
-        </div>
-        <div class="message-modal-footer">
-            <button id="messageConfirmBtn" class="message-btn message-btn-primary">OK</button>
-        </div>
-    </div>
-</div>  
+    </div>  
 
 
 <!-- start of  Edit Invoice Modal -->
@@ -647,6 +733,25 @@
 <!-- End of Edit modal -->  
 
 
+<!-- User Edit Modal -->
+<div id="userEditModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="userEditModalTitle">Edit User</h3>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="userEditContent">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="userEditCancelBtn" class="btn-secondary">Cancel</button>
+            <button id="userEditConfirmBtn" class="btn-primary">Confirm</button>
+        </div>
+    </div>
+</div>  
+<!-- End of User Edit Modal -->
 
 <!-- print records -->
  <!-- Print Modal for View Records -->
@@ -679,8 +784,137 @@
             <button onclick="closePrintModal()" class="btn-secondary">Close</button>
         </div>
     </div>
-</div>
- 
+</div> 
+<!-- End of Print Modal  -->  
+
+ <!-- Account Update Modals -->
+        <!-- Change Username Modal -->
+        <div id="usernameModal" class="modal">
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user-edit"></i> Change Username</h3>
+                    <button class="close-modal" onclick="closeModal('usernameModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="changeUsernameForm">
+                        <div class="form-group">
+                            <label>Current Username</label>
+                            <input type="text" id="currentUsernameModal" readonly class="readonly-input">
+                        </div>
+                        <div class="form-group">
+                            <label>New Username</label>
+                            <input type="text" id="newUsernameModal" placeholder="Enter new username" autocomplete="off">
+                            <small class="input-hint">Minimum 3 characters, must be unique</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="usernamePasswordConfirm" placeholder="Enter your password to confirm">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="closeModal('usernameModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Update Username</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div id="passwordModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-key"></i> Change Password</h3>
+                    <button class="close-modal" onclick="closeModal('passwordModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="currentPasswordModal" placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="newPasswordModal" placeholder="Enter new password" onkeyup="checkModalPasswordStrength(this.value)">
+                            <div class="password-strength">
+                                <div class="password-strength-bar" id="modalPasswordStrengthBar"></div>
+                            </div>
+                            <small class="input-hint">Minimum 6 characters, use mix of letters and numbers</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirmPasswordModal" placeholder="Confirm new password">
+                        </div>
+                        <div class="form-group">
+                            <label>Password Hint (Optional)</label>
+                            <input type="text" id="passwordHintModal" placeholder="e.g., My favorite color">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="closeModal('passwordModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Change Password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Settings Modal -->
+        <div id="securityModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                    <button class="close-modal" onclick="closeModal('securityModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="security-options">
+                        <div class="security-option">
+                            <div class="option-info">
+                                <i class="fas fa-bell"></i>
+                                <div>
+                                    <h4>Login Notifications</h4>
+                                    <p>Receive email when someone logs into your account</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="loginNotifications">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="security-option">
+                            <div class="option-info">
+                                <i class="fas fa-clock"></i>
+                                <div>
+                                    <h4>Session Timeout</h4>
+                                    <p>Auto logout after inactivity</p>
+                                </div>
+                            </div>
+                            <select id="sessionTimeout" class="security-select">
+                                <option value="15">15 minutes</option>
+                                <option value="30" selected>30 minutes</option>
+                                <option value="60">1 hour</option>
+                                <option value="120">2 hours</option>
+                            </select>
+                        </div>
+                        <div class="security-option">
+                            <div class="option-info">
+                                <i class="fas fa-mobile-alt"></i>
+                                <div>
+                                    <h4>Two-Factor Authentication</h4>
+                                    <p>Add an extra layer of security</p>
+                                </div>
+                            </div>
+                            <button class="btn-secondary" onclick="setup2FA()">Setup</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeModal('securityModal')">Close</button>
+                    <button class="btn-primary" onclick="saveSecuritySettings()">Save Changes</button>
+                </div>
+            </div>
+        </div>  
+
+ <!-- End Of account modal -->
+            
     <script src="/js/app.js"></script>
 </body>
 </html>

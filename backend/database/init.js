@@ -12,17 +12,79 @@ if (fs.existsSync(dbPath)) {
 
 const db = new sqlite3.Database(dbPath);
 
+// Helper function to generate unique number
+async function generateUniqueNumber(table, column, prefix, length = 8) {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        function tryGenerate() {
+            const min = Math.pow(10, length - 1);
+            const max = Math.pow(10, length) - 1;
+            const randomNum = Math.floor(Math.random() * (max - min + 1) + min);
+            const formattedNum = randomNum.toString().padStart(length, '0');
+            
+            db.get(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [`${prefix}-${formattedNum}-WGMH`], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else if (!row) {
+                    resolve(`${prefix}-${formattedNum}-WGMH`);
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    tryGenerate();
+                } else {
+                    // Fallback to timestamp
+                    const timestamp = Date.now().toString().slice(-length);
+                    resolve(`${prefix}-${timestamp}-WGMH`);
+                }
+            });
+        }
+        
+        tryGenerate();
+    });
+}
+
+// Helper function to generate user special ID based on role
+async function generateUserSpecialId(role) {
+    let prefix;
+    switch(role) {
+        case 'admin':
+            prefix = 'AABMA';
+            break;
+        case 'master':
+            prefix = 'MABMA';
+            break;
+        case 'user-admin':
+            prefix = 'UABMA';
+            break;
+        case 'user':
+            prefix = 'UUBMA';
+            break;
+        default:
+            prefix = 'CHBMA';
+    }
+    
+    const uniqueNumber = await generateUniqueNumber('users', 'special_id', prefix, 8);
+    return `${uniqueNumber}`;
+}
+
 // Initialize database tables
 db.serialize(() => {
     // Users table with userServices as JSON field
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            first_name TEXT , 
+            middle_name TEXT , 
+            last_name TEXT ,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            pass_hint TEXT ,
             role TEXT NOT NULL,
-            special_id TEXT UNIQUE,  -- New column for special user ID
-            services TEXT DEFAULT '[]',  -- JSON array of service IDs or names
+            special_id TEXT UNIQUE,
+            status TEXT DEFAULT 'active' ,
+            services TEXT DEFAULT '[]', 
+            suspended_until TEXT ,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
@@ -50,7 +112,7 @@ db.serialize(() => {
         )
     `);
 
-    // User Services junction table (for relational integrity)
+    // User Services junction table
     db.run(`
         CREATE TABLE IF NOT EXISTS user_services (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +130,7 @@ db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            identification_number TEXT UNIQUE,  -- New column for special invoice ID
+            identification_number TEXT UNIQUE,
             patient_name TEXT NOT NULL,
             gcr_number TEXT UNIQUE NOT NULL,
             account_id INTEGER,
@@ -91,7 +153,8 @@ db.serialize(() => {
             FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
             FOREIGN KEY (service_id) REFERENCES services(id)
         )
-    `);
+    `);  
+
 
     // Activity log table
     db.run(`
@@ -101,15 +164,90 @@ db.serialize(() => {
             action TEXT NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
+    `); 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS userNamesChanges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT NOT NULL, 
+            new_username TEXT NOT NULL,
+            old_username TEXT NOT NULL,  
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `); 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS accountNameChanges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT NOT NULL, 
+            new_account_first_name TEXT NOT NULL,
+            old_account_first_name TEXT NOT NULL,  
+            new_account_Middle_name TEXT NOT NULL,
+            old_account_Middle_name TEXT NOT NULL,  
+            new_account_last_name TEXT NOT NULL,
+            old_account_last_name TEXT NOT NULL,  
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `); 
+    db.run(`
+        CREATE TABLE IF NOT EXISTS deletedAccounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT NOT NULL, 
+            account_first_name TEXT NOT NULL,
+            account_Middle_name TEXT NOT NULL,  
+            account_last_name TEXT NOT NULL, 
+            account_type TEXT NOT NULL,
+            account_sex TEXT NOT NULL, 
+            account_age INTEGER NOT NULL,
+            account_gcr_number TEXT NOT NULL,
+            account_phone_number TEXT NOT NULL,
+            account_address TEXT NOT NULL,
+            account_description TEXT,   
+            account_service_details TEXT,
+            account_deleted_by TEXT,
+            account_created_by TEXT,
+            account_created_at DATETIME,
+            account_deleted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+          
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS passwordChanges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT NOT NULL,
+            new_password TEXT NOT NULL,
+            password_hint TEXT,
+            old_password TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `); 
+
+    //  user_agent, ip_address, location, timestamp
+    db.run(`
+        CREATE TABLE IF NOT EXISTS user_logins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            user_agent TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            location TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    // Password attempts table
+    db.run(`
+        CREATE TABLE IF NOT EXISTS password_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT NOT NULL,  
+            attempt_count INTEGER DEFAULT 1,
+            attempt_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            action TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
     `);
 
-
-    // Create trigger to automatically update services JSON when user_services changes
-    // Drop existing triggers
+    // Create triggers
     db.run(`DROP TRIGGER IF EXISTS update_user_services_after_insert`);
     db.run(`DROP TRIGGER IF EXISTS update_user_services_after_delete`);
 
-    // Create triggers with correct column name
     db.run(`
         CREATE TRIGGER IF NOT EXISTS update_user_services_after_insert
         AFTER INSERT ON user_services
@@ -138,21 +276,11 @@ db.serialize(() => {
         END
     `);
 
-
-    // Insert default users
-    db.run(`INSERT OR IGNORE INTO users (username, password, role, services) VALUES (?, ?, ?, ?)`, 
-        ['admin', 'admin123', 'admin', '[]']);
-    db.run(`INSERT OR IGNORE INTO users (username, password, role, services) VALUES (?, ?, ?, ?)`, 
-        ['user', 'user123', 'user', '[]']);
-
-    // Insert default accounts
+    // Insert default accounts first
     db.run(`INSERT OR IGNORE INTO accounts (account_name, account_type, description) VALUES (?, ?, ?)`,
         ['Drugs Account', 'drugs', 'Pharmaceutical and medication services']);
     db.run(`INSERT OR IGNORE INTO accounts (account_name, account_type, description) VALUES (?, ?, ?)`,
-        ['Non-Drugs Account', 'nondrugs', 'Non-medication medical services']); 
-
-    // db.run(`ALTER TABLE users ADD COLUMN special_id TEXT UNIQUE`);
-    // db.run(`ALTER TABLE invoices ADD COLUMN identification_number TEXT UNIQUE`);
+        ['Non-Drugs Account', 'nondrugs', 'Non-medication medical services']);
 
     // Insert default services
     const services = [
@@ -160,104 +288,142 @@ db.serialize(() => {
         'OBS', 'GYE', 'A & E', 'ENT', 'L/W', 'Scan', 'Theature', 'X-Ray'
     ];
     
-    // Track completion of service insertions
     let servicesInserted = 0;
     const totalServices = services.length;
     
     services.forEach((service, index) => {
-        db.run(`INSERT OR IGNORE INTO services (service_name, category) VALUES (?,  ?)`,
+        db.run(`INSERT OR IGNORE INTO services (service_name, category) VALUES (?, ?)`,
             [service, 'Medical Service'], (err) => {
             if (err) {
                 console.error(`Error inserting service ${service}:`, err);
             }
             servicesInserted++;
             
-            // After all services are inserted, assign services to user
+            // After all services are inserted, insert users and assign services
             if (servicesInserted === totalServices) {
                 console.log('All services inserted');
                 
-                // Get user ID for 'user'
-                db.get("SELECT id FROM users WHERE username = 'user'", (err, userRow) => {
-                    if (err) {
-                        console.error('Error getting user:', err);
-                        return;
-                    }
-                    
-                    if (userRow) {
-                        console.log('Found user ID:', userRow.id);
+                // Insert default users with special IDs
+                (async () => {
+                    try {
+                        // Generate special IDs
+                        const adminSpecialId = await generateUserSpecialId('admin');
+                        const userSpecialId = await generateUserSpecialId('user');
                         
-                        // Get services to assign
-                        const serviceNames = ['Eye', 'Dental'];
-                        let processed = 0;
-                        const assignedServices = [];
+                        // Insert admin user
+                        db.run(`INSERT OR IGNORE INTO users (first_name , middle_name , last_name , username, password, role, special_id, services) VALUES (?,?,?,?, ?, ?, ?, ?)`, 
+                            ['Kofi' , 'Monique','owusu','admin', 'admin123', 'admin', adminSpecialId, '[]'], (err) => {
+                            if (err) {
+                                console.error('Error inserting admin user:', err);
+                            } else {
+                                console.log('Admin user inserted with ID:', adminSpecialId);
+                            }
+                        });
                         
-                        serviceNames.forEach(serviceName => {
-                            db.get("SELECT id FROM services WHERE service_name = ?", [serviceName], (err, serviceRow) => {
-                                if (err) {
-                                    console.error(`Error getting service ${serviceName}:`, err);
-                                    processed++;
-                                    return;
-                                }
+                        // Insert regular user
+                        db.run(`INSERT OR IGNORE INTO users ( first_name , middle_name , last_name , username, password, role, special_id, services) VALUES (?, ?,?,?,?, ?, ?, ?)`, 
+                            ['Mannuel' , 'entwi','prempreh','user', 'user123', 'user', userSpecialId, '[]'], (err) => {
+                            if (err) {
+                                console.error('Error inserting user:', err);
+                            } else {
+                                console.log('Regular user inserted with ID:', userSpecialId);
                                 
-                                if (serviceRow) {
-                                    assignedServices.push(serviceRow.id);
-                                    db.run(`INSERT OR IGNORE INTO user_services (user_id, service_id, assigned_by) VALUES (?, ?, ?)`,
-                                        [userRow.id, serviceRow.id, 'admin'], (err) => {
-                                        if (err) {
-                                            console.error(`Error assigning service ${serviceName}:`, err);
-                                        } else {
-                                            console.log(`Assigned service: ${serviceName} to user`);
-                                        }
-                                        processed++;
+                                // Get user ID for 'user' and assign services
+                                db.get("SELECT id FROM users WHERE username = 'user'", (err, userRow) => {
+                                    if (err) {
+                                        console.error('Error getting user:', err);
+                                        return;
+                                    }
+                                    
+                                    if (userRow) {
+                                        console.log('Found user ID:', userRow.id);
                                         
-                                        // Check if all assignments are done
-                                        if (processed === serviceNames.length) {
-                                            // Update the userServices JSON field with the assigned services
-                                            const servicesJson = JSON.stringify(assignedServices);
-                                            db.run(`UPDATE users SET services = ? WHERE id = ?`, 
-                                                [servicesJson, userRow.id], (err) => {
+                                        // Services to assign to regular user
+                                        const serviceNames = ['Eye', 'Dental'];
+                                        let processed = 0;
+                                        const assignedServices = [];
+                                        
+                                        serviceNames.forEach(serviceName => {
+                                            db.get("SELECT id FROM services WHERE service_name = ?", [serviceName], (err, serviceRow) => {
                                                 if (err) {
-                                                    console.error('Error updating userServices JSON:', err);
+                                                    console.error(`Error getting service ${serviceName}:`, err);
+                                                    processed++;
+                                                    return;
+                                                }
+                                                
+                                                if (serviceRow) {
+                                                    assignedServices.push(serviceRow.id);
+                                                    db.run(`INSERT OR IGNORE INTO user_services (user_id, service_id, assigned_by) VALUES (?, ?, ?)`,
+                                                        [userRow.id, serviceRow.id, 'admin'], (err) => {
+                                                        if (err) {
+                                                            console.error(`Error assigning service ${serviceName}:`, err);
+                                                        } else {
+                                                            console.log(`Assigned service: ${serviceName} to user`);
+                                                        }
+                                                        processed++;
+                                                        
+                                                        // Check if all assignments are done
+                                                        if (processed === serviceNames.length) {
+                                                            // Update the services JSON field
+                                                            const servicesJson = JSON.stringify(assignedServices);
+                                                            db.run(`UPDATE users SET services = ? WHERE id = ?`, 
+                                                                [servicesJson, userRow.id], (err) => {
+                                                                if (err) {
+                                                                    console.error('Error updating services JSON:', err);
+                                                                } else {
+                                                                    console.log('Updated services JSON field');
+                                                                }
+                                                            });
+                                                            
+                                                            // Show summary
+                                                            showDatabaseSummary();
+                                                        }
+                                                    });
                                                 } else {
-                                                    console.log('Updated userServices JSON field');
+                                                    console.log(`Service ${serviceName} not found`);
+                                                    processed++;
                                                 }
                                             });
-                                            
-                                            console.log('✅ Database initialized successfully with user-service assignments!');
-                                            
-                                            // Verify and show summary
-                                            db.get("SELECT COUNT(*) as count FROM users", (err, userCount) => {
-                                                db.get("SELECT COUNT(*) as count FROM services", (err, serviceCount) => {
-                                                    db.get("SELECT COUNT(*) as count FROM user_services", (err, userServiceCount) => {
-                                                        // Get user with their services JSON
-                                                        db.get("SELECT id, username, role, services FROM users WHERE username = 'user'", (err, userWithServices) => {
-                                                            console.log('\n=== Database Summary ===');
-                                                            console.log(`Users: ${userCount?.count || 0}`);
-                                                            console.log(`Services: ${serviceCount?.count || 0}`);
-                                                            console.log(`User-Service Assignments: ${userServiceCount?.count || 0}`);
-                                                            if (userWithServices) {
-                                                                console.log(`User '${userWithServices.username}' services: ${userWithServices.services}`);
-                                                            }
-                                                            console.log('========================\n');
-                                                            db.close();
-                                                        });
-                                                    });
-                                                });
-                                            });
-                                        }
-                                    });
-                                } else {
-                                    console.log(`Service ${serviceName} not found`);
-                                    processed++;
-                                }
-                            });
+                                        });
+                                    } else {
+                                        console.log('User not found, skipping service assignment');
+                                        showDatabaseSummary();
+                                    }
+                                });
+                            }
                         });
-                    } else {
-                        console.log('User not found, skipping service assignment');
-                        db.close();
+                    } catch (error) {
+                        console.error('Error generating special IDs:', error);
+                        showDatabaseSummary();
                     }
-                });
+                })();
             }
         });
     });
 });
+
+function showDatabaseSummary() {
+    setTimeout(() => {
+        db.get("SELECT COUNT(*) as count FROM users", (err, userCount) => {
+            db.get("SELECT COUNT(*) as count FROM services", (err, serviceCount) => {
+                db.get("SELECT COUNT(*) as count FROM user_services", (err, userServiceCount) => {
+                    // Get users with their special IDs
+                    db.all("SELECT id, username, role, special_id FROM users", (err, users) => {
+                        console.log('\n=== Database Summary ===');
+                        console.log(`Users: ${userCount?.count || 0}`);
+                        console.log(`Services: ${serviceCount?.count || 0}`);
+                        console.log(`User-Service Assignments: ${userServiceCount?.count || 0}`);
+                        console.log('\nUsers:');
+                        if (users) {
+                            users.forEach(user => {
+                                console.log(`  - ${user.username} (${user.role}): ${user.special_id || 'No ID'}`);
+                            });
+                        }
+                        console.log('========================\n');
+                        db.close();
+                    });
+                });
+            });
+        });
+    }, 500);
+}

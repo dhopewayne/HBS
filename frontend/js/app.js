@@ -15,7 +15,10 @@ let currentDateRange = {from: null,to: null};
 // Pagination state for Service Columns View
 let serviceColumnsCurrentPage = 1;
 let serviceColumnsPageSize = 100;
-let serviceColumnsFilteredData = []; // Store filtered data for pagination
+let serviceColumnsFilteredData = []; // Store filtered data for pagination  
+// Global variable to store current user being edited
+let currentEditingUser = null;
+let currentEditAction = null;
 
 
 let isPrinting = false;
@@ -111,9 +114,12 @@ function setupEventListeners() {
     if (serviceForm) serviceForm.addEventListener('submit', handleAddService);
     
     const userForm = document.getElementById('userForm');
-    if (userForm) userForm.addEventListener('submit', handleAddUser);   
+    if (userForm) userForm.addEventListener('submit', handleAddUser);    
 
-    setupFilterEventListeners(); 
+
+
+    setupFilterEventListeners();   
+    setupProfileEventListeners();
 }
 
 function setupSidebarToggle() {
@@ -143,13 +149,15 @@ function setupSidebarToggle() {
 }
 function switchSection(section) {
     const sectionMap = {
+        'account': 'accountSection'  ,
         'dashboard': 'dashboardSection',
         'invoices': 'invoicesSection',
         'accounts': 'accountsSection',
         'services': 'servicesSection',
         'user-services': 'userServicesSection',
         'users': 'usersSection',
-        'activity': 'activitySection'
+        'activity': 'activitySection' 
+        
     };
     
     const sectionId = sectionMap[section];
@@ -166,7 +174,8 @@ function switchSection(section) {
         services: 'Service Management',
         'user-services': 'User Service Assignments',
         users: 'User Management',
-        activity: 'Activity Log'
+        activity: 'Activity Log',
+        account: 'Account Profile'
     };
     
     const headerTitle = document.getElementById('currentSectionTitle');
@@ -195,9 +204,10 @@ function switchSection(section) {
     if (section === 'invoices')  {
         loadInvoices(); 
         toggleFilterCollapse(); // Ensure filter is collapsed when navigating to invoices
-
-
-    } ;
+    } ;   
+    if(section === 'account') {
+        loadAccountProfile();
+    }
 }
 
 function showModal(modalId) {
@@ -377,19 +387,36 @@ function handleLogin() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
-    if (username === 'admin' && password === 'admin123') {
-        currentUser = { username, role: 'admin' };
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        showDashboard();
-        logActivity('User logged in as ADMIN');
-    } else if (username === 'user' && password === 'user123') {
-        currentUser = { username, role: 'user' };
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        showDashboard();
-        logActivity('User logged in as REGULAR USER');
-    } else {
-        showMessageModal('Invalid credentials!', 'error');
-    }
+    if (!username || !password) {
+        showMessageModal('Please enter both username and password.', 'error');
+        return;
+
+    } 
+
+    fetch(`${API_BASE_URL}/user/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {  
+
+            console.log('Login successful, user data:', result);
+            currentUser = result.data;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            logActivity('User logged in');
+            showDashboard();
+
+        } else {
+            showMessageModal(result.message || 'Login failed. Please try again.', 'error');
+        }
+    })
+
+   
+
+
+
 }
 
 // Display services in read-only mode
@@ -875,7 +902,6 @@ function getFilteredInvoicesForServiceColumns() {
     return filtered;
 }
 
-
 async function loadInvoices() {
     try {
         const response = await fetch(`${API_BASE_URL}/invoices`, {
@@ -1044,7 +1070,6 @@ function renderInvoicesTable(invoices) {
     }
     if (footer) footer.style.display = 'table-footer-group';
 } 
-
 
 function setupFilterEventListeners() {
     const accountTypeFilter = document.getElementById('filterAccountType');
@@ -1438,7 +1463,8 @@ function clearFilters() {
 async function showDashboard() {
     updateCopyrightYear();
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboardScreen').style.display = 'block';
+    document.getElementById('dashboardScreen').style.display = 'block'; 
+    document.getElementById('topUserName').textContent = currentUser.username;
     
     // document.getElementById('sidebarUserName').textContent = currentUser.username;  
     // document.getElementById('topUserName').textContent = currentUser.username;
@@ -1690,15 +1716,16 @@ async function loadAccountsForSelect() {
     }
 }
 
-async function loadUsers() { 
 
-  
 
+async function loadUsers() {
     try {
         const response = await fetch(`${API_BASE_URL}/users`, {
             headers: { 'X-User-Role': currentUser.role, 'X-Username': currentUser.username }
         });
-        const result = await response.json();
+        const result = await response.json(); 
+
+        console.log('user results:',result);
         
         if (result.success) {
             const container = document.getElementById('usersList');
@@ -1706,8 +1733,28 @@ async function loadUsers() {
                 container.innerHTML = result.data.map(user => `
                     <div class="data-item">
                         <div class="data-info">
-                            <strong>${escapeHtml(user.username)}</strong>
-                            <small>Role: ${user.role}</small>
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 70%;">
+                                <div>
+                                    <small>Account username: ${escapeHtml(user.username)}</small>
+                                    <small style="margin-left: 8px;">Role: ${user.role}</small> 
+                                    <small>Date Added: ${user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</small> 
+                                    <small>assigned services: ${user.assigned_services_count}</small>
+                                    <small>account Number: ${user.special_id}</small>
+                                </div>
+                                <div style="display: flex; gap: 15px;">
+                                    <i class="fas fa-user-edit" onclick="editUser('${user.special_id}')" style="cursor:pointer; color: var(--blue-600); font-size: 16px;" title="Edit username"></i>
+                                    <i class="fas fa-key" onclick="changeUserPassword('${user.special_id}')" style="cursor:pointer; color: var(--blue-600); font-size: 16px;" title="change password"></i> 
+
+                                    ${currentUser.role === 'admin' && user.role !== 'admin' ? 
+                                   ` <i class="fas fa-ban" onclick="toggleUserBlock('${user.special_id}')" style="cursor:pointer; color: #f59e0b; font-size: 16px;" title="Block Account"></i>`: '' }
+
+                                   ${currentUser.role === 'admin' && user.role !== 'admin' ? 
+                                    `<i class="fas fa-pause-circle" onclick="suspendUser('${user.special_id}')" style="cursor:pointer; color: #f59e0b; font-size: 16px;" title="Suspend Account"></i>` : '' }
+
+                                    ${currentUser.role === 'admin' && user.role !== 'admin' ? 
+                                        `<i class="fas fa-trash-alt" onclick="deleteUser('${user.special_id}')" style="cursor:pointer; color:#ef4444; font-size: 16px;" title="Delete User"></i>` : ''}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -1715,10 +1762,740 @@ async function loadUsers() {
         }
     } catch (error) {
         console.error('Error loading users:', error);
+        showMessageModal('Error loading users', 'error');
+    }
+} 
+
+
+// Multifunctional User Edit Modal
+async function showUserEditModal(action, user) {
+    currentEditingUser = user;
+    currentEditAction = action;
+    
+    const modal = document.getElementById('userEditModal');
+    const title = document.getElementById('userEditModalTitle');
+    const content = document.getElementById('userEditContent');
+    const confirmBtn = document.getElementById('userEditConfirmBtn');
+    const cancelBtn = document.getElementById('userEditCancelBtn');
+    
+    // Set modal title and content based on action
+    switch(action) {
+        case 'editUsername':
+            title.innerHTML = '<i class="fas fa-user-edit"></i> Edit Username';
+            content.innerHTML = renderEditUsernameForm(user);
+            break;
+        case 'changePassword':
+            title.innerHTML = '<i class="fas fa-key"></i> Change Password';
+            content.innerHTML = renderChangePasswordForm(user);
+            // Add password strength checker
+            attachPasswordStrengthChecker();
+            break;
+        case 'block':
+            title.innerHTML = '<i class="fas fa-ban"></i> Block User';
+            content.innerHTML = renderBlockUserForm(user);
+            break;
+        case 'unblock':
+            title.innerHTML = '<i class="fas fa-check-circle"></i> Unblock User';
+            content.innerHTML = renderUnblockUserForm(user);
+            break;
+        case 'suspend':
+            title.innerHTML = '<i class="fas fa-pause-circle"></i> Suspend User';
+            content.innerHTML = renderSuspendUserForm(user);
+            break;
+        case 'delete':
+            title.innerHTML = '<i class="fas fa-trash-alt"></i> Delete User';
+            content.innerHTML = renderDeleteUserForm(user);
+            break;
+        default:
+            return;
+    }
+    
+    // Set up event listeners
+    confirmBtn.onclick = () => handleUserEditConfirm();
+    cancelBtn.onclick = () => closeModal('userEditModal');
+    
+    // Close button
+    const closeBtn = modal.querySelector('.close-modal');
+    closeBtn.onclick = () => closeModal('userEditModal');
+    
+    // Show modal
+    showModal('userEditModal');
+}
+
+// Render Edit Username Form
+function renderEditUsernameForm(user) {
+    return `
+        <div class="user-edit-form">
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i>
+                <strong>Editing username for: ${escapeHtml(user.username)}</strong>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> New Username</label>
+                <input type="text" id="newUsername" placeholder="Enter new username" 
+                       value="${escapeHtml(user.username)}" autocomplete="off">
+                <div class="hint">
+                    <i class="fas fa-lightbulb"></i> Username must be unique and at least 3 characters long
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Confirm Action</label>
+                <input type="password" id="confirmAction" placeholder="Enter your admin password to confirm">
+                <div class="hint">
+                    <i class="fas fa-shield-alt"></i> Admin password required for security
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Render Change Password Form
+function renderChangePasswordForm(user) {
+    return `
+        <div class="user-edit-form">
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i>
+                <strong>Changing password for: ${escapeHtml(user.username)}</strong>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" 
+                       onkeyup="checkPasswordStrength(this.value)">
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                </div>
+                <div class="hint">
+                    <i class="fas fa-lightbulb"></i> Password must be at least 6 characters
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-check-circle"></i> Confirm New Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+            </div>  
+            <div class="form-group">    
+                <label><i class="fas fa-info-circle"></i>Add password Hint</label> 
+                <input type="text" id="passwordHint" placeholder="add a password hint (optional)">            
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-shield-alt"></i> Admin Password</label>
+                <input type="password" id="adminPassword" placeholder="Enter your admin password to confirm">
+            </div>
+        </div>
+    `;
+}
+
+// Render Block User Form
+function renderBlockUserForm(user) {
+    return `
+        <div class="user-edit-form">
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Warning: You are about to block this user!</strong>
+            </div>
+            <div class="user-details">
+                <p><strong>Username:</strong> ${escapeHtml(user.username)}</p>
+                <p><strong>Role:</strong> ${user.role}</p>
+                <p><strong>User ID:</strong> ${user.special_id || 'N/A'}</p>
+                <p><strong>Current Status:</strong> <span class="badge" style="background: #f59e0b;">${user.status || 'active'}</span></p>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Reason (Optional)</label>
+                <textarea id="blockReason" rows="3" placeholder="Enter reason for blocking this user..."></textarea>
+                <div class="hint">
+                    <i class="fas fa-lightbulb"></i> This reason will be logged for audit purposes
+                </div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-shield-alt"></i> Confirm Block</label>
+                <input type="password" id="adminPassword" placeholder="Enter your admin password to confirm">
+                <div class="hint">
+                    <i class="fas fa-shield-alt"></i> Admin password required for security
+                </div>
+            </div>
+            <div class="danger-message">
+                <i class="fas fa-ban"></i>
+                <strong>Blocked users cannot:</strong>
+                <ul style="margin-top: 8px; margin-left: 20px;">
+                    <li>Login to the system</li>
+                    <li>Create or edit invoices</li>
+                    <li>Access any system features</li>
+                </ul>
+            </div>
+        </div>
+    `;
+}
+
+// Render Unblock User Form
+function renderUnblockUserForm(user) {
+    return `
+        <div class="user-edit-form">
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i>
+                <strong>You are about to unblock ${escapeHtml(user.username)}</strong>
+            </div>
+            <div class="user-details">
+                <p><strong>Username:</strong> ${escapeHtml(user.username)}</p>
+                <p><strong>Role:</strong> ${user.role}</p>
+                <p><strong>User ID:</strong> ${user.special_id || 'N/A'}</p>
+                <p><strong>Current Status:</strong> <span class="badge" style="background: #ef4444;">${user.status || 'blocked'}</span></p>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-shield-alt"></i> Confirm Unblock</label>
+                <input type="password" id="adminPassword" placeholder="Enter your admin password to confirm">
+            </div>
+        </div>
+    `;
+}
+
+// Render Suspend User Form
+function renderSuspendUserForm(user) {
+    return `
+        <div class="user-edit-form">
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Warning: You are about to suspend this user!</strong>
+            </div>
+            <div class="user-details">
+                <p><strong>Username:</strong> ${escapeHtml(user.username)}</p>
+                <p><strong>Role:</strong> ${user.role}</p>
+                <p><strong>User ID:</strong> ${user.special_id || 'N/A'}</p>
+                <p><strong>Current Status:</strong> <span class="badge" style="background: #f59e0b;">${user.status || 'active'}</span></p>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-calendar"></i> Suspension Duration</label>
+                <select id="suspensionDays">
+                    <option value="1">1 day</option>
+                    <option value="3">3 days</option>
+                    <option value="7" selected>7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30">30 days</option>
+                    <option value="90">90 days</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Reason (Optional)</label>
+                <textarea id="suspendReason" rows="3" placeholder="Enter reason for suspending this user..."></textarea>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-shield-alt"></i> Confirm Suspension</label>
+                <input type="password" id="adminPassword" placeholder="Enter your admin password to confirm">
+            </div>
+            <div class="danger-message">
+                <i class="fas fa-pause-circle"></i>
+                <strong>Suspended users cannot access the system until the suspension period ends.</strong>
+            </div>
+        </div>
+    `;
+}
+
+// Render Delete User Form
+function renderDeleteUserForm(user) {
+    return `
+        <div class="user-edit-form">
+            <div class="danger-message">
+                <i class="fas fa-skull-crosswalk"></i>
+                <strong>DANGER: You are about to permanently delete this user!</strong>
+                <p style="margin-top: 10px;">This action <strong>CANNOT</strong> be undone!</p>
+            </div>
+            <div class="user-details">
+                <p><strong>Username:</strong> ${escapeHtml(user.username)}</p>
+                <p><strong>Role:</strong> ${user.role}</p>
+                <p><strong>User ID:</strong> ${user.special_id || 'N/A'}</p>
+                <p><strong>Created:</strong> ${user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
+                <p><strong>Assigned Services:</strong> ${user.assigned_services_count || 0}</p>
+                <p><strong>Invoices Created:</strong> ${user.invoices_count || 0}</p>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-exclamation-triangle"></i> Type "DELETE" to confirm</label>
+                <input type="text" id="deleteConfirmText" placeholder="Type DELETE here">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-shield-alt"></i> Admin Password</label>
+                <input type="password" id="adminPassword" placeholder="Enter your admin password to confirm">
+            </div>
+        </div>
+    `;
+}
+
+// Handle User Edit Confirm
+async function handleUserEditConfirm() {
+    switch(currentEditAction) {
+        case 'editUsername':
+            await confirmEditUsername();
+            break;
+        case 'changePassword':
+            await confirmChangePassword();
+            break;
+        case 'block':
+            await confirmBlockUser();
+            break;
+        case 'unblock':
+            await confirmUnblockUser();
+            break;
+        case 'suspend':
+            await confirmSuspendUser();
+            break;
+        case 'delete':
+            await confirmDeleteUser();
+            break;
     }
 }
 
-// New function: Load services for filter dropdown
+// Confirm Edit Username
+async function confirmEditUsername() {
+    const newUsername = document.getElementById('newUsername')?.value.trim();
+    const adminPassword = document.getElementById('confirmAction')?.value;
+    
+    if (!newUsername) {
+        showMessageModal('Please enter a new username', 'warning');
+        return;
+    }
+    
+    if (newUsername.length < 3) {
+        showMessageModal('Username must be at least 3 characters', 'warning');
+        return;
+    }
+    
+    if (!adminPassword) {
+        showMessageModal('Please enter admin password to confirm', 'warning');
+        return;
+    }
+    
+    // Verify admin password (simple check - in production, verify against actual admin password)
+    if (adminPassword !== 'admin123') {
+        showMessageModal('Invalid admin password', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/change-username/${currentEditingUser.special_id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                newUsername, 
+                changedBy: currentUser.username 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Username changed successfully!', 'success');
+            closeModal('userEditModal');
+            loadUsers();
+            logActivity(`Changed username for user ${currentEditingUser.special_id} to ${newUsername}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error changing username:', error);
+        showMessageModal('Error changing username', 'error');
+    }
+}
+
+// Confirm Change Password
+async function confirmChangePassword() {
+    const oldPassword = document.getElementById('oldPassword')?.value;
+    const newPassword = document.getElementById('newPassword')?.value;
+    const confirmPassword = document.getElementById('confirmPassword')?.value;
+    const adminPassword = document.getElementById('adminPassword')?.value;
+    
+    if (!oldPassword) {
+        showMessageModal('Please enter the current password', 'warning');
+        return;
+    }
+    
+    if (!newPassword) {
+        showMessageModal('Please enter a new password', 'warning');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showMessageModal('New password must be at least 6 characters', 'warning');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showMessageModal('New passwords do not match', 'warning');
+        return;
+    }
+    
+    if (!adminPassword) {
+        showMessageModal('Please enter admin password to confirm', 'warning');
+        return;
+    }
+    
+    // Verify admin password
+    if (adminPassword !== 'admin123') {
+        showMessageModal('Invalid admin password', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/change-password/${currentEditingUser.special_id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                oldPassword,
+                newPassword, 
+                changedBy: currentUser.username 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Password changed successfully!', 'success');
+            closeModal('userEditModal');
+            logActivity(`Changed password for user ${currentEditingUser.special_id}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error changing password:', error);
+        showMessageModal('Error changing password', 'error');
+    }
+}
+
+// Confirm Block User
+async function confirmBlockUser() {
+    const adminPassword = document.getElementById('adminPassword')?.value;
+    const reason = document.getElementById('blockReason')?.value || 'No reason provided';
+    
+    if (!adminPassword) {
+        showMessageModal('Please enter admin password to confirm', 'warning');
+        return;
+    }
+    
+    if (adminPassword !== 'admin123') {
+        showMessageModal('Invalid admin password', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/block/${currentEditingUser.special_id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                reason,
+                blockedBy: currentUser.username 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('User blocked successfully!', 'success');
+            closeModal('userEditModal');
+            loadUsers();
+            logActivity(`Blocked user ${currentEditingUser.special_id}. Reason: ${reason}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error blocking user:', error);
+        showMessageModal('Error blocking user', 'error');
+    }
+}
+
+// Confirm Unblock User
+async function confirmUnblockUser() {
+    const adminPassword = document.getElementById('adminPassword')?.value;
+    
+    if (!adminPassword) {
+        showMessageModal('Please enter admin password to confirm', 'warning');
+        return;
+    }
+    
+    if (adminPassword !== 'admin123') {
+        showMessageModal('Invalid admin password', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/unblock/${currentEditingUser.special_id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                unblockedBy: currentUser.username 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('User unblocked successfully!', 'success');
+            closeModal('userEditModal');
+            loadUsers();
+            logActivity(`Unblocked user ${currentEditingUser.special_id}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error unblocking user:', error);
+        showMessageModal('Error unblocking user', 'error');
+    }
+}
+
+// Confirm Suspend User
+async function confirmSuspendUser() {
+    const adminPassword = document.getElementById('adminPassword')?.value;
+    const suspensionDays = document.getElementById('suspensionDays')?.value;
+    const reason = document.getElementById('suspendReason')?.value || 'No reason provided';
+    
+    if (!adminPassword) {
+        showMessageModal('Please enter admin password to confirm', 'warning');
+        return;
+    }
+    
+    if (adminPassword !== 'admin123') {
+        showMessageModal('Invalid admin password', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/suspend/${currentEditingUser.special_id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                days: parseInt(suspensionDays),
+                reason,
+                suspendedBy: currentUser.username 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal(`User suspended for ${suspensionDays} days!`, 'success');
+            closeModal('userEditModal');
+            loadUsers();
+            logActivity(`Suspended user ${currentEditingUser.special_id} for ${suspensionDays} days. Reason: ${reason}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error suspending user:', error);
+        showMessageModal('Error suspending user', 'error');
+    }
+}
+
+// Confirm Delete User
+async function confirmDeleteUser() {
+    const confirmText = document.getElementById('deleteConfirmText')?.value;
+    const adminPassword = document.getElementById('adminPassword')?.value;
+    
+    if (confirmText !== 'DELETE') {
+        showMessageModal('Please type "DELETE" to confirm user deletion', 'warning');
+        return;
+    }
+    
+    if (!adminPassword) {
+        showMessageModal('Please enter admin password to confirm', 'warning');
+        return;
+    }
+    
+    if (adminPassword !== 'admin123') {
+        showMessageModal('Invalid admin password', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/delete/${currentEditingUser.special_id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                deletedBy: currentUser.username 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('User deleted successfully!', 'success');
+            closeModal('userEditModal');
+            loadUsers();
+            logActivity(`Deleted user ${currentEditingUser.special_id}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showMessageModal('Error deleting user', 'error');
+    }
+}
+
+// Password Strength Checker
+function checkPasswordStrength(password) {
+    const bar = document.getElementById('passwordStrengthBar');
+    if (!bar) return;
+    
+    let strength = 0;
+    
+    if (password.length >= 6) strength++;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    bar.className = 'password-strength-bar';
+    
+    if (strength <= 2) {
+        bar.classList.add('weak');
+    } else if (strength <= 4) {
+        bar.classList.add('medium');
+    } else {
+        bar.classList.add('strong');
+    }
+}
+
+function attachPasswordStrengthChecker() {
+    const passwordInput = document.getElementById('newPassword');
+    if (passwordInput) {
+        passwordInput.addEventListener('keyup', (e) => {
+            checkPasswordStrength(e.target.value);
+        });
+    }
+}
+
+// Update your existing editUser function
+async function editUser(specialId) {
+    try {
+        // Fetch full user details first
+        const response = await fetch(`${API_BASE_URL}/users/status/${specialId}`, {
+            headers: {
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            await showUserEditModal('editUsername', result.data);
+        } else {
+            showMessageModal('Error loading user details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading user:', error);
+        showMessageModal('Error loading user details', 'error');
+    }
+}
+
+// Update changeUserPassword function
+async function changeUserPassword(specialId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/status/${specialId}`, {
+            headers: {
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            await showUserEditModal('changePassword', result.data);
+        } else {
+            showMessageModal('Error loading user details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading user:', error);
+        showMessageModal('Error loading user details', 'error');
+    }
+}
+
+// Update toggleUserBlock function
+async function toggleUserBlock(specialId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/status/${specialId}`, {
+            headers: {
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            const action = result.data.status === 'blocked' ? 'unblock' : 'block';
+            await showUserEditModal(action, result.data);
+        } else {
+            showMessageModal('Error loading user details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading user:', error);
+        showMessageModal('Error loading user details', 'error');
+    }
+}
+
+// Update suspendUser function
+async function suspendUser(specialId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/status/${specialId}`, {
+            headers: {
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            await showUserEditModal('suspend', result.data);
+        } else {
+            showMessageModal('Error loading user details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading user:', error);
+        showMessageModal('Error loading user details', 'error');
+    }
+}
+
+// Update deleteUser function
+async function deleteUser(specialId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/status/${specialId}`, {
+            headers: {
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            }
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            await showUserEditModal('delete', result.data);
+        } else {
+            showMessageModal('Error loading user details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading user:', error);
+        showMessageModal('Error loading user details', 'error');
+    }
+}
+
+
 async function loadServicesForFilter() { 
 
 
@@ -1752,8 +2529,6 @@ async function updateTotalCount(total) {
         totalCountSpan.textContent = `$${total}`;
     }
 }  
-
-
 
 async function loadSummary() {
     try {
@@ -1965,7 +2740,628 @@ async function handleAddUser(e) {
         console.error('Error adding user:', error);
         showMessageModal('Error adding user', 'error');
     }
+}   
+
+
+
+// Update loadAccountProfile function to include avatar
+async function loadAccountProfile() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/current`, {
+            headers: { 
+                'X-User-Role': currentUser.role, 
+                'X-Username': currentUser.username 
+            }
+        });    
+
+        const result = await response.json();  
+        
+        if (result.success) {
+            const user = result.data;
+            
+            document.getElementById('profileUsername').textContent = user.username;
+            document.getElementById('profileAccountNumber').textContent = user.special_id || 'N/A';
+            document.getElementById('profileRole').textContent = user.role.toUpperCase();
+            
+            const roleBadge = document.getElementById('profileRole');
+            roleBadge.className = `role-badge ${user.role}`;
+            
+            const statusBadge = document.getElementById('profileStatus');
+            if (user.status === 'suspended') {
+                statusBadge.textContent = 'Suspended';
+                statusBadge.className = 'status-badge suspended';
+            } else if (user.status === 'blocked') {
+                statusBadge.textContent = 'Blocked';
+                statusBadge.className = 'status-badge blocked';
+            } else {
+                statusBadge.textContent = 'Active';
+                statusBadge.className = 'status-badge';
+            }
+            
+            if (user.created_at) {
+                document.getElementById('profileMemberSince').textContent = new Date(user.created_at).toLocaleDateString();
+            }
+            
+            document.getElementById('profileLastLogin').textContent = user.last_login ? new Date(user.last_login).toLocaleString() : 'First login';
+            
+            // Update avatar with user initials
+            updateProfileAvatar(user.username);
+            
+            await loadProfileServices();
+            await loadProfileRecentActivity();
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
 }
+
+// Add this new function to update profile avatar
+function updateProfileAvatar(username) {
+    const profileAvatar = document.getElementById('profileAvatar');
+    if (!profileAvatar) return;
+    
+    // Get user initials
+    const initials = username.split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    
+    // Generate a random but consistent color based on username
+    const colors = [
+        '#10b981', '#3b82f6', '#ef4444', '#f59e0b', 
+        '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'
+    ];
+    const colorIndex = username.length % colors.length;
+    const backgroundColor = colors[colorIndex];
+    
+    // Clear the avatar div and create letter avatar
+    profileAvatar.innerHTML = `
+        <div style="
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: ${backgroundColor};
+            border-radius: 50%;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        ">
+            ${initials || 'U'}
+        </div>
+    `;
+    
+    console.log('Profile avatar updated with initials:', initials);
+}
+
+// Also update the top header avatar (optional)
+function updateTopHeaderAvatar(username) {
+    const userAvatarSmall = document.getElementById('userAvatarSmall');
+    if (!userAvatarSmall) return;
+    
+    const initials = username.split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    
+    const colors = ['#10b981', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const colorIndex = username.length % colors.length;
+    
+    userAvatarSmall.innerHTML = `
+        <div style="
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: ${colors[colorIndex]};
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        ">
+            ${initials || 'U'}
+        </div>
+    `;
+}
+
+// Update showDashboard to also update top header avatar
+async function showDashboard() {
+    updateCopyrightYear();
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboardScreen').style.display = 'block';
+    
+    // Update top header username and avatar
+    document.getElementById('topUserName').textContent = currentUser.username;
+    updateTopHeaderAvatar(currentUser.username);
+    
+    const adminOnlyItems = document.querySelectorAll('.admin-only');
+    if (currentUser.role === 'admin') {
+        adminOnlyItems.forEach(item => item.style.display = 'flex'); 
+        await loadUserAssignedServices();
+        await loadInvoices();
+        await loadActivityLog();
+        await loadSummary();
+        await loadAccountsForSelect();
+    } else {
+        adminOnlyItems.forEach(item => item.style.display = 'none'); 
+        await loadUserAssignedServices();
+        await loadInvoices();
+        await loadActivityLog();
+        await loadSummary(); 
+        await loadAccountsForSelect();
+    }
+    
+    switchSection('dashboard');
+}
+
+
+// Load assigned services for profile
+async function loadProfileServices() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/my-services`, {
+            headers: { 
+                'X-User-Role': currentUser.role, 
+                'X-Username': currentUser.username 
+            }
+        });
+        const result = await response.json();
+        
+        const servicesContainer = document.getElementById('profileServices');
+        if (result.success && result.data && result.data.length > 0) {
+            servicesContainer.innerHTML = result.data.map(s => `
+                <span class="service-tag">
+                    <i class="fas fa-stethoscope"></i> ${escapeHtml(s.service_name)}
+                </span>
+            `).join('');
+        } else {
+            servicesContainer.innerHTML = '<span class="empty-text">No services assigned</span>';
+        }
+    } catch (error) {
+        console.error('Error loading profile services:', error);
+    }
+}
+
+// Update username from profile
+async function handleUpdateUsername(e) {
+    e.preventDefault();
+    
+    const newUsername = document.getElementById('newUsernameProfile').value.trim();
+    const confirmPassword = document.getElementById('usernameConfirmPassword').value;
+    
+    if (!newUsername) {
+        showMessageModal('Please enter a new username', 'warning');
+        return;
+    }
+    
+    if (newUsername.length < 3) {
+        showMessageModal('Username must be at least 3 characters', 'warning');
+        return;
+    }
+    
+    if (!confirmPassword) {
+        showMessageModal('Please enter your password to confirm', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/update-profile-username`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                newUsername, 
+                password: confirmPassword 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Username updated successfully! Please login again.', 'success');
+            
+            // Update current user in localStorage
+            currentUser.username = newUsername;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Clear form
+            document.getElementById('newUsernameProfile').value = '';
+            document.getElementById('usernameConfirmPassword').value = '';
+            
+            // Reload profile
+            setTimeout(() => {
+                loadAccountProfile();
+            }, 1000);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating username:', error);
+        showMessageModal('Error updating username', 'error');
+    }
+}
+
+// Password strength checker for profile
+function checkProfilePasswordStrength(password) {
+    const bar = document.getElementById('profilePasswordStrengthBar');
+    if (!bar) return;
+    
+    let strength = 0;
+    
+    if (password.length >= 6) strength++;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    bar.className = 'password-strength-bar';
+    
+    if (strength <= 2) {
+        bar.classList.add('weak');
+    } else if (strength <= 4) {
+        bar.classList.add('medium');
+    } else {
+        bar.classList.add('strong');
+    }
+}
+
+// Update password from profile
+async function handleUpdatePassword(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPasswordProfile').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+    const passwordHint = document.getElementById('passwordHintProfile').value;
+    
+    if (!currentPassword) {
+        showMessageModal('Please enter your current password', 'warning');
+        return;
+    }
+    
+    if (!newPassword) {
+        showMessageModal('Please enter a new password', 'warning');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showMessageModal('New password must be at least 6 characters', 'warning');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showMessageModal('New passwords do not match', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/update-profile-password`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ 
+                currentPassword, 
+                newPassword, 
+                passwordHint 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Password changed successfully!', 'success');
+            
+            // Clear form
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPasswordProfile').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+            document.getElementById('passwordHintProfile').value = '';
+            document.getElementById('profilePasswordStrengthBar').className = 'password-strength-bar';
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating password:', error);
+        showMessageModal('Error updating password', 'error');
+    }
+}
+
+// Add event listeners for profile forms
+function setupProfileEventListeners() {
+    const updateUsernameForm = document.getElementById('updateUsernameForm');
+    if (updateUsernameForm) {
+        updateUsernameForm.addEventListener('submit', handleUpdateUsername);
+    }
+    
+    const updatePasswordForm = document.getElementById('updatePasswordForm');
+    if (updatePasswordForm) {
+        updatePasswordForm.addEventListener('submit', handleUpdatePassword);
+    }  
+
+        // Change username form handler
+    const changeUsernameForm = document.getElementById('changeUsernameForm');
+    if (changeUsernameForm) {
+        changeUsernameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleModalUpdateUsername();
+        });
+    }
+    
+    // Change password form handler
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleModalUpdatePassword();
+        });
+    }
+}
+ 
+
+// Open profile modal based on action
+function openProfileModal(action) {
+    switch(action) {
+        case 'username':
+            document.getElementById('currentUsernameModal').value = currentUser.username;
+            document.getElementById('newUsernameModal').value = '';
+            document.getElementById('usernamePasswordConfirm').value = '';
+            showModal('usernameModal');
+            break;
+        case 'password':
+            document.getElementById('currentPasswordModal').value = '';
+            document.getElementById('newPasswordModal').value = '';
+            document.getElementById('confirmPasswordModal').value = '';
+            document.getElementById('passwordHintModal').value = '';
+            document.getElementById('modalPasswordStrengthBar').className = 'password-strength-bar';
+            showModal('passwordModal');
+            break;
+        case 'security':
+            loadSecuritySettings();
+            showModal('securityModal');
+            break;
+    }
+}
+
+// Load security settings from localStorage
+function loadSecuritySettings() {
+    const loginNotifications = localStorage.getItem('loginNotifications') === 'true';
+    const sessionTimeout = localStorage.getItem('sessionTimeout') || '30';
+    
+    document.getElementById('loginNotifications').checked = loginNotifications;
+    document.getElementById('sessionTimeout').value = sessionTimeout;
+}
+
+// Save security settings
+function saveSecuritySettings() {
+    const loginNotifications = document.getElementById('loginNotifications').checked;
+    const sessionTimeout = document.getElementById('sessionTimeout').value;
+    
+    localStorage.setItem('loginNotifications', loginNotifications);
+    localStorage.setItem('sessionTimeout', sessionTimeout);
+    
+    showMessageModal('Security settings saved successfully!', 'success');
+    closeModal('securityModal');
+}
+
+// Setup 2FA (placeholder)
+function setup2FA() {
+    showMessageModal('Two-factor authentication setup will be available soon.', 'info');
+}
+
+// Copy to clipboard
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        showMessageModal('Copied to clipboard!', 'success');
+    }).catch(() => {
+        showMessageModal('Failed to copy', 'error');
+    });
+}
+
+// Check password strength for modal
+function checkModalPasswordStrength(password) {
+    const bar = document.getElementById('modalPasswordStrengthBar');
+    if (!bar) return;
+    
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    bar.className = 'password-strength-bar';
+    if (strength <= 2) bar.classList.add('weak');
+    else if (strength <= 4) bar.classList.add('medium');
+    else bar.classList.add('strong');
+}
+
+// Load recent activity for profile
+async function loadProfileRecentActivity() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/activity-log`, {
+            headers: { 'X-User-Role': currentUser.role, 'X-Username': currentUser.username }
+        });
+        const result = await response.json();
+        
+        const container = document.getElementById('profileRecentActivity');
+        if (result.success && result.data && result.data.length > 0) {
+            let activities = result.data;
+            if (Array.isArray(activities) && activities.length === 1 && Array.isArray(activities[0])) {
+                activities = activities[0];
+            }
+            
+            container.innerHTML = activities.slice(0, 5).map(log => `
+                <div class="activity-item">
+                    <i class="fas fa-circle"></i>
+                    <div class="activity-content">
+                        <p class="activity-action">${escapeHtml(log.action || 'No action')}</p>
+                        <small class="activity-time">${new Date(log.timestamp).toLocaleString()}</small>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<div class="empty-state">No recent activity</div>';
+        }
+    } catch (error) {
+        console.error('Error loading profile activity:', error);
+    }
+}
+
+
+// Add form submit handlers
+document.addEventListener('DOMContentLoaded', () => {
+    // Change username form handler
+    const changeUsernameForm = document.getElementById('changeUsernameForm');
+    if (changeUsernameForm) {
+        changeUsernameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleModalUpdateUsername();
+        });
+    }
+    
+    // Change password form handler
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleModalUpdatePassword();
+        });
+    }
+});
+
+// Handle username update from modal
+async function handleModalUpdateUsername() {
+    const newUsername = document.getElementById('newUsernameModal').value.trim();
+    const password = document.getElementById('usernamePasswordConfirm').value;
+    
+    if (!newUsername) {
+        showMessageModal('Please enter a new username', 'warning');
+        return;
+    }
+    
+    if (newUsername.length < 3) {
+        showMessageModal('Username must be at least 3 characters', 'warning');
+        return;
+    }
+    
+    if (!password) {
+        showMessageModal('Please enter your password to confirm', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/update-profile-username`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ newUsername, password })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Username updated successfully! Please login again.', 'success');
+            currentUser.username = newUsername;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            closeModal('usernameModal');
+            setTimeout(() => {
+                loadAccountProfile();
+            }, 1000);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating username:', error);
+        showMessageModal('Error updating username', 'error');
+    }
+}
+
+// Handle password update from modal
+async function handleModalUpdatePassword() {
+    const currentPassword = document.getElementById('currentPasswordModal').value;
+    const newPassword = document.getElementById('newPasswordModal').value;
+    const confirmPassword = document.getElementById('confirmPasswordModal').value;
+    const passwordHint = document.getElementById('passwordHintModal').value;
+    
+    if (!currentPassword) {
+        showMessageModal('Please enter your current password', 'warning');
+        return;
+    }
+    
+    if (!newPassword) {
+        showMessageModal('Please enter a new password', 'warning');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showMessageModal('New password must be at least 6 characters', 'warning');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showMessageModal('New passwords do not match', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/update-profile-password`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Role': currentUser.role,
+                'X-Username': currentUser.username
+            },
+            body: JSON.stringify({ currentPassword, newPassword, passwordHint })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Password changed successfully!', 'success');
+            closeModal('passwordModal');
+            document.getElementById('changePasswordForm').reset();
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating password:', error);
+        showMessageModal('Error updating password', 'error');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Load accounts for edit select (keep this function)
 async function loadAccountsForEditSelect(selectedAccountId) {
@@ -2203,9 +3599,6 @@ function updateEditSubtotal() {
     }
 }
 
-
-
-
 // Update loadInvoiceForEdit to use the editable display
 async function loadInvoiceForEdit(invoiceId) {
     try {
@@ -2242,7 +3635,6 @@ async function loadInvoiceForEdit(invoiceId) {
         showMessageModal('Error loading invoice details', 'error');
     }
 }
-
 
 // Update handleEditInvoice to collect edited services
 async function handleEditInvoice(e) {
@@ -2747,7 +4139,7 @@ function exportToExcel() {
     const uniqueServices = buildPrintServicesList(filteredInvoices);
     
     // Prepare CSV data
-    const headers = ['Date & Time', 'Patient Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount (Gh₵)'];
+    const headers = ['Date & Time', 'Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount (Gh₵)'];
     
     const rows = filteredInvoices.map(invoice => {
         // Create service map for this invoice
@@ -3233,4 +4625,68 @@ window.deleteAccount = deleteAccount;
 window.deleteService = deleteService;
 window.assignServiceToUser = assignServiceToUser;
 window.removeUserService = removeUserService;
-window.loadUserServices = loadUserServices;
+window.loadUserServices = loadUserServices; 
+// Make functions globally available
+window.editUser = editUser;
+window.changeUserPassword = changeUserPassword;
+window.toggleUserBlock = toggleUserBlock;
+window.suspendUser = suspendUser;
+window.deleteUser = deleteUser;
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+// update edit 
+
