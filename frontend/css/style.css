@@ -2590,7 +2590,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .profile-avatar {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+    background: linear-gradient(135deg, var(--gray-border), var(--gray-border));
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -2846,6 +2846,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     display: flex;
     flex-direction: column;
     gap: 16px;
+} 
+
+.btn-text{
+    padding: 12px 24px;
+    background: var(--blue-400);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
 .detail-row {
@@ -3398,4 +3409,710 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .service-checkbox {
     transition: opacity 0.2s ease;
+} 
+
+.passComfirmMessage {
+    font-size: 11px;
+    margin-top: 5px;
+    display: block;
 }
+
+.passMatch {
+    color: #10b981;
+}
+
+.passDontMatch {
+    color: #ef4444;
+}
+
+
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ====================== users card display css ==================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+
+
+/* User List - Stylish Rows View */
+#usersList {
+    width: 100%;
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-border);
+}
+
+/* User Row Item */
+.user-row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f2f5;
+    transition: all 0.3s ease;
+    background: var(--white);
+}
+
+.user-row-item:last-child {
+    border-bottom: none;
+}
+
+.user-row-item:hover {
+    background: linear-gradient(90deg, #f8fafc, #ffffff);
+    transform: translateX(4px);
+}
+
+/* User Info Section */
+.user-info-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 2;
+}
+
+.user-avatar-small {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    transition: all 0.3s ease;
+}
+
+.user-row-item:hover .user-avatar-small {
+    transform: scale(1.05);
+    border-radius: 16px;
+}
+
+.user-initials-row {
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+.user-details-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name-row {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--black);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.user-account-row {
+    font-size: 11px;
+    color: var(--gray-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.user-account-row i {
+    font-size: 11px;
+    color: var(--blue-600);
+}
+
+/* Stats Section */
+.user-stats-section {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex: 1;
+}
+
+.stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: #f8fafc;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.stat-chip i {
+    font-size: 12px;
+    color: var(--blue-600);
+}
+
+.stat-chip span {
+    color: var(--gray-text);
+}
+
+.stat-chip strong {
+    color: var(--black);
+    margin-left: 4px;
+}
+
+/* Badges Section */
+.user-badges-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+/* Role Badge */
+.role-badge-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.role-badge-row i {
+    font-size: 11px;
+}
+
+.role-badge-row.admin {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.role-badge-row.master {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+.role-badge-row.user-admin {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.role-badge-row.user {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Status Badge */
+.status-badge-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-badge-row i {
+    font-size: 10px;
+}
+
+.status-badge-row.active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge-row.suspended {
+    background: #fed7aa;
+    color: #92400e;
+}
+
+.status-badge-row.blocked {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Actions Section */
+.user-actions-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-btn-row {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    position: relative;
+}
+
+.action-btn-row::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    margin-bottom: 6px;
+    z-index: 10;
+}
+
+.action-btn-row:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.action-btn-row.edit {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.action-btn-row.edit:hover {
+    background: #3b82f6;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn-row.password {
+    background: #f3e8ff;
+    color: #8b5cf6;
+}
+
+.action-btn-row.password:hover {
+    background: #8b5cf6;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn-row.block {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.action-btn-row.block:hover {
+    background: #f59e0b;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn-row.unblock {
+    background: #d1fae5;
+    color: #10b981;
+}
+
+.action-btn-row.unblock:hover {
+    background: #10b981;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn-row.suspend {
+    background: #ffedd5;
+    color: #f97316;
+}
+
+.action-btn-row.suspend:hover {
+    background: #f97316;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn-row.unsuspend {
+    background: #cffafe;
+    color: #06b6d4;
+}
+
+.action-btn-row.unsuspend:hover {
+    background: #06b6d4;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn-row.delete {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.action-btn-row.delete:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Table Header */
+.users-table-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--gray-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.header-user {
+    flex: 2;
+    padding-left: 60px;
+}
+
+.header-stats {
+    flex: 1;
+}
+
+.header-badges {
+    flex: 1;
+}
+
+.header-actions {
+    width: 180px;
+    text-align: center;
+}
+
+/* Readonly Badge */
+.readonly-badge-row {
+    padding: 5px 12px;
+    background: #f1f5f9;
+    border-radius: 20px;
+    font-size: 11px;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Large screens - Desktop */
+@media (min-width: 1200px) {
+    .user-stats-section {
+        display: flex;
+    }
+    
+    .user-badges-section {
+        display: flex;
+    }
+}
+
+/* Medium screens - Tablet Landscape */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .user-stats-section {
+        gap: 12px;
+    }
+    
+    .stat-chip {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .user-badges-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}
+
+/* Small screens - Tablet Portrait */
+@media (min-width: 768px) and (max-width: 991px) {
+    .users-table-header {
+        display: none;
+    }
+    
+    .user-row-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 16px;
+    }
+    
+    .user-info-section {
+        flex: auto;
+    }
+    
+    .user-stats-section {
+        flex: auto;
+        justify-content: space-around;
+        padding: 8px 0;
+        border-top: 1px solid #f0f2f5;
+        border-bottom: 1px solid #f0f2f5;
+    }
+    
+    .user-badges-section {
+        flex: auto;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+    
+    .user-actions-section {
+        flex: auto;
+        justify-content: center;
+        padding-top: 4px;
+    }
+}
+
+/* Mobile screens */
+@media (max-width: 767px) {
+    #usersList {
+        border-radius: 16px;
+    }
+    
+    .users-table-header {
+        display: none;
+    }
+    
+    .user-row-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px;
+        margin-bottom: 0;
+    }
+    
+    .user-info-section {
+        flex: auto;
+        gap: 12px;
+    }
+    
+    .user-avatar-small {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .user-initials-row {
+        font-size: 20px;
+    }
+    
+    .user-name-row {
+        font-size: 14px;
+    }
+    
+    .user-stats-section {
+        flex: auto;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 0;
+        border-top: 1px solid #f0f2f5;
+        border-bottom: 1px solid #f0f2f5;
+    }
+    
+    .stat-chip {
+        flex: 1;
+        justify-content: center;
+        min-width: 80px;
+    }
+    
+    .user-badges-section {
+        flex: auto;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .role-badge-row,
+    .status-badge-row {
+        flex: 1;
+        justify-content: center;
+        min-width: 100px;
+    }
+    
+    .user-actions-section {
+        flex: auto;
+        justify-content: center;
+        gap: 10px;
+        padding-top: 8px;
+    }
+    
+    .action-btn-row {
+        width: 38px;
+        height: 38px;
+        font-size: 15px;
+    }
+}
+
+/* Extra small mobile screens */
+@media (max-width: 480px) {
+    .user-row-item {
+        padding: 12px;
+    }
+    
+    .user-info-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .user-details-row {
+        align-items: center;
+    }
+    
+    .user-name-row {
+        justify-content: center;
+    }
+    
+    .stat-chip {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    
+    .role-badge-row,
+    .status-badge-row {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
+    
+    .action-btn-row {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+    }
+}
+
+/* Animation for rows */
+.user-row-item {
+    animation: slideIn 0.3s ease backwards;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.user-row-item:nth-child(1) { animation-delay: 0.02s; }
+.user-row-item:nth-child(2) { animation-delay: 0.04s; }
+.user-row-item:nth-child(3) { animation-delay: 0.06s; }
+.user-row-item:nth-child(4) { animation-delay: 0.08s; }
+.user-row-item:nth-child(5) { animation-delay: 0.10s; }
+
+/* Scrollbar for users list if needed */
+#usersList {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#usersList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#usersList::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+#usersList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#usersList::-webkit-scrollbar-thumb:hover {
+    background: var(--blue-600);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */  
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ===================== END OF USER DISPLAY STYLES ================================= */
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */ 
+/* ================================================================================== */     
+
+
+/* Role badge styles */
+.role-badge.user { background: #10b981; }
+.role-badge.user-admin { background: #3b82f6; }
+.role-badge.admin { background: #8b5cf6; }
+.role-badge.master { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+/* Hide elements by default */
+.user-admin-only, .admin-only, .master-only {
+    display: none;
+}
+
+/* Permission-based button styles */
+.action-btn-row.delete { background: #ef4444; color: white; }
+.action-btn-row.delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.action-btn-row.suspend { background: #f59e0b; color: white; }
+.action-btn-row.block { background: #dc2626; color: white; }

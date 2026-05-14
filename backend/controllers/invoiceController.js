@@ -1,3 +1,4 @@
+const { json } = require('body-parser');
 const { getDatabase } = require('../models/database');
 
 // Cache for user special IDs to reduce database calls
@@ -513,7 +514,9 @@ exports.getAllAccounts = async (req, res) => {
 };
 
 exports.createAccount = async (req, res) => {
-    const { accountName, accountType, description, createdBy } = req.body;
+    const { accountName, accountType, description, createdBy } = req.body; 
+
+    console.log('About to create account:', accountName , accountType)
     
     try {
         const db = await getDatabase();
@@ -701,6 +704,8 @@ exports.getUserServices = async (req, res) => {
     }
 };
 
+
+// Get activity log with role-based filtering
 exports.getActivityLog = async (req, res) => {
     try {
         const db = await getDatabase();
@@ -708,13 +713,36 @@ exports.getActivityLog = async (req, res) => {
         const username = req.headers['x-username'];
         
         let logs;
-        if (userRole === 'admin') {
+        
+        if (userRole === 'master') {
+            // Master sees all activity logs
             logs = await db.all(`
                 SELECT * FROM activity_log 
                 ORDER BY timestamp DESC 
                 LIMIT 200
             `);
+        } else if (userRole === 'admin') {
+            // Admin sees all logs except other admin activities
+            logs = await db.all(`
+                SELECT * FROM activity_log 
+                WHERE user NOT IN (
+                    SELECT special_id FROM users WHERE role IN ('admin', 'master')
+                )
+                ORDER BY timestamp DESC 
+                LIMIT 200
+            `);
+        } else if (userRole === 'user-admin') {
+            // User-admin sees only regular user activities
+            logs = await db.all(`
+                SELECT * FROM activity_log 
+                WHERE user IN (
+                    SELECT special_id FROM users WHERE role = 'user'
+                )
+                ORDER BY timestamp DESC 
+                LIMIT 200
+            `);
         } else {
+            // Regular users see only their own activities
             const userSpecialId = await getUserSpecialId(username);
             logs = await db.all(`
                 SELECT * FROM activity_log 
@@ -726,6 +754,7 @@ exports.getActivityLog = async (req, res) => {
         
         res.json({ success: true, data: logs });
     } catch (error) {
+        console.error('Error getting activity log:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 };
@@ -999,38 +1028,104 @@ exports.getUserWithServices = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
-    const { username, password, role, userServices } = req.body;
+    const { firstName, middleName, lastName, Sex, DOB, phone, username, password, role, userServices, passwordHint } = req.body;
+    const creatorRole = req.headers['x-user-role'];
     
     try {
         const db = await getDatabase();
         
-        if (!username || !password || !role) {
-            return res.status(400).json({ success: false, error: 'All fields are required' });
+        if (!firstName || !lastName || !username || !password || !role) {
+            return res.status(400).json({ success: false, error: 'Fill all required fields!' });
         }
         
-        const validRoles = ['admin', 'user', 'user-admin', 'master'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({ 
+        // Role creation permissions
+        const validRoles = ['user', 'user-admin', 'admin'];
+        
+        // Master can create any role except other master
+        if (creatorRole === 'master') {
+            validRoles.push('master');
+        }
+        // Admin can create user and user-admin only
+        else if (creatorRole === 'admin') {
+            if (role === 'admin' || role === 'master') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Admins cannot create admin or master accounts' 
+                });
+            }
+        }
+        // User-admin can only create regular users
+        else if (creatorRole === 'user-admin') {
+            if (role !== 'user') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'User admins can only create regular user accounts' 
+                });
+            }
+        }
+        // Regular users cannot create accounts
+        else {
+            return res.status(403).json({ 
                 success: false, 
-                error: 'Invalid role. Must be admin, user, user-admin, or master' 
+                error: 'Insufficient permissions to create users' 
             });
         }
         
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: `Invalid role. Must be one of: ${validRoles.join(', ')}` 
+            });
+        }
+        
+        // Service assignment based on role
+        let serviceIds = [];
+        if (userServices && Array.isArray(userServices) && userServices.length > 0) {
+            // Users and user-admins can have services
+            if (role === 'user' || role === 'user-admin') {
+                serviceIds = userServices;
+            } else {
+                // Admins and masters cannot be assigned services
+                console.log(`Warning: ${role} account cannot be assigned services. Ignoring service assignments.`);
+            }
+        }
+        
+        const servicesJson = JSON.stringify(serviceIds);
         const specialId = await generateUserSpecialId(role);
         
         const result = await db.run(`
-            INSERT INTO users (username, password, role, special_id, services)
-            VALUES (?, ?, ?, ?, ?)
-        `, [username, password, role, specialId, userServices || '[]']);
+            INSERT INTO users (
+                first_name, middle_name, last_name, sex, phone_number, date_of_birth, 
+                username, password, role, special_id, services, pass_hint
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [firstName, middleName, lastName, Sex, phone, DOB, username, password, role, specialId, servicesJson, passwordHint]);
         
-        await logActivity(req.body.createdBy, `Created new user: ${username} with role: ${role} and ID: ${specialId}`);
+        const userId = result.lastID;
+        
+        // Insert into user_services only for users and user-admins
+        if ((role === 'user' || role === 'user-admin') && serviceIds.length > 0) {
+            for (const serviceId of serviceIds) {
+                try {
+                    await db.run(`
+                        INSERT OR IGNORE INTO user_services (user_id, service_id, assigned_by) 
+                        VALUES (?, ?, ?)
+                    `, [userId, serviceId, req.body.createdBy || username]);
+                } catch (err) {
+                    console.error(`Error assigning service ${serviceId}:`, err);
+                }
+            }
+        }
+        
+        await logActivity(req.body.createdBy || username, `Created new user: ${username} with role: ${role} and ID: ${specialId}`);
         
         res.status(201).json({ 
             success: true, 
             message: 'User created successfully', 
-            userId: result.lastID,
-            specialId: specialId
+            userId: userId,
+            specialId: specialId,
+            assignedServices: (role === 'user' || role === 'user-admin') ? serviceIds.length : 0
         });
+        
     } catch (error) {
         if (error.message.includes('UNIQUE')) {
             if (error.message.includes('special_id')) {
@@ -1039,6 +1134,7 @@ exports.createUser = async (req, res) => {
                 res.status(400).json({ success: false, error: 'Username already exists' });
             }
         } else {
+            console.error('Error creating user:', error);
             res.status(500).json({ success: false, error: error.message });
         }
     }
@@ -1047,18 +1143,51 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
     try {
         const db = await getDatabase();
-        const users = await db.all(`
+        const userRole = req.headers['x-user-role'];
+        const requestingUsername = req.headers['x-username'];
+        
+        let query = `
             SELECT u.id, u.username, u.role, u.special_id, u.status, u.created_at,
+                   u.first_name, u.last_name, u.middle_name, 
+                   u.sex, u.phone_number, u.date_of_birth,
+                   u.services, 
                    COUNT(DISTINCT us.service_id) as assigned_services_count,
                    COUNT(DISTINCT i.id) as invoices_count
             FROM users u
             LEFT JOIN user_services us ON u.id = us.user_id
             LEFT JOIN invoices i ON u.username = i.created_by
-            GROUP BY u.id
-            ORDER BY u.created_at DESC
-        `);
+        `;
+        
+        let whereClause = '';
+        let params = [];
+        
+        // Role-based filtering
+        if (userRole === 'master') {
+            // Master sees all except other masters
+            whereClause = ' WHERE u.role != ?';
+            params = ['master'];
+        } else if (userRole === 'admin') {
+            // Admin sees users and user-admins, not other admins or masters
+            whereClause = ' WHERE u.role IN (?, ?)';
+            params = ['user', 'user-admin'];
+        } else if (userRole === 'user-admin') {
+            // User-admin only sees regular users
+            whereClause = ' WHERE u.role = ?';
+            params = ['user'];
+        } else {
+            // Regular users see only themselves
+            whereClause = ' WHERE u.username = ?';
+            params = [requestingUsername];
+        }
+        
+        query += whereClause;
+        query += ' GROUP BY u.id ORDER BY u.created_at DESC';
+        
+        const users = await db.all(query, params);
+        
         res.json({ success: true, data: users });
     } catch (error) {
+        console.error('Error getting users:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 };
@@ -1301,10 +1430,11 @@ exports.changeUserPassword = async (req, res) => {
     }
 };
 
-// Block user account
+// Block user with role validation
 exports.blockUser = async (req, res) => {
     const { userId } = req.params;
     const { blockedBy } = req.body;
+    const userRole = req.headers['x-user-role'];
     
     try {
         const db = await getDatabase();
@@ -1314,8 +1444,42 @@ exports.blockUser = async (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
         
-        if (user.role === 'admin') {
-            return res.status(400).json({ success: false, error: 'Cannot block admin user' });
+        // Role-based blocking permissions
+        if (userRole === 'master') {
+            // Master can block anyone except other masters
+            if (user.role === 'master') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Master accounts cannot block other master accounts' 
+                });
+            }
+        } else if (userRole === 'admin') {
+            // Admin can block users and user-admins, not other admins or masters
+            if (user.role === 'admin') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Admins cannot block other admin accounts' 
+                });
+            }
+            if (user.role === 'master') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Admins cannot block master accounts' 
+                });
+            }
+        } else if (userRole === 'user-admin') {
+            // User-admin can only block regular users
+            if (user.role !== 'user') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'User admins can only block regular user accounts' 
+                });
+            }
+        } else {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Insufficient permissions to block users' 
+            });
         }
         
         await db.run(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`);
@@ -1391,10 +1555,11 @@ exports.suspendUser = async (req, res) => {
     }
 };
 
-// Delete user
+// Delete user with role validation
 exports.deleteUser = async (req, res) => {
     const { userId } = req.params;
     const { deletedBy } = req.body;
+    const userRole = req.headers['x-user-role'];
     
     try {
         const db = await getDatabase();
@@ -1404,8 +1569,39 @@ exports.deleteUser = async (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
         
-        if (user.role === 'admin') {
-            return res.status(400).json({ success: false, error: 'Cannot delete admin user' });
+        // Role-based deletion permissions
+        if (userRole === 'master') {
+            if (user.role === 'master') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Master accounts cannot delete other master accounts' 
+                });
+            }
+        } else if (userRole === 'admin') {
+            if (user.role === 'admin') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Admins cannot delete other admin accounts' 
+                });
+            }
+            if (user.role === 'master') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'Admins cannot delete master accounts' 
+                });
+            }
+        } else if (userRole === 'user-admin') {
+            if (user.role !== 'user') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'User admins can only delete regular user accounts' 
+                });
+            }
+        } else {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Insufficient permissions to delete users' 
+            });
         }
         
         await logDeletedAccount({
@@ -1430,7 +1626,6 @@ exports.deleteUser = async (req, res) => {
         
         await logActivity(deletedBy || req.headers['x-username'], `Deleted user ${userId} (${user.username})`);
         
-        // Clear cache for this user
         clearUserSpecialIdCache(user.username);
         
         res.json({ success: true, message: 'User deleted successfully' });
@@ -1471,7 +1666,8 @@ exports.getCurrentUser = async (req, res) => {
         const username = req.headers['x-username'];
         
         const user = await db.get(`
-            SELECT id, username, role, special_id, status, created_at 
+            SELECT id, username, role, special_id, first_name, middle_name, last_name, 
+                   phone_number, sex, date_of_birth, status, created_at, updated_at
             FROM users 
             WHERE username = ?
         `, username);
@@ -1498,6 +1694,127 @@ exports.getCurrentUser = async (req, res) => {
     }
 };
 
+// Add update profile details endpoint
+exports.updateProfileDetails = async (req, res) => {
+    const { firstName, middleName, lastName, sex, phoneNumber, dateOfBirth, password } = req.body;
+    
+    try {
+        const db = await getDatabase();
+        const currentUsername = req.headers['x-username'];
+        
+        // Verify password
+        const user = await db.get('SELECT * FROM users WHERE username = ?', currentUsername);
+        if (!user || user.password !== password) {
+            return res.status(401).json({ success: false, error: 'Invalid password' });
+        }
+        
+        const updates = [];
+        const values = [];
+        
+        if (firstName !== undefined) {
+            updates.push('first_name = ?');
+            values.push(firstName);
+        }
+        if (middleName !== undefined) {
+            updates.push('middle_name = ?');
+            values.push(middleName);
+        }
+        if (lastName !== undefined) {
+            updates.push('last_name = ?');
+            values.push(lastName);
+        }
+        if (sex !== undefined) {
+            updates.push('sex = ?');
+            values.push(sex);
+        }
+        if (phoneNumber !== undefined) {
+            updates.push('phone_number = ?');
+            values.push(phoneNumber);
+        }
+        if (dateOfBirth !== undefined) {
+            updates.push('date_of_birth = ?');
+            values.push(dateOfBirth);
+        }
+        
+        updates.push('updated_at = datetime("now")');
+        values.push(currentUsername);
+        
+        await db.run(`
+            UPDATE users SET ${updates.join(', ')} WHERE username = ?
+        `, values);
+        
+        await logActivity(currentUsername, 'Updated profile details');
+        
+        res.json({ success: true, message: 'Profile updated successfully' });
+    } catch (error) {
+        console.error('Error updating profile details:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Update user profile details (first name, last name, sex, phone, etc.)
+exports.updateUserProfile = async (req, res) => {
+    const { userId } = req.params;
+    const { firstName, middleName, lastName, sex, phoneNumber, dateOfBirth, updatedBy } = req.body;
+    
+    try {
+        const db = await getDatabase();
+        
+        const user = await db.get('SELECT * FROM users WHERE special_id = ?', userId);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
+        const updates = [];
+        const values = [];
+        
+        if (firstName !== undefined) {
+            updates.push('first_name = ?');
+            values.push(firstName);
+        }
+        if (middleName !== undefined) {
+            updates.push('middle_name = ?');
+            values.push(middleName);
+        }
+        if (lastName !== undefined) {
+            updates.push('last_name = ?');
+            values.push(lastName);
+        }
+        if (sex !== undefined) {
+            updates.push('sex = ?');
+            values.push(sex);
+        }
+        if (phoneNumber !== undefined) {
+            updates.push('phone_number = ?');
+            values.push(phoneNumber);
+        }
+        if (dateOfBirth !== undefined) {
+            updates.push('date_of_birth = ?');
+            values.push(dateOfBirth);
+        }
+        
+        updates.push('updated_at = datetime("now")');
+        
+        if (updates.length === 1) { // Only updated_at
+            return res.status(400).json({ success: false, error: 'No fields to update' });
+        }
+        
+        values.push(userId);
+        
+        await db.run(`
+            UPDATE users 
+            SET ${updates.join(', ')}
+            WHERE special_id = ?
+        `, values);
+        
+        await logActivity(updatedBy || req.headers['x-username'], `Updated profile for user ${userId}`);
+        
+        res.json({ success: true, message: 'User profile updated successfully' });
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
 // Update profile username with logging
 exports.updateProfileUsername = async (req, res) => {
     const { newUsername, password } = req.body;
@@ -1746,7 +2063,97 @@ exports.getPasswordChangeHistory = async (req, res) => {
         console.error('Error getting password change history:', error);
         res.status(500).json({ success: false, error: error.message });
     }
+};  
+
+// Add this to your invoiceController.js - Unsuspend user
+exports.unsuspendUser = async (req, res) => {
+    const { userId } = req.params;
+    const { unsuspendedBy } = req.body;
+    
+    try {
+        const db = await getDatabase();
+        
+        const user = await db.get('SELECT * FROM users WHERE special_id = ?', userId);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
+        await db.run(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'`);
+        await db.run('UPDATE users SET status = ?, suspended_until = NULL WHERE special_id = ?', 
+            ['active', userId]);
+        
+        await logActivity(unsuspendedBy || req.headers['x-username'], `Unsuspended user ${userId} (${user.username})`);
+        
+        res.json({ success: true, message: 'User unsuspended successfully' });
+    } catch (error) {
+        console.error('Error unsuspending user:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// Make sure updateUserProfile exists
+exports.updateUserProfile = async (req, res) => {
+    const { userId } = req.params;
+    const { firstName, middleName, lastName, sex, phoneNumber, dateOfBirth, updatedBy } = req.body;
+    
+    try {
+        const db = await getDatabase();
+        
+        const user = await db.get('SELECT * FROM users WHERE special_id = ?', userId);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
+        const updates = [];
+        const values = [];
+        
+        if (firstName !== undefined) {
+            updates.push('first_name = ?');
+            values.push(firstName);
+        }
+        if (middleName !== undefined) {
+            updates.push('middle_name = ?');
+            values.push(middleName);
+        }
+        if (lastName !== undefined) {
+            updates.push('last_name = ?');
+            values.push(lastName);
+        }
+        if (sex !== undefined) {
+            updates.push('sex = ?');
+            values.push(sex);
+        }
+        if (phoneNumber !== undefined) {
+            updates.push('phone_number = ?');
+            values.push(phoneNumber);
+        }
+        if (dateOfBirth !== undefined) {
+            updates.push('date_of_birth = ?');
+            values.push(dateOfBirth);
+        }
+        
+        if (updates.length === 0) {
+            return res.status(400).json({ success: false, error: 'No fields to update' });
+        }
+        
+        updates.push('updated_at = datetime("now")');
+        values.push(userId);
+        
+        await db.run(`
+            UPDATE users 
+            SET ${updates.join(', ')}
+            WHERE special_id = ?
+        `, values);
+        
+        await logActivity(updatedBy || req.headers['x-username'], `Updated profile for user ${userId}`);
+        
+        res.json({ success: true, message: 'User profile updated successfully' });
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 };
 
 // Export cache clearing function
-exports.clearUserCache = clearUserSpecialIdCache;
+exports.clearUserCache = clearUserSpecialIdCache;  
+

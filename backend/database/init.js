@@ -76,19 +76,25 @@ db.serialize(() => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             first_name TEXT , 
             middle_name TEXT , 
-            last_name TEXT ,
+            last_name TEXT , 
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             pass_hint TEXT ,
             role TEXT NOT NULL,
-            special_id TEXT UNIQUE,
+            special_id TEXT UNIQUE, 
+            sex TEXT , 
+            phone_number TEXT,  
+            date_of_birth TEXT, 
             status TEXT DEFAULT 'active' ,
             services TEXT DEFAULT '[]', 
-            suspended_until TEXT ,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP , 
+            updated_at DATETIME ,  
+            suspended_until DATETIME 
         )
-    `);
+    `);  
 
+ 
+    
     // Accounts table
     db.run(`
         CREATE TABLE IF NOT EXISTS accounts (
@@ -307,16 +313,16 @@ db.serialize(() => {
                 (async () => {
                     try {
                         // Generate special IDs
-                        const adminSpecialId = await generateUserSpecialId('admin');
+                        const masterSpecialId = await generateUserSpecialId('master');
                         const userSpecialId = await generateUserSpecialId('user');
                         
                         // Insert admin user
                         db.run(`INSERT OR IGNORE INTO users (first_name , middle_name , last_name , username, password, role, special_id, services) VALUES (?,?,?,?, ?, ?, ?, ?)`, 
-                            ['Kofi' , 'Monique','owusu','admin', 'admin123', 'admin', adminSpecialId, '[]'], (err) => {
+                            ['Kofi' , 'Monique','owusu','Kofi1', 'admin123', 'master', masterSpecialId, '[]'], (err) => {
                             if (err) {
                                 console.error('Error inserting admin user:', err);
                             } else {
-                                console.log('Admin user inserted with ID:', adminSpecialId);
+                                console.log('Admin user inserted with ID:', masterSpecialId);
                             }
                         });
                         
@@ -354,7 +360,7 @@ db.serialize(() => {
                                                 if (serviceRow) {
                                                     assignedServices.push(serviceRow.id);
                                                     db.run(`INSERT OR IGNORE INTO user_services (user_id, service_id, assigned_by) VALUES (?, ?, ?)`,
-                                                        [userRow.id, serviceRow.id, 'admin'], (err) => {
+                                                        [userRow.id, serviceRow.id, 'master'], (err) => {
                                                         if (err) {
                                                             console.error(`Error assigning service ${serviceName}:`, err);
                                                         } else {
@@ -426,4 +432,48 @@ function showDatabaseSummary() {
             });
         });
     }, 500);
+}   
+
+
+ 
+
+   // Check if column exists before adding
+function addColumnIfNotExists(tableName, columnName, columnType) {
+    db.get(`PRAGMA table_info(${tableName})`, (err, rows) => {
+        if (err) {
+            console.error('Error checking table schema:', err);
+            return;
+        }
+        
+        // For better compatibility, we need to get all rows
+        db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+            if (err) {
+                console.error('Error getting columns:', err);
+                return;
+            }
+            
+            const columnExists = columns.some(col => col.name === columnName);
+            
+            if (!columnExists) {
+                db.run(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}`, (err) => {
+                    if (err) {
+                        console.error(`Error adding ${columnName}:`, err);
+                    } else {
+                        console.log(`Added ${columnName} column to ${tableName}`);
+                    }
+                });
+            } else {
+                console.log(`Column ${columnName} already exists`);
+            }
+        });
+    });
 }
+
+// Usage
+addColumnIfNotExists('users', 'sex', "TEXT DEFAULT 'other'");
+addColumnIfNotExists('users', 'date_of_birth', 'TEXT');
+addColumnIfNotExists('users', 'phone_number', 'TEXT'); 
+addColumnIfNotExists('users','updated_at' , 'DATETIME'); 
+    
+// addColumnIfNotExists('users','suspended_until' , 'DATETIME'); 
+    
