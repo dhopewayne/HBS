@@ -4115,4 +4115,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .action-btn-row.delete:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .action-btn-row.suspend { background: #f59e0b; color: white; }
-.action-btn-row.block { background: #dc2626; color: white; }
+.action-btn-row.block { background: #dc2626; color: white; }  
+
+.modal-body.modal-footer{ display:flex ; 
+    width: 100%; justify-content: flex-end; align-items: center;}

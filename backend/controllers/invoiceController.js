@@ -382,8 +382,71 @@ async function generateUserSpecialId(role) {
         return generateUserSpecialId(role);
     }
     return specialId;
-}
+} 
 
+// Helper function to check if password is correct for a given username
+async function checkPassWord(username, password) {
+    try {
+        const db = await getDatabase();
+        
+        // Validate input parameters
+        if (!username || !password) {
+            console.log('Invalid input: username or password missing');
+            return false;
+        }
+        
+        // Query the user from database
+        const user = await db.get(
+            'SELECT id, username, password, status FROM users WHERE username = ?',
+            username
+        );
+        
+        // Check if user exists
+        if (!user) {
+            console.log(`User not found: ${username}`);
+            return false;
+        }
+        
+        // Check if account is blocked or suspended
+        if (user.status === 'blocked') {
+            console.log(`Account blocked: ${username}`);
+            return false;
+        }
+        
+        if (user.status === 'suspended') {
+            // Check if suspension period has expired
+            const suspendedUser = await db.get(
+                'SELECT suspended_until FROM users WHERE username = ?',
+                username
+            );
+            
+            if (suspendedUser && suspendedUser.suspended_until) {
+                const suspendedUntil = new Date(suspendedUser.suspended_until);
+                if (suspendedUntil > new Date()) {
+                    console.log(`Account suspended until: ${suspendedUntil}`);
+                    return false;
+                }
+            }
+        }
+        
+        // Compare passwords (assuming plain text for now - you should use hashing in production)
+        const isPasswordCorrect = (user.password === password);
+        
+        // Log the password attempt for security monitoring
+        if (!isPasswordCorrect) {
+            await logPasswordAttempt(username, 'password_check');
+            console.log(`Incorrect password attempt for user: ${username}`);
+        } else {
+            console.log(`Successful password verification for user: ${username}`);
+        }
+        
+        return isPasswordCorrect;
+        
+    } catch (error) {
+        console.error('Error checking password:', error);
+        return false;
+    }
+}
 // ============= INVOICE CONTROLLER EXPORTS =============
 
 // Get single invoice
@@ -605,13 +668,137 @@ exports.deleteAccount = async (req, res) => {
     }
 };
 
+
+// Service Management (Admin only)
+// exports.getAllServices = async (req, res) => {
+//     try {
+//         const db = await getDatabase();
+        
+//         // Fix the JOIN syntax - get all services with their assigned prices
+//         const services = await db.all(`
+//             SELECT 
+//                 s.id,
+//                 s.service_name,
+//                 s.description,
+//                 s.category, 
+//                 us.price as assigned_price,
+//             FROM services s
+//             LEFT JOIN invoice_services us ON s.id = us.service_id
+//             WHERE us.id IS NULL OR us.id IN (
+//                 SELECT MAX(id) 
+//                 FROM invoice_services 
+//                 GROUP BY service_id
+//             )
+//             ORDER BY s.service_name
+//         `);
+        
+//         // Group services by ID and get the latest price if multiple assignments exist
+//         const groupedServices = {};
+        
+//         for (const service of services) {
+//             const serviceId = service.id;
+            
+//             if (!groupedServices[serviceId]) {
+//                 groupedServices[serviceId] = {
+//                     id: service.id,
+//                     service_name: service.service_name,
+//                     description: service.description,
+//                     category: service.category,
+//                     default_price: service.default_price,
+//                     is_active: service.is_active,
+//                     prices: [] // Array to store all assigned prices
+//                 };
+//             }
+            
+//             // Add price if exists
+//             if (service.assigned_price) {
+//                 groupedServices[serviceId].prices.push({
+//                     price: service.assigned_price,
+//                     assigned_by: service.assigned_by,
+//                     assigned_date: service.assigned_date
+//                 });
+//             }
+//         }
+        
+//         // Convert grouped object back to array
+//         const result = Object.values(groupedServices).map(service => ({
+//             ...service,
+//             current_price: service.prices.length > 0 ? 
+//                 service.prices[service.prices.length - 1].price : 
+//                 service.default_price,
+//             price_history: service.prices
+//         }));
+        
+//         res.json({ success: true, data: result });
+//     } catch (error) {
+//         console.error('Error fetching services:', error);
+//         res.status(500).json({ success: false, error: error.message });
+//     }
+// };  
+
 // Service Management (Admin only)
 exports.getAllServices = async (req, res) => {
     try {
         const db = await getDatabase();
-        const services = await db.all('SELECT * FROM services ORDER BY service_name');
-        res.json({ success: true, data: services });
+        
+        // Fix the JOIN syntax - get all services with their assigned prices
+        const services = await db.all(`
+            SELECT 
+                s.id,
+                s.service_name,
+                s.description,
+                s.category, 
+                us.price as assigned_price
+            FROM services s
+            LEFT JOIN invoice_services us ON s.id = us.service_id
+            WHERE us.id IS NULL OR us.id IN (
+                SELECT MAX(id) 
+                FROM invoice_services 
+                GROUP BY service_id
+            )
+            ORDER BY s.service_name
+        `);
+        
+        // Group services by ID and get the latest price if multiple assignments exist
+        const groupedServices = {};
+        
+        for (const service of services) {
+            const serviceId = service.id;
+            
+            if (!groupedServices[serviceId]) {
+                groupedServices[serviceId] = {
+                    id: service.id,
+                    service_name: service.service_name,
+                    description: service.description,
+                    category: service.category,
+                    default_price: service.default_price,
+                    is_active: service.is_active,
+                    prices: [] // Array to store all assigned prices
+                };
+            }
+            
+            // Add price if exists
+            if (service.assigned_price) {
+                groupedServices[serviceId].prices.push({
+                    price: service.assigned_price,
+                    assigned_by: service.assigned_by,
+                    assigned_date: service.assigned_date
+                });
+            }
+        }
+        
+        // Convert grouped object back to array
+        const result = Object.values(groupedServices).map(service => ({
+            ...service,
+            current_price: service.prices.length > 0 ? 
+                service.prices[service.prices.length - 1].price : 
+                service.default_price,
+            price_history: service.prices
+        }));
+        
+        res.json({ success: true, data: result });
     } catch (error) {
+        console.error('Error fetching services:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 };
@@ -703,7 +890,6 @@ exports.getUserServices = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
-
 
 // Get activity log with role-based filtering
 exports.getActivityLog = async (req, res) => {
@@ -1192,6 +1378,8 @@ exports.getUsers = async (req, res) => {
     }
 };
 
+
+
 exports.createInvoice = async (req, res) => {
     const { patientName, gcrNumber, accountId, accountType, amount, services, createdBy } = req.body;
     
@@ -1219,13 +1407,34 @@ exports.createInvoice = async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `, [patientName, gcrNumber, accountId, accountType, amount, identificationNumber, createdBy || 'system']);
         
-        const invoiceId = result.lastID;
+        const invoiceId = result.lastID; 
+
+        // FIX: Don't overwrite the services parameter - use a different variable name
+        const availableServices = await db.all('SELECT * FROM services');
         
+        // Create a map for quick lookup of service details
+        const serviceMap = new Map();
+        availableServices.forEach(service => {
+            serviceMap.set(service.service_name, service);
+        });
+        
+        // Insert each service from the request
         for (const service of services) {
+            // Get the full service details from the map
+            const serviceDetails = serviceMap.get(service.name); 
+
+
+            console.log('services Print:' ,service)
+            
+            if (!serviceDetails) {
+                console.warn(`Service "${service.name}" not found in database`);
+                continue; // Skip if service doesn't exist
+            }
+            
             await db.run(`
-                INSERT INTO invoice_services (invoice_id, service_name, price)
-                VALUES (?, ?, ?)
-            `, [invoiceId, service.name, amount]);
+                INSERT INTO invoice_services (invoice_id, service_id, service_name, price)
+                VALUES (?, ?, ?, ?)
+            `, [invoiceId, serviceDetails.id, service.name, service.price || amount]);
         }
         
         await logActivity(createdBy || 'system', `Created invoice #${invoiceId} (${identificationNumber}) for ${patientName} - GH¢${amount}`);
@@ -2089,20 +2298,24 @@ exports.unsuspendUser = async (req, res) => {
         console.error('Error unsuspending user:', error);
         res.status(500).json({ success: false, error: error.message });
     }
-};
+}; 
 
 // Make sure updateUserProfile exists
 exports.updateUserProfile = async (req, res) => {
-    const { userId } = req.params;
-    const { firstName, middleName, lastName, sex, phoneNumber, dateOfBirth, updatedBy } = req.body;
-    
+    const { userId , username } = req.params;
+    const { firstName, middleName, lastName, sex, phoneNumber, dateOfBirth, updatedBy , password } = req.body;  
+
+    console.log('UserName:' , username)
+     
     try {
         const db = await getDatabase();
         
         const user = await db.get('SELECT * FROM users WHERE special_id = ?', userId);
         if (!user) {
             return res.status(404).json({ success: false, error: 'User not found' });
-        }
+        }     
+
+        
         
         const updates = [];
         const values = [];
@@ -2152,8 +2365,206 @@ exports.updateUserProfile = async (req, res) => {
         console.error('Error updating user profile:', error);
         res.status(500).json({ success: false, error: error.message });
     }
+};  
+
+
+// ============= PASSWORD VERIFICATION ROUTE =============
+// Verify password for current user
+exports.verifyPassword = async (req, res) => {
+    const { username, password } = req.body;
+    
+    try {
+        if (!username || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                valid: false,
+                error: 'Username and password are required' 
+            });
+        }
+        
+        const db = await getDatabase();
+        
+        // Get user from database
+        const user = await db.get(
+            'SELECT id, username, password, status FROM users WHERE username = ?',
+            username
+        );
+        
+        // Check if user exists
+        if (!user) {
+            return res.status(401).json({ 
+                success: false, 
+                valid: false,
+                error: 'Invalid username or password' 
+            });
+        }
+        
+        // Check account status
+        if (user.status === 'blocked') {
+            return res.status(403).json({ 
+                success: false, 
+                valid: false,
+                error: 'Account is blocked. Contact admin.' 
+            });
+        }
+        
+        if (user.status === 'suspended') {
+            const suspendedUser = await db.get(
+                'SELECT suspended_until FROM users WHERE username = ?',
+                username
+            );
+            
+            if (suspendedUser && suspendedUser.suspended_until) {
+                const suspendedUntil = new Date(suspendedUser.suspended_until);
+                if (suspendedUntil > new Date()) {
+                    return res.status(403).json({ 
+                        success: false, 
+                        valid: false,
+                        error: `Account suspended until ${suspendedUntil.toLocaleDateString()}` 
+                    });
+                }
+            }
+        }
+        
+        // Check password
+        const isPasswordValid = (user.password === password);
+        
+        if (!isPasswordValid) {
+            await logPasswordAttempt(username, 'verify_password');
+            return res.status(401).json({ 
+                success: false, 
+                valid: false,
+                error: 'Invalid username or password' 
+            });
+        }
+        
+        // Password is correct
+        res.json({ 
+            success: true, 
+            valid: true,
+            message: 'Password verified successfully' 
+        });
+        
+    } catch (error) {
+        console.error('Error verifying password:', error);
+        res.status(500).json({ 
+            success: false, 
+            valid: false,
+            error: error.message 
+        });
+    }
 };
 
+// Update user profile details (first name, last name, phone number, etc.) with password verification
+exports.updateUserProfileDetails = async (req, res) => {
+    const { firstName, middleName, lastName, phoneNumber, password } = req.body;
+    const currentUsername = req.headers['x-username']; 
+    console.log('update profile hit !!!') ; 
+    
+    try {
+        const db = await getDatabase(); 
+
+
+        
+        // First verify password
+        if (!password) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Password is required to update profile' 
+            });
+        }
+        
+        const user = await db.get('SELECT * FROM users WHERE username = ?', currentUsername);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        
+        // Verify password
+        if (user.password !== password) {
+            await logPasswordAttempt(currentUsername, 'profile_update');
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid password' 
+            });
+        }
+        
+        // Build update query
+        const updates = [];
+        const values = [];
+        
+        if (firstName !== undefined && firstName !== null) {
+            updates.push('first_name = ?');
+            values.push(firstName);
+        }
+        if (middleName !== undefined) {
+            updates.push('middle_name = ?');
+            values.push(middleName || null);
+        }
+        if (lastName !== undefined && lastName !== null) {
+            updates.push('last_name = ?');
+            values.push(lastName);
+        }
+        if (phoneNumber !== undefined && phoneNumber !== null) {
+            updates.push('phone_number = ?');
+            values.push(phoneNumber);
+        }
+        
+        if (updates.length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'No fields to update' 
+            });
+        }
+        
+        updates.push('updated_at = datetime("now")');
+        values.push(currentUsername);
+        
+        await db.run(`
+            UPDATE users 
+            SET ${updates.join(', ')} 
+            WHERE username = ?
+        `, values);
+        
+        await logActivity(currentUsername, `Updated profile details (${updates.map(u => u.split('=')[0]).join(', ')})`);
+        
+        res.json({ 
+            success: true, 
+            message: 'Profile updated successfully' 
+        });
+        
+    } catch (error) {
+        console.error('Error updating profile details:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+};  
+
+exports.getUserAssignments = async(req, res) => {    
+    const { assignments } = req.params;  // Change from 'assignment' to 'assignments'
+    
+    console.log("assignment:", assignments);
+    
+    try {
+        // Your logic here
+        
+        res.status(200).json({
+            success: true,
+            data: assignments
+        });
+        
+    } catch (error) {
+        console.error('Error getting user assignments:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+} 
+
 // Export cache clearing function
-exports.clearUserCache = clearUserSpecialIdCache;  
+exports.clearUserCache = clearUserSpecialIdCache;   
+// Export the function for use in other modules
+exports.checkPassword = checkPassWord;
 

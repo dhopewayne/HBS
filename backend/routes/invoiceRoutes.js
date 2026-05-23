@@ -113,7 +113,20 @@ router.get('/summary', invoiceController.getSummary);
 router.get('/users/current', invoiceController.getCurrentUser);
 router.put('/users/update-profile-username', invoiceController.updateProfileUsername);
 router.put('/users/update-profile-password', invoiceController.updateProfilePassword);
-router.put('/users/update-profile-details', invoiceController.updateProfileDetails);
+// router.put('/users/update-profile-details', invoiceController.updateUserProfile); 
+// router.put('/users/update-profile-details', invoiceController.updateProfileDetails); 
+// router.post('/users/verify-password/:details' , invoiceController.checkPassWord)  
+
+
+// NEW: Password verification route
+router.post('/users/verify-password', invoiceController.verifyPassword);
+
+// NEW: Update profile details (first name, last name, phone number)
+router.put('/users/update-profile-details', invoiceController.updateUserProfileDetails);
+router.put('/users/update-profile', invoiceController.updateUserProfile);  
+
+
+
 
 // ============= USER-ADMIN LEVEL ROUTES (user-admin and above) =============
 router.put('/invoices/:id', roleMiddleware.checkUserAdmin, invoiceController.updateInvoice);
@@ -131,7 +144,15 @@ router.get('/activity-log', roleMiddleware.checkUserAdmin, invoiceController.get
 // User service management (user-admin and above)
 router.get('/users/:userId/services', roleMiddleware.checkUserAdmin, invoiceController.getUserServices);
 router.post('/users/services/assign', roleMiddleware.checkUserAdmin, invoiceController.assignServiceToUser);
-router.delete('/users/:userId/services/:serviceId', roleMiddleware.checkUserAdmin, invoiceController.removeUserService);
+router.delete('/users/:userId/services/:serviceId', roleMiddleware.checkUserAdmin, invoiceController.removeUserService);       
+
+// router.get('/users/services/assignments/:assignments'  ,invoiceController.getUserAssignments )   
+// // Change this:
+// router.get('/users/services/assignments/:assignments', invoiceController.getUserAssignments)
+
+// To this:
+// router.get('/users/services/assignments/:assignment', invoiceController.getUserAssignments)  
+router.get('/users/services/assignments/:assignment', invoiceController.getUserAssignments);
 
 // ============= ADMIN LEVEL ROUTES (admin and master only) =============
 router.post('/users', roleMiddleware.checkAdmin, invoiceController.createUser);

@@ -1,3 +1,6 @@
+// const { json } = require("body-parser");
+
+
 // API Base URL
 const API_BASE_URL = '/api'; 
 // State management
@@ -19,7 +22,15 @@ let currentEditingUser = null;
 let currentEditAction = null;
 let isPrinting = false;
 let isPrintModalOpen = false;
-let isRenderingPrint = false;
+let isRenderingPrint = false; 
+let allUsersList = [];
+let selectedUserForServices = null;
+let allServicesList = [];
+let userAssignedServicesList = [];
+let availableServicesFilter = '';
+let assignedServicesFilter = '';
+
+
 
 // Get elements
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
@@ -343,10 +354,17 @@ function switchSection(section) {
     };
     
     const sectionId = sectionMap[section];
-    document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) targetSection.classList.add('active');
+    document.querySelectorAll('.content-section').forEach(el => {  
+
+        const checkActive  = el.classList.contains('active')  
+
+        checkActive?el.classList.remove('active'):''        
+    });
+    const targetSection = document.getElementById(sectionId); 
+    if (targetSection) {
+        targetSection.classList.add('active')
     
+    };  
     const sectionTitles = {
         dashboard: 'Dashboard',
         invoices: 'Records Management',
@@ -362,10 +380,11 @@ function switchSection(section) {
     if (headerTitle) headerTitle.textContent = sectionTitles[section] || 'Dashboard';
     
     // Load data based on section and permissions
-    if (section === 'accounts' && hasPermission.canManageAccounts()) loadAccounts();
-    if (section === 'services' && hasPermission.canManageServices()) loadServicesList();
+    // if (section === 'accounts' && hasPermission.canManageAccounts()) loadAccounts();
+    // if (section === 'services' && hasPermission.canManageServices()) loadServicesList();
     if (section === 'user-services' && hasPermission.canManageUserServices()) {
         loadUsersForServiceAssignment();
+        setupUserServicesEventListeners();
         loadAllServicesForAssignment();
         const userServiceManagement = document.getElementById('userServiceManagement');
         if (userServiceManagement) userServiceManagement.style.display = 'none';
@@ -383,11 +402,25 @@ function switchSection(section) {
         loadInvoices(); 
         toggleFilterCollapse();
     }
-    if (section === 'account') loadAccountProfile();
+    if (section === 'account') loadAccountProfile();   
+
+    if (section === 'services' && hasPermission.canManageServices()) {
+        loadServicesList();
+        setupServiceFilters();
+    }   
+
+    if (section === 'accounts' && hasPermission.canManageAccounts()) {
+        loadAccounts();
+        setupAccountFilters();
+    }
+ 
+
+
+
 }
 
 function showModal(modalId) {
-    const modal = document.getElementById(modalId);
+    const modal = document.getElementById(modalId); 
     if (modal) {
         modal.classList.add('active');
         modal.style.display = 'flex';
@@ -570,18 +603,48 @@ function handleLogin() {
     });
 }
 
-// ============================================
+async function getCurrentUser(){  
+
+     const response = await fetch(`${API_BASE_URL}/users/current`, {
+            headers: getApiHeaders()
+        }); 
+
+    const result  = await response.json() ; 
+
+ 
+    return result.data ;
+}
+// ==========================.dat==================
 // MAIN SHOW DASHBOARD FUNCTION WITH ROLE SUPPORT
 // ============================================
 async function showDashboard() {
     updateCopyrightYear();
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboardScreen').style.display = 'block';
+    document.getElementById('dashboardScreen').style.display = 'block'; 
+     
+    let pre ;
+    
+    const user = await getCurrentUser(); 
+    user.sex === 'male'? pre ='Mr.': pre = 'Mrs.' ;
+    const accountName = `${pre}${user.first_name} ` ;  
+
+  
     
     // Update user info in UI
-    document.getElementById('topUserName').textContent = currentUser.username;
+    document.getElementById('topUserName').textContent = accountName; 
+
+    const accName = document.getElementById('topUserName') ; 
+    accName.addEventListener('click' , ()=>{  
+       switchSection('account');    
+    })
     updateTopHeaderAvatar(currentUser.username);
     updateUserRoleBadge();
+    
+   
+
+    
+
+    //  console.log('User details:', current_user)
     
     // Update UI based on role
     updateUIByRole();
@@ -1710,32 +1773,243 @@ function displayServicesReadOnly(services) {
 // ============================================
 // ACCOUNT MANAGEMENT FUNCTIONS
 // ============================================
+// async function loadAccounts() {
+//     if (!hasPermission.canManageAccounts()) return;
+//     try {
+//         const response = await fetch(`${API_BASE_URL}/accounts`, { headers: getApiHeaders() });
+//         const result = await response.json();
+//         if (result.success) {
+//             accounts = result.data;
+//             const container = document.getElementById('accountsList');
+//             if (container) {
+//                 container.innerHTML = accounts.map(acc => `
+//                     <div class="data-item">
+//                         <div class="data-info">
+//                             <strong>${escapeHtml(acc.account_name)}</strong>
+//                             <small>${acc.account_type} | ${acc.description || 'No description'}</small>
+//                         </div>
+//                         <div class="data-actions">
+//                             <button onclick="deleteAccount(${acc.id})" class="btn-secondary" style="background:#ef4444;">Delete</button>
+//                         </div>
+//                     </div>
+//                 `).join('');
+//             }
+//         }
+//     } catch (error) {
+//         console.error('Error loading accounts:', error);
+//     }
+// }
+
+
 async function loadAccounts() {
     if (!hasPermission.canManageAccounts()) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/accounts`, { headers: getApiHeaders() });
+        const response = await fetch(`${API_BASE_URL}/accounts`, { 
+            headers: getApiHeaders() 
+        });
         const result = await response.json();
+        
         if (result.success) {
             accounts = result.data;
-            const container = document.getElementById('accountsList');
-            if (container) {
-                container.innerHTML = accounts.map(acc => `
-                    <div class="data-item">
-                        <div class="data-info">
-                            <strong>${escapeHtml(acc.account_name)}</strong>
-                            <small>${acc.account_type} | ${acc.description || 'No description'}</small>
-                        </div>
-                        <div class="data-actions">
-                            <button onclick="deleteAccount(${acc.id})" class="btn-secondary" style="background:#ef4444;">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
+            
+            // Update stats
+            updateAccountStats(accounts);
+            
+            // Render accounts
+            renderAccountsGrid(accounts);
         }
     } catch (error) {
         console.error('Error loading accounts:', error);
+        showMessageModal('Error loading accounts', 'error');
     }
 }
+
+// Update account statistics
+function updateAccountStats(accounts) {
+    const totalCount = accounts.length;
+    const drugsCount = accounts.filter(a => a.account_type === 'drugs').length;
+    const nonDrugsCount = accounts.filter(a => a.account_type === 'nondrugs').length;
+    const activeCount = accounts.filter(a => a.status !== 'inactive').length;
+    
+    document.getElementById('totalAccountsCount').textContent = totalCount;
+    document.getElementById('drugsAccountsCount').textContent = drugsCount;
+    document.getElementById('nonDrugsAccountsCount').textContent = nonDrugsCount;
+    document.getElementById('activeAccountsCount').textContent = activeCount;
+}
+
+// Render accounts in modern grid
+function renderAccountsGrid(accountsToRender) {
+    const container = document.getElementById('accountsList');
+    const emptyState = document.getElementById('accountsEmptyState');
+    
+    if (!container) return;
+    
+    if (accountsToRender.length === 0) {
+        container.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+    
+    if (emptyState) emptyState.style.display = 'none';
+    
+    container.innerHTML = accountsToRender.map((account, index) => {
+        const isDrugs = account.account_type === 'drugs';
+        const typeLabel = isDrugs ? 'Drugs Account' : 'Non-Drugs Account';
+        const typeClass = isDrugs ? 'drugs' : 'nondrugs';
+        
+        return `
+            <div class="account-card-modern" style="animation-delay: ${0.02 * (index % 10)}s">
+                <div class="account-card-header">
+                    <div class="account-icon ${typeClass}">
+                        <i class="fas ${isDrugs ? 'fa-pills' : 'fa-notes-medical'}"></i>
+                    </div>
+                    <div class="account-title">
+                        <div class="account-name-modern">
+                            ${escapeHtml(account.account_name)}
+                        </div>
+                        <span class="account-type-badge ${typeClass}">
+                            <i class="fas ${isDrugs ? 'fa-pills' : 'fa-chart-line'}"></i>
+                            ${typeLabel}
+                        </span>
+                    </div>
+                </div>
+                <div class="account-card-body">
+                    <div class="account-description-modern">
+                        ${account.description ? escapeHtml(account.description) : ''}
+                    </div>
+                    <div class="account-meta">
+                        <div class="account-stats">
+                            <div class="account-stat-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Created: ${account.created_at ? new Date(account.created_at).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div class="account-actions-modern">
+                            <button class="action-icon-account edit" onclick="editAccount(${account.id})" title="Edit Account">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-icon-account delete" onclick="deleteAccount(${account.id})" title="Delete Account">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Setup account filters
+function setupAccountFilters() {
+    const searchInput = document.getElementById('accountSearchInput');
+    const clearBtn = document.getElementById('clearAccountSearch');
+    const filterChips = document.querySelectorAll('.filter-chip');
+    let currentFilter = 'all';
+    let searchTerm = '';
+    
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase().trim();
+            if (clearBtn) clearBtn.style.display = searchTerm ? 'flex' : 'none';
+            filterAccounts(currentFilter, searchTerm);
+        });
+    }
+    
+    // Clear search
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                searchTerm = '';
+                clearBtn.style.display = 'none';
+                filterAccounts(currentFilter, searchTerm);
+            }
+        });
+    }
+    
+    // Filter chips
+    filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            filterChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            currentFilter = chip.dataset.filter;
+            filterAccounts(currentFilter, searchTerm);
+        });
+    });
+}
+
+// Filter accounts
+function filterAccounts(filter, searchTerm) {
+    let filtered = [...accounts];
+    
+    // Apply filter
+    if (filter === 'drugs') {
+        filtered = filtered.filter(a => a.account_type === 'drugs');
+    } else if (filter === 'nondrugs') {
+        filtered = filtered.filter(a => a.account_type === 'nondrugs');
+    }
+    
+    // Apply search
+    if (searchTerm) {
+        filtered = filtered.filter(a => 
+            a.account_name.toLowerCase().includes(searchTerm) ||
+            (a.description && a.description.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    renderAccountsGrid(filtered);
+}
+
+
+// Update account function
+async function updateAccount(id) {
+    const accountName = document.getElementById('modalAccountName').value.trim();
+    const accountType = document.getElementById('modalAccountTypeSelect').value;
+    const description = document.getElementById('modalAccountDescription').value.trim();
+    
+    if (!accountName) {
+        showMessageModal('Please enter account name', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/accounts/${id}`, {
+            method: 'PUT',
+            headers: getApiHeaders(),
+            body: JSON.stringify({ 
+                accountName, 
+                accountType, 
+                description,
+                updatedBy: currentUser.username 
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            showMessageModal('Account updated successfully!', 'success');
+            closeModal('addAccountModal');
+            document.getElementById('addAccountForm').reset();
+            loadAccounts();
+            logActivity(`Updated account: ${accountName}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating account:', error);
+        showMessageModal('Error updating account', 'error');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 async function loadAccountsForSelect() {
     if (!hasPermission.canManageAccounts()) return;
@@ -1773,49 +2047,454 @@ async function loadAccountsForEditSelect(selectedAccountId) {
 // ============================================
 // SERVICE MANAGEMENT FUNCTIONS
 // ============================================
+// async function loadServicesList() {
+//     if (!hasPermission.canManageServices()) return;
+//     try {
+//         const response = await fetch(`${API_BASE_URL}/services`, { headers: getApiHeaders() });
+//         const result = await response.json();
+//         if (result.success) {
+//             services = result.data;
+//             const container = document.getElementById('servicesList');
+//             if (container) {
+//                 container.innerHTML = services.map(svc => `
+//                     <div class="data-item">
+//                         <div class="data-info">
+//                             <strong>${escapeHtml(svc.service_name)}</strong>
+//                             <small>${svc.category || 'Uncategorized'}</small>
+//                         </div>
+//                         <div class="data-actions">
+//                             <button onclick="deleteService(${svc.id})" class="btn-secondary" style="background:#ef4444;">Delete</button>
+//                         </div>
+//                     </div>
+//                 `).join('');
+//             }
+//         }
+//     } catch (error) {
+//         console.error('Error loading services:', error);
+//     }
+// } 
+
+
 async function loadServicesList() {
     if (!hasPermission.canManageServices()) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/services`, { headers: getApiHeaders() });
+        const response = await fetch(`${API_BASE_URL}/services`, { 
+            headers: getApiHeaders() 
+        });
         const result = await response.json();
+        
         if (result.success) {
-            services = result.data;
-            const container = document.getElementById('servicesList');
-            if (container) {
-                container.innerHTML = services.map(svc => `
-                    <div class="data-item">
-                        <div class="data-info">
-                            <strong>${escapeHtml(svc.service_name)}</strong>
-                            <small>${svc.category || 'Uncategorized'}</small>
-                        </div>
-                        <div class="data-actions">
-                            <button onclick="deleteService(${svc.id})" class="btn-secondary" style="background:#ef4444;">Delete</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
+            services = result.data; 
+
+            // console.log('Loaded services:', services);
+            
+            // Update stats
+            updateServicesStats(services);
+            
+            // Store for filtering
+            allServicesList = services;
+            
+            // Render the modern grid
+            renderServicesGrid(services);
         }
     } catch (error) {
         console.error('Error loading services:', error);
+        showMessageModal('Error loading services', 'error');
     }
+}   
+
+// function updateServicesStats(services) {
+//     // Flatten the services to get all price entries for statistics
+//     const allPriceEntries = [];
+    
+//     services.forEach(service => {
+//         // Add the current price
+//         if (service.current_price && service.current_price > 0) {
+//             allPriceEntries.push({
+//                 price: service.current_price,
+//                 service_name: service.service_name,
+//                 category: service.category
+//             });
+//         }
+        
+//         // Add historical prices if you want to include them
+//         if (service.price_history && service.price_history.length > 0) {
+//             service.price_history.forEach(priceEntry => {
+//                 if (priceEntry.price && priceEntry.price > 0) {
+//                     allPriceEntries.push({
+//                         price: priceEntry.price,
+//                         service_name: service.service_name,
+//                         category: service.category,
+//                         is_historical: true
+//                     });
+//                 }
+//             });
+//         }
+//     });
+    
+//     // Calculate statistics
+//     const totalCount = services.length; // Unique services count
+//     const withPrice = allPriceEntries.filter(s => s.price && s.price > 0);
+//     const prices = withPrice.map(s => s.price);
+//     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+//     const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+//     const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+    
+//     // Group by category for additional stats
+//     const categoryStats = {};
+//     services.forEach(service => {
+//         const category = service.category || 'Uncategorized';
+//         if (!categoryStats[category]) {
+//             categoryStats[category] = {
+//                 count: 0,
+//                 prices: []
+//             };
+//         }
+//         categoryStats[category].count++;
+//         if (service.current_price && service.current_price > 0) {
+//             categoryStats[category].prices.push(service.current_price);
+//         }
+//     });
+    
+//     // Calculate average price per category
+//     Object.keys(categoryStats).forEach(category => {
+//         const prices = categoryStats[category].prices;
+//         categoryStats[category].avgPrice = prices.length > 0 ? 
+//             prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+//     });
+    
+//     // Update DOM elements
+//     document.getElementById('totalServicesCount').textContent = totalCount;
+//     document.getElementById('priceRange').textContent = prices.length > 0 ? 
+//         `GH¢${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}` : 'GH¢0 - 0';
+//     document.getElementById('avgPrice').textContent = `GH¢${avgPrice.toFixed(2)}`;
+//     document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
+    
+//     // Optional: Display category breakdown
+//     if (document.getElementById('categoryBreakdown')) {
+//         let categoryHtml = '<h4>Category Breakdown:</h4><ul>';
+//         for (const [category, stats] of Object.entries(categoryStats)) {
+//             categoryHtml += `<li>${category}: ${stats.count} services, Avg: GH¢${stats.avgPrice.toFixed(2)}</li>`;
+//         }
+//         categoryHtml += '</ul>';
+//         document.getElementById('categoryBreakdown').innerHTML = categoryHtml;
+//     }
+    
+//     // Return stats for potential other uses
+//     return {
+//         totalCount,
+//         minPrice,
+//         maxPrice,
+//         avgPrice,
+//         categoryStats,
+//         allPriceEntries
+//     };
+// }
+
+// Update services statistics
+function updateServicesStats(services) {
+    const totalCount = services.length; 
+    const withPrice = services.filter(s => s.prices && s.prices.length > 0);
+
+    // console.log('Services with price:', withPrice);
+
+
+
+    const prices = withPrice.map(s => s.prices[s.prices.length - 1].price); // Get the latest price for each service    
+    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+    const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+    
+    document.getElementById('totalServicesCount').textContent = totalCount;
+    document.getElementById('priceRange').textContent = prices.length > 0 ? `GH¢${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}` : 'GH¢0 - 0';
+    document.getElementById('avgPrice').textContent = `GH¢${avgPrice.toFixed(2)}`;
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
+}  
+
+// function updateServicesStats(services) {
+//     // Flatten the services to get all price entries for statistics
+//     const allPriceEntries = [];
+    
+//     services.forEach(service => {
+//         // Add the current price
+//         if (service.current_price && service.current_price > 0) {
+//             allPriceEntries.push({
+//                 price: service.current_price,
+//                 service_name: service.service_name,
+//                 category: service.category
+//             });
+//         }
+        
+//         // Add historical prices if you want to include them
+//         if (service.price_history && service.price_history.length > 0) {
+//             service.price_history.forEach(priceEntry => {
+//                 if (priceEntry.price && priceEntry.price > 0) {
+//                     allPriceEntries.push({
+//                         price: priceEntry.price,
+//                         service_name: service.service_name,
+//                         category: service.category,
+//                         is_historical: true
+//                     });
+//                 }
+//             });
+//         }
+//     });
+    
+//     // Calculate statistics
+//     const totalCount = services.length; // Unique services count
+//     const withPrice = allPriceEntries.filter(s => s.price && s.price > 0);
+//     const prices = withPrice.map(s => s.price);
+//     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+//     const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+//     const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+    
+//     // Group by category for additional stats
+//     const categoryStats = {};
+//     services.forEach(service => {
+//         const category = service.category || 'Uncategorized';
+//         if (!categoryStats[category]) {
+//             categoryStats[category] = {
+//                 count: 0,
+//                 prices: []
+//             };
+//         }
+//         categoryStats[category].count++;
+//         if (service.current_price && service.current_price > 0) {
+//             categoryStats[category].prices.push(service.current_price);
+//         }
+//     });
+    
+//     // Calculate average price per category
+//     Object.keys(categoryStats).forEach(category => {
+//         const prices = categoryStats[category].prices;
+//         categoryStats[category].avgPrice = prices.length > 0 ? 
+//             prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+//     });
+    
+//     // Update DOM elements
+//     document.getElementById('totalServicesCount').textContent = totalCount;
+//     document.getElementById('priceRange').textContent = prices.length > 0 ? 
+//         `GH¢${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}` : 'GH¢0 - 0';
+//     document.getElementById('avgPrice').textContent = `GH¢${avgPrice.toFixed(2)}`;
+//     document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
+    
+//     // Optional: Display category breakdown
+//     if (document.getElementById('categoryBreakdown')) {
+//         let categoryHtml = '<h4>Category Breakdown:</h4><ul>';
+//         for (const [category, stats] of Object.entries(categoryStats)) {
+//             categoryHtml += `<li>${category}: ${stats.count} services, Avg: GH¢${stats.avgPrice.toFixed(2)}</li>`;
+//         }
+//         categoryHtml += '</ul>';
+//         document.getElementById('categoryBreakdown').innerHTML = categoryHtml;
+//     }
+    
+//     // Return stats for potential other uses
+//     return {
+//         totalCount,
+//         minPrice,
+//         maxPrice,
+//         avgPrice,
+//         categoryStats,
+//         allPriceEntries
+//     };
+// }
+
+// Render services in modern grid
+function renderServicesGrid(servicesToRender) {
+    const container = document.getElementById('servicesList');
+    const emptyState = document.getElementById('servicesEmptyState');
+    
+    if (!container) return;
+    
+    if (servicesToRender.length === 0) {
+        container.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+    
+    if (emptyState) emptyState.style.display = 'none';
+    
+    container.innerHTML = servicesToRender.map((service, index) => {
+        const hasPrice = service.price && service.price > 0;
+        const priceDisplay = hasPrice ? `GH¢${service.price.toFixed(2)}` : 'Price Pending';
+        const priceClass = hasPrice ? 'has-price' : 'no-price';
+        
+        return `
+            <div class="service-card-modern" style="animation-delay: ${0.02 * (index % 10)}s">
+                <div class="service-card-header">
+                    <div class="service-icon">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div class="service-title">
+                        <div class="service-name-modern">
+                            ${escapeHtml(service.service_name)}
+                            <span class="price-badge ${priceClass}">
+                                <i class="fas ${hasPrice ? 'fa-check-circle' : 'fa-clock'}"></i>
+                                ${hasPrice ? 'Priced' : 'Pending'}
+                            </span>
+                        </div>
+                        <div class="service-category">
+                            <i class="fas fa-folder"></i>
+                            <span>Healthcare Service</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="service-card-body">
+                    <div class="service-description-modern">
+                        ${service.description ? escapeHtml(service.description) : ''}
+                    </div>
+                    <div class="service-meta">
+                        <div class="price-container">
+                            <span class="price-currency">GH¢</span>
+                            <span class="price-amount ${!hasPrice ? 'pending' : ''}">${hasPrice ? service.price.toFixed(2) : '—'}</span>
+                        </div>
+                        <div class="service-actions-modern">
+                            <button class="action-icon-modern edit" onclick="editService(${service.id})" title="Edit Service">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-icon-modern delete" onclick="deleteService(${service.id})" title="Delete Service">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
-async function loadAllServicesForAssignment() {
+// Setup search and filter for services
+function setupServiceFilters() {
+    const searchInput = document.getElementById('serviceSearchInput');
+    const clearBtn = document.getElementById('clearServiceSearch');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    let currentFilter = 'all';
+    let searchTerm = '';
+    
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase().trim();
+            if (clearBtn) clearBtn.style.display = searchTerm ? 'flex' : 'none';
+            filterServices(currentFilter, searchTerm);
+        });
+    }
+    
+    // Clear search
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                searchTerm = '';
+                clearBtn.style.display = 'none';
+                filterServices(currentFilter, searchTerm);
+            }
+        });
+    }
+    
+    // Filter tabs
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            filterTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentFilter = tab.dataset.filter;
+            filterServices(currentFilter, searchTerm);
+        });
+    });
+}
+
+// Filter services
+function filterServices(filter, searchTerm) {
+    let filtered = [...services];
+    
+    // Apply filter
+    if (filter === 'has-price') {
+        filtered = filtered.filter(s => s.price && s.price > 0);
+    } else if (filter === 'no-price') {
+        filtered = filtered.filter(s => !s.price || s.price === 0);
+    }
+    
+    // Apply search
+    if (searchTerm) {
+        filtered = filtered.filter(s => 
+            s.service_name.toLowerCase().includes(searchTerm) ||
+            (s.description && s.description.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    renderServicesGrid(filtered);
+}
+
+// Edit service function
+// window.editService = async function(id) {
+//     const service = services.find(s => s.id === id);
+//     if (!service) return;
+    
+//     // Populate edit modal
+//     document.getElementById('modalServiceName').value = service.service_name;
+//     document.getElementById('modalServiceDescription').value = service.description || '';
+//     document.getElementById('modalServicePrice').value = service.price || '';
+    
+//     // Change form submission to update mode
+//     const addForm = document.getElementById('addServiceForm');
+//     const originalSubmit = addForm.onsubmit;
+    
+//     addForm.onsubmit = async (e) => {
+//         e.preventDefault();
+//         await updateService(id);
+//     };
+    
+//     showModal('addServiceModal');
+    
+//     // Restore original submit after modal closes
+//     const modal = document.getElementById('addServiceModal');
+//     const observer = new MutationObserver((mutations) => {
+//         if (!modal.classList.contains('active')) {
+//             addForm.onsubmit = originalSubmit;
+//             observer.disconnect();
+//         }
+//     });
+//     observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+// };
+
+// Update service function
+async function updateService(id) {
+    const serviceName = document.getElementById('modalServiceName').value.trim();
+    const description = document.getElementById('modalServiceDescription').value.trim();
+    const price = document.getElementById('modalServicePrice').value.trim();
+    
+    if (!serviceName) {
+        showMessageModal('Please enter service name', 'warning');
+        return;
+    }
+    
+    const serviceData = { serviceName, description, updatedBy: currentUser.username };
+    if (price) {
+        const priceNum = parseFloat(price);
+        if (!isNaN(priceNum) && priceNum > 0) serviceData.price = priceNum;
+    }
+    
     try {
-        const response = await fetch(`${API_BASE_URL}/services`, { headers: getApiHeaders() });
+        const response = await fetch(`${API_BASE_URL}/services/${id}`, {
+            method: 'PUT',
+            headers: getApiHeaders(),
+            body: JSON.stringify(serviceData)
+        });
         const result = await response.json();
         if (result.success) {
-            const select = document.getElementById('serviceToAssign');
-            if (select) {
-                select.innerHTML = '<option value="">Choose a service...</option>' + 
-                    result.data.map(svc => `<option value="${svc.id}">${escapeHtml(svc.service_name)}</option>`).join('');
-            }
+            showMessageModal('Service updated successfully!', 'success');
+            closeModal('addServiceModal');
+            document.getElementById('addServiceForm').reset();
+            loadServicesList();
+            logActivity(`Updated service: ${serviceName}`);
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
         }
     } catch (error) {
-        console.error('Error loading services for assignment:', error);
+        console.error('Error updating service:', error);
+        showMessageModal('Error updating service', 'error');
     }
 }
-
 async function loadServicesForFilter() {
     try {
         const response = await fetch(`${API_BASE_URL}/my-services`, { headers: getApiHeaders() });
@@ -1852,59 +2531,109 @@ async function loadServicesForUserSelect() {
 // ============================================
 // USER SERVICE ASSIGNMENT FUNCTIONS
 // ============================================
-async function loadUsersForServiceAssignment() {
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======//////
+// =======================  NEW USER ASSIGNMENT FUNCTION FOR POPUP =======////// 
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================//////
+// =======================================================================////// 
+ 
+
+
+
+// Load all available services
+async function loadAllServicesForAssignment() {
     try {
-        const response = await fetch(`${API_BASE_URL}/users`, { headers: getApiHeaders() });
+        const response = await fetch(`${API_BASE_URL}/services`, {
+            headers: getApiHeaders()
+        });
         const result = await response.json();
         if (result.success) {
-            allUsers = result.data;
-            const select = document.getElementById('userSelectForServices');
-            if (select) {
-                const assignableUsers = allUsers.filter(u => u.role === 'user' || u.role === 'user-admin');
-                select.innerHTML = '<option value="">Select a user...</option>' + 
-                    assignableUsers.map(user => `<option value="${user.id}">${escapeHtml(user.username)} (${getRoleDisplayName(user.role)})</option>`).join('');
-            }
+            allServicesList = result.data;
+            renderAvailableServices();
         }
     } catch (error) {
-        console.error('Error loading users for assignment:', error);
+        console.error('Error loading services:', error);
+    }
+} 
+
+
+// Load users for service assignment - Make sure this is the only version
+async function loadUsersForServiceAssignment() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users`, {
+            headers: getApiHeaders()
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            allUsersList = result.data;
+            
+            // Fetch full service objects for each user (not just IDs)
+            for (let i = 0; i < allUsersList.length; i++) {
+                const user = allUsersList[i];
+                if (user.role === 'user' || user.role === 'user-admin') {
+                    try {
+                        const servicesResponse = await fetch(`${API_BASE_URL}/users/${user.id}/services`, {
+                            headers: getApiHeaders()
+                        });
+                        const servicesResult = await servicesResponse.json();
+                        if (servicesResult.success) {
+                            // Store the full service objects
+                            user.services = servicesResult.data || [];
+                        } else {
+                            user.services = [];
+                        }
+                    } catch (err) {
+                        console.error(`Error fetching services for user ${user.id}:`, err);
+                        user.services = [];
+                    }
+                } else {
+                    user.services = [];
+                }
+            }
+            
+            updateUserCountBadge();
+            renderUsersTable(allUsersList);
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+        const tbody = document.getElementById('usersServicesTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Error loading users</td></tr>';
+        }
     }
 }
 
-async function loadUserServices() {
-    const userId = document.getElementById('userSelectForServices').value;
-    const userServiceManagement = document.getElementById('userServiceManagement');
-    if (!userId) {
-        if (userServiceManagement) userServiceManagement.style.display = 'none';
-        return;
-    }
-    if (userServiceManagement) userServiceManagement.style.display = 'block';
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/${userId}/services`, { headers: getApiHeaders() });
-        const result = await response.json();
-        if (result.success) {
-            const container = document.getElementById('userAssignedServices');
-            if (container) {
-                if (result.data.length === 0) {
-                    container.innerHTML = '<div class="empty-state">No services assigned</div>';
-                } else {
-                    container.innerHTML = result.data.map(service => `
-                        <div class="data-item">
-                            <div class="data-info">
-                                <strong>${escapeHtml(service.service_name)}</strong>
-                                <small>GH¢${service.price || 0}</small>
-                            </div>
-                            <div class="data-actions">
-                                <button onclick="removeUserService(${userId}, ${service.id})" class="btn-secondary" style="background:#ef4444;">Remove</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error loading user services:', error);
-    }
-}
+
+
+ 
 
 async function assignServiceToUser() {
     const userId = document.getElementById('userSelectForServices').value;
@@ -1931,7 +2660,44 @@ async function assignServiceToUser() {
         console.error('Error assigning service:', error);
         showMessageModal('Error assigning service', 'error');
     }
-}
+} 
+
+
+async function loadUserServices() {
+    const userId = document.getElementById('userSelectForServices').value;
+    const userServiceManagement = document.getElementById('userServiceManagement');
+    if (!userId) {
+        if (userServiceManagement) userServiceManagement.style.display = 'none';
+        return;
+    }
+    if (userServiceManagement) userServiceManagement.style.display = 'block';
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/services`, { headers: getApiHeaders() });
+        const result = await response.json();  
+        if (result.success) {
+            const container = document.getElementById('userAssignedServices');
+            if (container) {
+                if (result.data.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No services assigned</div>';
+                } else {
+                    container.innerHTML = result.data.map(service => `
+                        <div class="data-item">
+                            <div class="data-info">
+                                <strong>${escapeHtml(service.service_name)}</strong>
+                                <small>GH¢${service.price || 0}</small>
+                            </div>
+                            <div class="data-actions">
+                                <button onclick="removeUserService(${userId}, ${service.id})" class="btn-secondary" style="background:#ef4444;">Remove</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading user services:', error);
+    }
+}  
 
 async function removeUserService(userId, serviceId) {
     showConfirmModal('Remove this service from the user?', async () => {
@@ -1954,7 +2720,488 @@ async function removeUserService(userId, serviceId) {
             showMessageModal('Error removing service', 'error');
         }
     });
+} 
+
+// Update user count badge
+function updateUserCountBadge() {
+    const badge = document.getElementById('userCountBadge');
+    if (badge) {
+        const count = allUsersList.filter(u => u.role === 'user' || u.role === 'user-admin').length;
+        badge.textContent = `${count} Users`;
+    }
+} 
+
+function getInitials(name) {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length === 1) return name.substring(0, 2).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
+
+// Close service assignment modal
+function closeServiceAssignmentModal() {
+    closeModal('serviceAssignmentModal');
+    selectedUserIdForServices = null;
+    availableServicesFilter = '';
+    assignedServicesFilter = '';
+    
+    // Clear search inputs
+    const availableSearch = document.getElementById('availableServicesSearch');
+    const assignedSearch = document.getElementById('assignedServicesSearch');
+    if (availableSearch) availableSearch.value = '';
+    if (assignedSearch) assignedSearch.value = '';
+    
+    // Refresh users table to show updated service counts
+    renderUsersTable(allUsersList);
+}
+
+// Load all available services for modal
+async function loadAllServicesForAssignmentModal() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/services`, {
+            headers: getApiHeaders()
+        });
+        const result = await response.json();
+        if (result.success) {
+            allServicesList = result.data;
+            renderAvailableServicesModal();
+        }
+    } catch (error) {
+        console.error('Error loading services:', error);
+    }
+}  
+
+// Render available services with checkboxes
+function renderAvailableServices() {
+    const container = document.getElementById('availableServicesList');
+    if (!container) return;
+    
+    const assignedServiceIds = new Set(userAssignedServicesList.map(s => s.id));
+    let filteredServices = allServicesList.filter(s => !assignedServiceIds.has(s.id));
+    
+    // Apply search filter
+    if (availableServicesFilter) {
+        filteredServices = filteredServices.filter(s => 
+            s.service_name.toLowerCase().includes(availableServicesFilter) ||
+            (s.description && s.description.toLowerCase().includes(availableServicesFilter))
+        );
+    }
+    
+    if (filteredServices.length === 0) {
+        container.innerHTML = '<div class="empty-state-list"><i class="fas fa-box-open"></i>No available services</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredServices.map(service => `
+        <label class="service-checkbox-item" data-service-id="${service.id}">
+            <input type="checkbox" class="service-checkbox-available" value="${service.id}" data-service-name="${escapeHtml(service.service_name)}">
+            <div class="service-info">
+                <div class="service-name">${escapeHtml(service.service_name)}</div>
+                ${service.description ? `<div class="service-description">${escapeHtml(service.description)}</div>` : ''}
+            </div>
+            ${service.price ? `<span class="service-price">GH¢${service.price.toFixed(2)}</span>` : ''}
+        </label>
+    `).join('');
+    
+    // Add event listeners to checkboxes
+    document.querySelectorAll('.service-checkbox-available').forEach(cb => {
+        cb.addEventListener('change', updateAssignSelectedCount);
+    });
+}
+
+// Load user's assigned services for modal
+async function loadUserAssignedServicesDataModal(userId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${userId}/services`, {
+            headers: getApiHeaders()
+        });
+        const result = await response.json();
+        if (result.success) {
+            userAssignedServicesList = result.data;
+            renderAvailableServicesModal();
+            renderAssignedServicesModal();
+        }
+    } catch (error) {
+        console.error('Error loading user services:', error);
+    }
+}
+
+// Render available services in modal
+function renderAvailableServicesModal() {
+    const container = document.getElementById('availableServicesList');
+    if (!container) return;
+    
+    const assignedServiceIds = new Set(userAssignedServicesList.map(s => s.id));
+    let filteredServices = allServicesList.filter(s => !assignedServiceIds.has(s.id));
+    
+    if (availableServicesFilter) {
+        filteredServices = filteredServices.filter(s => 
+            s.service_name.toLowerCase().includes(availableServicesFilter) ||
+            (s.description && s.description.toLowerCase().includes(availableServicesFilter))
+        );
+    }
+    
+    if (filteredServices.length === 0) {
+        container.innerHTML = '<div class="empty-state-list"><i class="fas fa-box-open"></i>No available services</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredServices.map(service => `
+        <label class="service-checkbox-item" data-service-id="${service.id}">
+            <input type="checkbox" class="service-checkbox-available" value="${service.id}" data-service-name="${escapeHtml(service.service_name)}">
+            <div class="service-info">
+                <div class="service-name">${escapeHtml(service.service_name)}</div>
+                ${service.description ? `<div class="service-description">${escapeHtml(service.description)}</div>` : ''}
+            </div>
+            ${service.price ? `<span class="service-price">GH¢${service.price.toFixed(2)}</span>` : ''}
+        </label>
+    `).join('');
+    
+    document.querySelectorAll('.service-checkbox-available').forEach(cb => {
+        cb.addEventListener('change', updateAssignSelectedCount);
+    });
+    updateAssignSelectedCount();
+}
+
+// Render assigned services in modal
+function renderAssignedServicesModal() {
+    const container = document.getElementById('assignedServicesList');
+    if (!container) return;
+    
+    let filteredServices = [...userAssignedServicesList];
+    
+    if (assignedServicesFilter) {
+        filteredServices = filteredServices.filter(s => 
+            s.service_name.toLowerCase().includes(assignedServicesFilter) ||
+            (s.description && s.description.toLowerCase().includes(assignedServicesFilter))
+        );
+    }
+    
+    if (filteredServices.length === 0) {
+        container.innerHTML = '<div class="empty-state-list"><i class="fas fa-tasks"></i>No services assigned</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredServices.map(service => `
+        <label class="service-checkbox-item assigned" data-service-id="${service.id}">
+            <input type="checkbox" class="service-checkbox-assigned" value="${service.id}" data-service-name="${escapeHtml(service.service_name)}">
+            <div class="service-info">
+                <div class="service-name">${escapeHtml(service.service_name)}</div>
+                ${service.description ? `<div class="service-description">${escapeHtml(service.description)}</div>` : ''}
+            </div>
+            ${service.price ? `<span class="service-price">GH¢${service.price.toFixed(2)}</span>` : ''}
+        </label>
+    `).join('');
+    
+    document.querySelectorAll('.service-checkbox-assigned').forEach(cb => {
+        cb.addEventListener('change', updateRemoveSelectedCount);
+    });
+    updateRemoveSelectedCount();
+}
+
+// Update assign selected count
+function updateAssignSelectedCount() {
+    const selected = document.querySelectorAll('.service-checkbox-available:checked').length;
+    const countSpan = document.getElementById('selectedCount');
+    const assignBtn = document.getElementById('assignSelectedBtn');
+    
+    if (countSpan) countSpan.textContent = selected;
+    if (assignBtn) assignBtn.disabled = selected === 0;
+}
+
+// Update remove selected count
+function updateRemoveSelectedCount() {
+    const selected = document.querySelectorAll('.service-checkbox-assigned:checked').length;
+    const countSpan = document.getElementById('removeSelectedCount');
+    const removeBtn = document.getElementById('removeSelectedBtn');
+    
+    if (countSpan) countSpan.textContent = selected;
+    if (removeBtn) removeBtn.disabled = selected === 0;
+}
+
+// Assign selected services
+async function assignSelectedServices() {
+    if (!selectedUserIdForServices) {
+        showMessageModal('No user selected', 'warning');
+        return;
+    }
+    
+    const selectedCheckboxes = document.querySelectorAll('.service-checkbox-available:checked');
+    if (selectedCheckboxes.length === 0) return;
+    
+    const serviceIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    const serviceNames = Array.from(selectedCheckboxes).map(cb => cb.dataset.serviceName);
+    
+    showConfirmModal(`Assign ${serviceNames.length} service(s) to this user?`, async () => {
+        try {
+            let successCount = 0;
+            for (const serviceId of serviceIds) {
+                const response = await fetch(`${API_BASE_URL}/users/services/assign`, {
+                    method: 'POST',
+                    headers: getApiHeaders(),
+                    body: JSON.stringify({ 
+                        userId: selectedUserIdForServices, 
+                        serviceId: serviceId,
+                        assignedBy: currentUser.username 
+                    })
+                });
+                const result = await response.json();
+                if (result.success) successCount++;
+            }
+            
+            if (successCount > 0) {
+                showMessageModal(`${successCount} service(s) assigned successfully!`, 'success');
+                await loadUserAssignedServicesDataModal(selectedUserIdForServices);
+                logActivity(`Assigned ${successCount} service(s) to user ID ${selectedUserIdForServices}`);
+            } else {
+                showMessageModal('Failed to assign services', 'error');
+            }
+        } catch (error) {
+            console.error('Error assigning services:', error);
+            showMessageModal('Error assigning services', 'error');
+        }
+    });
+}
+
+// Remove selected services
+async function removeSelectedServices() {
+    if (!selectedUserIdForServices) {
+        showMessageModal('No user selected', 'warning');
+        return;
+    }
+    
+    const selectedCheckboxes = document.querySelectorAll('.service-checkbox-assigned:checked');
+    if (selectedCheckboxes.length === 0) return;
+    
+    const serviceIds = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    const serviceNames = Array.from(selectedCheckboxes).map(cb => cb.dataset.serviceName);
+    
+    showConfirmModal(`Remove ${serviceNames.length} service(s) from this user?`, async () => {
+        try {
+            let successCount = 0;
+            for (const serviceId of serviceIds) {
+                const response = await fetch(`${API_BASE_URL}/users/${selectedUserIdForServices}/services/${serviceId}`, {
+                    method: 'DELETE',
+                    headers: getApiHeaders(),
+                    body: JSON.stringify({ deletedBy: currentUser.username })
+                });
+                const result = await response.json();
+                if (result.success) successCount++;
+            }
+            
+            if (successCount > 0) {
+                showMessageModal(`${successCount} service(s) removed successfully!`, 'success');
+                await loadUserAssignedServicesDataModal(selectedUserIdForServices);
+                logActivity(`Removed ${successCount} service(s) from user ID ${selectedUserIdForServices}`);
+            } else {
+                showMessageModal('Failed to remove services', 'error');
+            }
+        } catch (error) {
+            console.error('Error removing services:', error);
+            showMessageModal('Error removing services', 'error');
+        }
+    });
+}
+
+// Setup event listeners for user services page
+function setupUserServicesEventListeners() {
+    const searchInput = document.getElementById('userSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const clearBtn = document.getElementById('clearUserSearch');
+            if (clearBtn) clearBtn.style.display = e.target.value ? 'flex' : 'none';
+            renderUsersTable(allUsersList);
+        });
+    }
+    
+    const clearSearch = document.getElementById('clearUserSearch');
+    if (clearSearch) {
+        clearSearch.addEventListener('click', () => {
+            const searchInput = document.getElementById('userSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                clearSearch.style.display = 'none';
+                renderUsersTable(allUsersList);
+            }
+        });
+    }
+    
+    const availableSearch = document.getElementById('availableServicesSearch');
+    if (availableSearch) {
+        availableSearch.addEventListener('input', (e) => {
+            availableServicesFilter = e.target.value.toLowerCase();
+            renderAvailableServicesModal();
+        });
+    }
+    
+    const assignedSearch = document.getElementById('assignedServicesSearch');
+    if (assignedSearch) {
+        assignedSearch.addEventListener('input', (e) => {
+            assignedServicesFilter = e.target.value.toLowerCase();
+            renderAssignedServicesModal();
+        });
+    }
+    
+    const assignBtn = document.getElementById('assignSelectedBtn');
+    if (assignBtn) assignBtn.addEventListener('click', assignSelectedServices);
+    
+    const removeBtn = document.getElementById('removeSelectedBtn');
+    if (removeBtn) removeBtn.addEventListener('click', removeSelectedServices);
+}   
+
+
+
+// Render users table - FIXED VERSION
+function renderUsersTable(users) {
+    const tbody = document.getElementById('usersServicesTableBody');
+    if (!tbody) return; 
+
+    // console.log('users:', users);
+    
+    // Filter to users and user-admins
+    let assignableUsers = users.filter(u => u.role === 'user' || u.role === 'user-admin');
+    
+    // Apply search filter
+    const searchTerm = document.getElementById('userSearchInput')?.value.toLowerCase().trim() || '';
+    if (searchTerm) {
+        assignableUsers = assignableUsers.filter(user => 
+            user.username?.toLowerCase().includes(searchTerm) ||
+            (user.first_name && user.first_name.toLowerCase().includes(searchTerm)) ||
+            (user.last_name && user.last_name.toLowerCase().includes(searchTerm)) ||
+            (user.middle_name && user.middle_name.toLowerCase().includes(searchTerm)) ||
+            user.special_id?.toLowerCase().includes(searchTerm) ||
+            user.phone_number?.toLowerCase().includes(searchTerm) ||
+            `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (assignableUsers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No users found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = assignableUsers.map(user => {
+        const fullName = [user.first_name, user.middle_name, user.last_name].filter(n => n && n.trim()).join(' ') || user.username;
+        const initials = getInitials(fullName);
+        const roleDisplay = getRoleDisplayName(user.role);
+        
+        // Safely handle services
+        let servicesList = [];
+        if (user.services && Array.isArray(user.services)) {
+            servicesList = user.services;
+        } else if (user.assigned_services && Array.isArray(user.assigned_services)) {
+            servicesList = user.assigned_services;
+        } else if (user.user_services && Array.isArray(user.user_services)) {
+            servicesList = user.user_services;
+        }
+        
+        const servicesHtml = servicesList.length > 0 
+            ? `<div class="services-badge-container">${servicesList.map(s => `<span class="service-badge-small">${escapeHtml(s.service_name || s.name || 'Unknown')}</span>`).join('')}</div>`
+            : '<span class="no-services-text">No services assigned</span>';
+        
+        // Escape all string values for safe HTML
+        const escapedFullName = escapeHtml(fullName);
+        const escapedUsername = escapeHtml(user.username);
+        const escapedSpecialId = escapeHtml(user.special_id?.substring(0, 8) || 'N/A');
+        const escapedPhone = escapeHtml(user.phone_number || '');
+        
+        // Create safe onclick attribute
+        const onclickAttr = `openServiceAssignmentModal(${user.id}, '${escapedFullName.replace(/'/g, "\\'")}', '${escapedSpecialId.replace(/'/g, "\\'")}', '${escapedUsername.replace(/'/g, "\\'")}', '${escapedPhone.replace(/'/g, "\\'")}')`;
+        
+        return `
+            <tr>
+                <td>
+                    <div class="user-info-cell">
+                        <div class="user-avatar-small">${escapeHtml(initials)}</div>
+                        <div>
+                            <div class="user-name-text">${escapedFullName}</div>
+                            <div class="user-email-text">${escapedUsername}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><code>${escapedSpecialId}</code></td>
+                <td><span class="role-badge-row ${user.role}" style="background: ${getRoleColor(user.role)}; padding: 4px 10px; font-size: 11px;">${escapeHtml(roleDisplay)}</span></td>
+                <td class="services-cell">${servicesHtml}</td>
+                <td class="action-buttons-cell">
+                    <button class="assign-service-btn" onclick="${onclickAttr}">
+                        <i class="fas fa-cog"></i> Manage Services
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+
+// Helper function to safely escape strings for onclick attributes
+function escapeForOnClick(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+} 
+
+
+
+// Open service assignment modal
+async function openServiceAssignmentModal(userId, fullName, staffId, username, phone) {
+    selectedUserIdForServices = userId;
+    
+    // Set modal info - populate BOTH elements
+    const modalUserName = document.getElementById('modalUserName');
+    // const modalUserFullName = document.getElementById('modalUserInfo modalUserFullName');
+     const modalUserFullName = document.getElementById('modalUserNameInFull');  
+    const modalUserId = document.getElementById('modalUserId');
+    const modalStaffId = document.getElementById('modalStaffId');
+    const modalUsername = document.getElementById('modalUsername');
+    const modalPhone = document.getElementById('modalPhone');
+    
+    if (modalUserName) modalUserName.textContent = fullName;
+    if (modalUserFullName) modalUserFullName.textContent = fullName;
+    if (modalUserId) modalUserId.value = userId;
+    if (modalStaffId) modalStaffId.textContent = staffId?.substring(0, 8) || 'N/A';
+    if (modalUsername) modalUsername.textContent = username;
+    if (modalPhone) modalPhone.textContent = phone || 'Not provided';
+    
+    // Also set the avatar with initials
+    const avatar = document.getElementById('modalUserAvatar');
+    if (avatar) {
+        const initials = getInitials(fullName);
+        avatar.innerHTML = initials;
+        avatar.style.display = 'flex';
+        avatar.style.alignItems = 'center';
+        avatar.style.justifyContent = 'center';
+    }
+    
+    // Show modal
+    showModal('serviceAssignmentModal');
+    
+    // Load services
+    await loadAllServicesForAssignmentModal();
+    await loadUserAssignedServicesDataModal(userId);
+}
+
+
+
+
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== //// 
+//// ===============   END OF NEW SERVICE ASSIGNMENT    ======================= ////
+//// ===============   END OF NEW SERVICE ASSIGNMENT    ======================= ////
+//// ===============   END OF NEW SERVICE ASSIGNMENT    ======================= ////
+//// ===============   END OF NEW SERVICE ASSIGNMENT    ======================= ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== ////
+////=========================================================================== //// 
 
 // ============================================
 // USER MANAGEMENT FUNCTIONS
@@ -2418,29 +3665,53 @@ async function passwordMatch() {
 // ============================================
 // PROFILE FUNCTIONS
 // ============================================
+
+// Update loadAccountProfile function to include full name fields
 async function loadAccountProfile() {
     try {
         const response = await fetch(`${API_BASE_URL}/users/current`, { headers: getApiHeaders() });
-        const result = await response.json();
+        const result = await response.json(); 
+        // console.log('current user results:', result);
+        
         if (result.success) {
             const user = result.data;
+            
+            // Set basic info
             document.getElementById('profileUsername').textContent = user.username;
             document.getElementById('profileAccountNumber').textContent = user.special_id || 'N/A';
             document.getElementById('profileRole').textContent = getRoleDisplayName(user.role);
             document.getElementById('profileRole').style.background = getRoleColor(user.role);
             
-            const fullNameElement = document.getElementById('profileFullName');
-            if (fullNameElement) {
-                const fullName = [user.first_name, user.middle_name, user.last_name].filter(n => n && n.trim()).join(' ') || user.username;
-                fullNameElement.textContent = fullName;
-            }
+            // Set full name and individual name fields
+            const fullName = [user.first_name, user.middle_name, user.last_name].filter(n => n && n.trim()).join(' ') || user.username;
+            const fullNameElement = document.getElementById('profileFullName'); 
+
+
+            const fullNameElements = fullNameElement.innerHTML = '<span id="profileFirstName"></span> <span id="profileMiddleName"></span> <span id="profileLastName"></span>'  ;  
+
+             if (fullNameElement) fullNameElement.innerHTML = fullNameElements;
+            // Set individual name fields
+            const firstNameElement = document.getElementById('profileFirstName');
+            if (firstNameElement) firstNameElement.textContent = user.first_name || '-';
             
-            const sexElement = document.getElementById('profileSex');
-            if (sexElement) sexElement.textContent = user.sex ? user.sex.charAt(0).toUpperCase() + user.sex.slice(1) : 'Not specified';
+            const middleNameElement = document.getElementById('profileMiddleName');
+            if (middleNameElement) middleNameElement.textContent = user.middle_name || '-';
             
+            const lastNameElement = document.getElementById('profileLastName');
+            if (lastNameElement) lastNameElement.textContent = user.last_name || '-';     
+
+
+            
+            
+            // Set phone number
             const phoneElement = document.getElementById('profilePhone');
             if (phoneElement) phoneElement.textContent = user.phone_number || 'Not specified';
             
+            // Set gender
+            const sexElement = document.getElementById('profileSex');
+            if (sexElement) sexElement.textContent = user.sex ? user.sex.charAt(0).toUpperCase() + user.sex.slice(1) : 'Not specified';
+            
+            // Set age from DOB
             let ageText = 'Not specified';
             if (user.date_of_birth) {
                 const birthDate = new Date(user.date_of_birth);
@@ -2448,11 +3719,12 @@ async function loadAccountProfile() {
                 let age = today.getFullYear() - birthDate.getFullYear();
                 const monthDiff = today.getMonth() - birthDate.getMonth();
                 if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
-                ageText = `${age} years`;
+                ageText = `${age} years (${new Date(user.date_of_birth).toLocaleDateString()})`;
             }
             const ageElement = document.getElementById('profileAge');
             if (ageElement) ageElement.textContent = ageText;
             
+            // Set status badge
             const statusBadge = document.getElementById('profileStatus');
             if (statusBadge) {
                 if (user.status === 'suspended') {
@@ -2467,15 +3739,206 @@ async function loadAccountProfile() {
                 }
             }
             
+            // Set dates
             if (user.created_at) document.getElementById('profileMemberSince').textContent = new Date(user.created_at).toLocaleDateString();
             document.getElementById('profileLastLogin').textContent = user.last_login ? new Date(user.last_login).toLocaleString() : 'First login';
+            
+            // Update avatar
             updateProfileAvatar(user.first_name || user.username);
+            
+            // Load services and activity
             await loadProfileServices();
             await loadProfileRecentActivity();
         }
     } catch (error) {
         console.error('Error loading profile:', error);
+        showMessageModal('Error loading profile', 'error');
     }
+}
+
+
+
+// In your app.js, add a function to verify password
+async function verifyPassword(password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/verify-password`, {
+            method: 'POST',
+            headers: getApiHeaders(),
+            body: JSON.stringify({ 
+                username: currentUser.username, 
+                password: password 
+            })
+        });
+        
+        const result = await response.json();
+        return result.success && result.valid === true;
+        
+    } catch (error) {
+        console.error('Error verifying password:', error);
+        return false;
+    }
+}
+
+// Add function to update full name
+async function handleUpdateFullname(e) {
+    e.preventDefault(); 
+
+    
+    
+    const firstName = document.getElementById('editFirstName').value.trim();
+    const middleName = document.getElementById('editMiddleName').value.trim();
+    const lastName = document.getElementById('editLastName').value.trim();
+    const confirmPassword = document.getElementById('fullnameConfirmPassword').value;
+    
+    // Validation
+    if (!firstName) {
+        showMessageModal('Please enter first name', 'warning');
+        return;
+    }
+    
+    if (!lastName) {
+        showMessageModal('Please enter last name', 'warning');
+        return;
+    }
+    
+    if (!confirmPassword) {
+        showMessageModal('Please enter your password to confirm', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/update-profile-details`, {
+            method: 'PUT',
+            headers: getApiHeaders(),
+            body: JSON.stringify({ 
+                firstName, 
+                middleName: middleName || null, 
+                lastName, 
+                password: confirmPassword 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Full name updated successfully!', 'success');
+            closeModal('fullnameModal');
+            
+            // Update current user data
+            if (currentUser) {
+                currentUser.first_name = firstName;
+                currentUser.middle_name = middleName;
+                currentUser.last_name = lastName;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            // Reload profile to show updated info
+            setTimeout(() => loadAccountProfile(), 500);
+            logActivity('Updated profile full name');
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating full name:', error);
+        showMessageModal('Error updating full name', 'error');
+    }
+}
+
+// Add function to update phone number
+async function handleUpdatePhone(e) {
+    e.preventDefault();
+    
+    const phoneNumber = document.getElementById('editPhoneNumber').value.trim();
+    const confirmPassword = document.getElementById('phoneConfirmPassword').value;
+    
+    // Validation
+    if (!phoneNumber) {
+        showMessageModal('Please enter phone number', 'warning');
+        return;
+    }
+    
+    // Basic phone number validation (Ghana format)
+    const phoneRegex = /^(0[2-9]\d{7,8})$/;
+    if (!phoneRegex.test(phoneNumber)) {
+        showMessageModal('Please enter a valid phone number (e.g., 024XXXXXXX)', 'warning');
+        return;
+    }
+    
+    if (!confirmPassword) {
+        showMessageModal('Please enter your password to confirm', 'warning');
+        return;
+    }
+    
+    try {       
+
+        // alert('user phone update !!!') ; 
+
+        const response = await fetch(`${API_BASE_URL}/users/update-profile-details`, {
+            method: 'PUT',
+            headers: getApiHeaders(),
+            body: JSON.stringify({ 
+                phoneNumber, 
+                password: confirmPassword 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessageModal('Phone number updated successfully!', 'success');
+            closeModal('phoneModal');
+            
+            // Update current user data
+            if (currentUser) {
+                currentUser.phone_number = phoneNumber;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            // Reload profile to show updated info
+            setTimeout(() => loadAccountProfile(), 500);
+            logActivity('Updated profile phone number');
+        } else {
+            showMessageModal('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error updating phone number:', error);
+        showMessageModal('Error updating phone number', 'error');
+    }
+}  
+
+
+
+// Update setupProfileEventListeners function
+function setupProfileEventListeners() {
+    const updateUsernameForm = document.getElementById('updateUsernameForm');
+    if (updateUsernameForm) updateUsernameForm.addEventListener('submit', handleUpdateUsername);
+    
+    const updatePasswordForm = document.getElementById('updatePasswordForm');
+    if (updatePasswordForm) updatePasswordForm.addEventListener('submit', handleUpdatePassword);
+    
+    const changeUsernameForm = document.getElementById('changeUsernameForm');
+    if (changeUsernameForm) changeUsernameForm.addEventListener('submit', async (e) => { 
+        e.preventDefault(); 
+        await handleModalUpdateUsername(); 
+    });
+    
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) changePasswordForm.addEventListener('submit', async (e) => { 
+        e.preventDefault(); 
+        await handleModalUpdatePassword(); 
+    });
+    
+    // Add new event listeners
+  
+    
+    const updatePhoneForm = document.getElementById('updatePhoneForm');
+    if (updatePhoneForm) updatePhoneForm.addEventListener('submit', handleUpdatePhone);  
+
+    const updateFullNameForm = document.getElementById('updateFullnameForm');
+    if (updateFullNameForm) updateFullNameForm.addEventListener('submit', handleUpdateFullname); 
+
+
+   
 }
 
 async function loadProfileServices() {
@@ -2534,17 +3997,6 @@ function updateTopHeaderAvatar(username) {
     const colors = ['#10b981', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6', '#ec4899'];
     const colorIndex = username.length % colors.length;
     userAvatarSmall.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${colors[colorIndex]};border-radius:50%;font-size:14px;font-weight:bold;color:white;">${initials || 'U'}</div>`;
-}
-
-function setupProfileEventListeners() {
-    const updateUsernameForm = document.getElementById('updateUsernameForm');
-    if (updateUsernameForm) updateUsernameForm.addEventListener('submit', handleUpdateUsername);
-    const updatePasswordForm = document.getElementById('updatePasswordForm');
-    if (updatePasswordForm) updatePasswordForm.addEventListener('submit', handleUpdatePassword);
-    const changeUsernameForm = document.getElementById('changeUsernameForm');
-    if (changeUsernameForm) changeUsernameForm.addEventListener('submit', async (e) => { e.preventDefault(); await handleModalUpdateUsername(); });
-    const changePasswordForm = document.getElementById('changePasswordForm');
-    if (changePasswordForm) changePasswordForm.addEventListener('submit', async (e) => { e.preventDefault(); await handleModalUpdatePassword(); });
 }
 
 async function handleUpdateUsername(e) {
@@ -2662,14 +4114,37 @@ async function handleModalUpdatePassword() {
     }
 }
 
-function openProfileModal(action) {
+function openProfileModal(action) { 
+   
     switch(action) {
+        case 'fullname':
+            // Populate existing values 
+            const firstName = document.getElementById('profileFirstName').textContent;
+            const middleName = document.getElementById('profileMiddleName').textContent;
+            const lastName = document.getElementById('profileLastName').textContent;  
+
+            console.log('first Name:', firstName) ;
+            document.getElementById('editFirstName').value = firstName !== '-' ? firstName : '';
+            document.getElementById('editMiddleName').value = middleName !== '-' ? middleName : '';
+            document.getElementById('editLastName').value = lastName !== '-' ? lastName : '';
+            document.getElementById('fullnameConfirmPassword').value = '';
+            showModal('fullnameModal');
+            break;
+            
+        case 'phone':
+            const phone = document.getElementById('profilePhone').textContent;
+            document.getElementById('editPhoneNumber').value = phone !== 'Not specified' ? phone : '';
+            document.getElementById('phoneConfirmPassword').value = '';
+            showModal('phoneModal');
+            break;
+            
         case 'username':
             document.getElementById('currentUsernameModal').value = currentUser.username;
             document.getElementById('newUsernameModal').value = '';
             document.getElementById('usernamePasswordConfirm').value = '';
             showModal('usernameModal');
             break;
+            
         case 'password':
             document.getElementById('currentPasswordModal').value = '';
             document.getElementById('newPasswordModal').value = '';
@@ -2678,13 +4153,14 @@ function openProfileModal(action) {
             document.getElementById('modalPasswordStrengthBar').className = 'password-strength-bar';
             showModal('passwordModal');
             break;
+            
         case 'security':
             loadSecuritySettings();
             showModal('securityModal');
             break;
     }
 }
-
+ 
 function loadSecuritySettings() {
     const loginNotifications = localStorage.getItem('loginNotifications') === 'true';
     const sessionTimeout = localStorage.getItem('sessionTimeout') || '30';
@@ -2960,7 +4436,15 @@ function openPrintModal() {
     setTimeout(() => { try { renderPrintTable(filteredInvoices); isRenderingPrint = false; showModal('printModal'); } catch (error) { console.error('Error rendering print table:', error); isRenderingPrint = false; isPrintModalOpen = false; showMessageModal('Error loading print preview', 'error'); } }, 100);
 }
 
-function closePrintModal() { closeModal('printModal'); const container = document.getElementById('printTableContainer'); if (container) container.innerHTML = ''; isPrintModalOpen = false; isRenderingPrint = false; }
+function closePrintModal() { 
+    closeModal('printModal');
+    const container = document.getElementById('printTableContainer'); 
+    if (container) container.innerHTML = '';
+    isPrintModalOpen = false; 
+    isRenderingPrint = false; 
+
+
+}
 
 function printPrintModal() {
     if (isPrinting) return;
@@ -2991,16 +4475,34 @@ function exportToExcel() {
     const allRows = [headers, ...rows, totalsRow, grandTotalRow];
     const csvContent = allRows.map(row => row.map(cell => { if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) return `"${cell.replace(/"/g, '""')}"`; return cell; }).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a'); const url = URL.createObjectURL(blob); link.setAttribute('href', url); link.setAttribute('download', `mediledger_records_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+    const link = document.createElement('a'); const url = URL.createObjectURL(blob); link.setAttribute('href', url); link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+
     showMessageModal(`Exported ${filteredInvoices.length} records to Excel/CSV successfully!`, 'success');
 }
 
 // ============================================
 // MODAL FUNCTIONS FOR ADDING ACCOUNTS, SERVICES, USERS
 // ============================================
-function openAddAccountModal() { document.getElementById('addAccountForm').reset(); showModal('addAccountModal'); }
-function openAddServiceModal() { document.getElementById('addServiceForm').reset(); showModal('addServiceModal'); }
-async function openAddUserModal() { document.getElementById('addUserForm').reset(); const strengthBar = document.getElementById('modalAddPasswordStrengthBar'); if (strengthBar) strengthBar.className = 'password-strength-bar'; await loadServicesForUserSelect(); showModal('addUserModal'); }
+function openAddAccountModal() { 
+    document.getElementById('addAccountForm').reset(); 
+    showModal('addAccountModal'); 
+}
+
+function openAddServiceModal() { 
+    document.getElementById('addServiceForm').reset(); 
+    showModal('addServiceModal');
+
+}
+
+
+async function openAddUserModal() { 
+    document.getElementById('addUserForm').reset(); 
+    const strengthBar = document.getElementById('modalAddPasswordStrengthBar'); 
+    if (strengthBar) strengthBar.className = 'password-strength-bar'; 
+    await loadServicesForUserSelect(); 
+    showModal('addUserModal'); 
+
+}
 
 async function handleModalAddAccount(e) {
     e.preventDefault();
@@ -3009,11 +4511,27 @@ async function handleModalAddAccount(e) {
     const description = document.getElementById('modalAccountDescription').value.trim();
     if (!accountName) { showMessageModal('Please enter account name', 'warning'); return; }
     try {
-        const response = await fetch(`${API_BASE_URL}/accounts`, { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ accountName, accountType, description, createdBy: currentUser.username }) });
+        const response = await fetch(`${API_BASE_URL}/accounts`, { 
+            method: 'POST', headers: getApiHeaders(), 
+            body: JSON.stringify({ accountName, accountType, description, createdBy: currentUser.username }) 
+        });
         const result = await response.json();
-        if (result.success) { showMessageModal('Account added successfully!', 'success'); closeModal('addAccountModal'); document.getElementById('addAccountForm').reset(); loadAccounts(); loadAccountsForSelect(); logActivity(`Added new account: ${accountName}`); }
-        else { showMessageModal('Error: ' + result.error, 'error'); }
-    } catch (error) { console.error('Error adding account:', error); showMessageModal('Error adding account', 'error'); }
+
+        if (result.success) { 
+            showMessageModal('Account added successfully!', 'success'); 
+            closeModal('addAccountModal');
+            document.getElementById('addAccountForm').reset(); 
+            loadAccounts();
+            loadAccountsForSelect(); 
+            logActivity(`Added new account: ${accountName}`); 
+        }
+        else { 
+            showMessageModal('Error: ' + result.error, 'error');
+         }
+    } catch (error) { 
+        console.error('Error adding account:', error); 
+        showMessageModal('Error adding account', 'error');
+     }
 }
 
 async function handleModalAddService(e) {
@@ -3053,34 +4571,241 @@ async function handleModalAddUser(e) {
     try {
         const response = await fetch(`${API_BASE_URL}/users`, { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ firstName, middleName, lastName, Sex, DOB, phone, username, password, role, userServices, passwordHint, createdBy: currentUser.username }) });
         const result = await response.json();
-        if (result.success) { showMessageModal(`User "${username}" added successfully!`, 'success'); closeModal('addUserModal'); document.getElementById('addUserForm').reset(); loadUsers(); loadUsersForServiceAssignment(); logActivity(`Added new user: ${username} with role: ${role}`); }
-        else { showMessageModal('Error: ' + result.error, 'error'); }
-    } catch (error) { console.error('Error adding user:', error); showMessageModal('Error adding user', 'error'); }
+        if (result.success) { 
+            showMessageModal(`User "${username}" added successfully!`, 'success');
+             closeModal('addUserModal');
+              document.getElementById('addUserForm').reset();
+               loadUsers(); 
+               loadUsersForServiceAssignment();
+               logActivity(`Added new user: ${username} with role: ${role}`);
+             }
+        else { 
+             showMessageModal('Error: ' + result.error, 'error'); 
+            }
+    } catch (error) { 
+        console.error('Error adding user:', error); 
+        showMessageModal('Error adding user', 'error');
+     }
 }
 
 // ============================================
 // DELETE FUNCTIONS
 // ============================================
-window.editInvoice = async function(id) { if (!hasPermission.canEditInvoice()) { showMessageModal('Only admin can edit invoices', 'warning'); return; } await loadInvoiceForEdit(id); showModal('editInvoiceModal'); };
-window.deleteInvoice = async function(id) { if (!hasPermission.canDeleteUser()) { showMessageModal('Only admin can delete invoices', 'warning'); return; } showConfirmModal('Are you sure you want to delete this invoice?', async () => { try { const response = await fetch(`${API_BASE_URL}/invoices/${id}`, { method: 'DELETE', headers: getApiHeaders(), body: JSON.stringify({ deletedBy: currentUser.username }) }); const result = await response.json(); if (result.success) { loadInvoices(); loadSummary(); showMessageModal('Invoice deleted successfully', 'success'); logActivity(`Deleted invoice #${id}`); } else { showMessageModal('Error: ' + result.error, 'error'); } } catch (error) { console.error('Error deleting invoice:', error); showMessageModal('Error deleting invoice', 'error'); } }); };
-window.deleteAccount = async function(id) { showConfirmModal('Delete this account?', async () => { try { const response = await fetch(`${API_BASE_URL}/accounts/${id}`, { method: 'DELETE', headers: getApiHeaders(), body: JSON.stringify({ deletedBy: currentUser.username }) }); const result = await response.json(); if (result.success) { showMessageModal('Account deleted', 'success'); loadAccounts(); loadAccountsForSelect(); } else { showMessageModal('Error: ' + result.error, 'error'); } } catch (error) { console.error('Error deleting account:', error); showMessageModal('Error deleting account', 'error'); } }); };
-window.deleteService = async function(id) { showConfirmModal('Delete this service?', async () => { try { const response = await fetch(`${API_BASE_URL}/services/${id}`, { method: 'DELETE', headers: getApiHeaders(), body: JSON.stringify({ deletedBy: currentUser.username }) }); const result = await response.json(); if (result.success) { showMessageModal('Service deleted', 'success'); loadServicesList(); loadAllServicesForAssignment(); } else { showMessageModal('Error: ' + result.error, 'error'); } } catch (error) { console.error('Error deleting service:', error); showMessageModal('Error deleting service', 'error'); } }); };
+window.editInvoice = async function(id) { 
+    if (!hasPermission.canEditInvoice()) { 
+        showMessageModal('Only admin can edit invoices', 'warning'); 
+        return; } 
+        await loadInvoiceForEdit(id); showModal('editInvoiceModal'); 
+   };
+
+
+window.deleteInvoice = async function(id) { 
+    if (!hasPermission.canDeleteUser()) { 
+        showMessageModal('Only admin can delete invoices', 'warning'); 
+        return; 
+    } 
+    showConfirmModal('Are you sure you want to delete this invoice?', async () => { 
+        try {
+             const response = await fetch(`${API_BASE_URL}/invoices/${id}`,
+                 { method: 'DELETE', 
+                    headers: getApiHeaders(), 
+                    body: JSON.stringify({ deletedBy: currentUser.username }) 
+                }); 
+             const result = await response.json(); 
+             if (result.success) {
+                 loadInvoices(); 
+                 loadSummary(); 
+                 showMessageModal('Invoice deleted successfully', 'success'); logActivity(`Deleted invoice #${id}`); 
+                } else { 
+                    showMessageModal('Error: ' + result.error, 'error'); 
+                } 
+            } catch (error) { 
+                console.error('Error deleting invoice:', error); 
+                showMessageModal('Error deleting invoice', 'error');
+             } 
+            }); 
+        };
+
+
+        window.deleteAccount = async function(id) {
+             showConfirmModal('Delete this account?', async () => { 
+                try { 
+                    const response = await fetch(`${API_BASE_URL}/accounts/${id}`, 
+                        { method: 'DELETE', 
+                            headers: getApiHeaders(),
+                             body: JSON.stringify({ deletedBy: currentUser.username })
+                             }); 
+                             const result = await response.json();
+                              if (result.success) { 
+                                showMessageModal('Account deleted', 'success'); loadAccounts(); 
+                                loadAccountsForSelect();
+                             } else {
+                                 showMessageModal('Error: ' + result.error, 'error'); 
+                                } 
+                            } catch (error) { 
+                                console.error('Error deleting account:', error); showMessageModal('Error deleting account', 'error');
+                             } 
+                            }); 
+                         }; 
+
+
+window.deleteService = async function(id) { 
+    showConfirmModal('Delete this service?', async () => {
+         try { 
+            const response = await fetch(`${API_BASE_URL}/services/${id}`, 
+                { method: 'DELETE', 
+                  headers: getApiHeaders(), 
+                  body: JSON.stringify({ deletedBy: currentUser.username }) 
+                }); 
+            const result = await response.json(); 
+            if (result.success) { 
+                showMessageModal('Service deleted', 'success'); 
+                loadServicesList(); 
+                loadAllServicesForAssignment(); 
+              } else { 
+                showMessageModal('Error: ' + result.error, 'error');
+             } 
+            } catch (error) { 
+                console.error('Error deleting service:', error); 
+                showMessageModal('Error deleting service', 'error'); 
+             } 
+             }); 
+            };  
+
+
+// Edit account function
+window.editAccount = async function(id) {
+    const account = accounts.find(a => a.id === id);
+    if (!account) return;
+    
+    // Populate edit modal
+    document.getElementById('modalAccountName').value = account.account_name;
+    document.getElementById('modalAccountDescription').value = account.description || '';
+    document.getElementById('modalAccountTypeSelect').value = account.account_type;
+    
+    // Change form submission to update mode
+    const addForm = document.getElementById('addAccountForm');
+    const originalSubmit = addForm.onsubmit;
+    
+    addForm.onsubmit = async (e) => {
+        e.preventDefault();
+        await updateAccount(id);
+    };
+    
+    showModal('addAccountModal');
+    
+    // Restore original submit after modal closes
+    const modal = document.getElementById('addAccountModal');
+    const observer = new MutationObserver((mutations) => {
+        if (!modal.classList.contains('active')) {
+            addForm.onsubmit = originalSubmit;
+            observer.disconnect();
+        }
+    });
+    observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+};
+
+
+
 
 // ============================================
 // MOBILE SIDEBAR FUNCTIONALITY
 // ============================================
-function closeMobileSidebar() { if (window.innerWidth <= 992) { sidebar.classList.remove('mobile-open'); document.body.classList.remove('sidebar-open'); if (sidebarOverlay) sidebarOverlay.classList.remove('active'); } }
-function openMobileSidebar() { if (window.innerWidth <= 992) { sidebar.classList.add('mobile-open'); document.body.classList.add('sidebar-open'); if (sidebarOverlay) sidebarOverlay.classList.add('active'); } }
-if (mobileMenuToggle) { mobileMenuToggle.addEventListener('click', (e) => { e.stopPropagation(); if (sidebar.classList.contains('mobile-open')) closeMobileSidebar(); else openMobileSidebar(); }); }
-if (sidebarOverlay) { sidebarOverlay.addEventListener('click', closeMobileSidebar); }
+function closeMobileSidebar() { 
+    
+    if (window.innerWidth <= 992) { sidebar.classList.remove('mobile-open'); document.body.classList.remove('sidebar-open'); if (sidebarOverlay) sidebarOverlay.classList.remove('active'); } 
+
+
+}
+
+function openMobileSidebar() {
+    if (window.innerWidth <= 992) { sidebar.classList.add('mobile-open'); document.body.classList.add('sidebar-open'); if (sidebarOverlay) sidebarOverlay.classList.add('active'); } 
+
+}
+
+
+if (mobileMenuToggle) { 
+    
+    mobileMenuToggle.addEventListener('click', (e) => { e.stopPropagation(); if (sidebar.classList.contains('mobile-open')) closeMobileSidebar(); else openMobileSidebar(); });
+
+}
+
+
+if (sidebarOverlay) { 
+    sidebarOverlay.addEventListener('click', closeMobileSidebar);  
+
+}
 const allNavItems = document.querySelectorAll('.nav-item');
-allNavItems.forEach(item => { item.removeEventListener('click', closeMobileSidebarHandler); item.addEventListener('click', closeMobileSidebarHandler); });
-function closeMobileSidebarHandler() { if (window.innerWidth <= 992) { setTimeout(() => { closeMobileSidebar(); }, 150); } }
+
+
+allNavItems.forEach(item => { 
+    item.removeEventListener('click', closeMobileSidebarHandler); item.addEventListener('click', closeMobileSidebarHandler); 
+});
+
+
+function closeMobileSidebarHandler() { 
+    if (window.innerWidth <= 992) { setTimeout(() => { closeMobileSidebar(); }, 150); } 
+
+}
 const logoutBtnSidebar = document.getElementById('logoutBtnSidebar');
-if (logoutBtnSidebar) { logoutBtnSidebar.addEventListener('click', () => { if (window.innerWidth <= 992) { setTimeout(() => { closeMobileSidebar(); }, 150); } }); }
-window.addEventListener('resize', () => { if (window.innerWidth > 992) { sidebar.classList.remove('mobile-open'); document.body.classList.remove('sidebar-open'); if (sidebarOverlay) sidebarOverlay.classList.remove('active'); } });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && window.innerWidth <= 992 && sidebar.classList.contains('mobile-open')) { closeMobileSidebar(); } });
-if (sidebar) { sidebar.addEventListener('click', (e) => { e.stopPropagation(); }); }
+
+if (logoutBtnSidebar) { 
+    logoutBtnSidebar.addEventListener('click', () => { if (window.innerWidth <= 992) { setTimeout(() => { closeMobileSidebar(); }, 150); } }); 
+}
+window.addEventListener('resize', () => { 
+    if (window.innerWidth > 992) { sidebar.classList.remove('mobile-open'); document.body.classList.remove('sidebar-open'); if (sidebarOverlay) sidebarOverlay.classList.remove('active'); } 
+}); 
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && window.innerWidth <= 992 && sidebar.classList.contains('mobile-open')) { closeMobileSidebar(); } 
+}); 
+
+if (sidebar) { 
+    sidebar.addEventListener('click', (e) => { e.stopPropagation(); });
+ 
+}  
+
+
+// Make openServiceAssignmentModal globally available
+window.openServiceAssignmentModal = async function(userId, fullName, staffId, username, phone) {
+    selectedUserIdForServices = userId;
+    
+    // Set modal info
+    const modalUserName = document.getElementById('modalUserName');
+    const modalUserId = document.getElementById('modalUserId');
+    const modalStaffId = document.getElementById('modalStaffId');
+    const modalUsername = document.getElementById('modalUsername');
+    const modalPhone = document.getElementById('modalPhone');
+    
+    if (modalUserName) modalUserName.textContent = fullName;
+    if (modalUserId) modalUserId.value = userId;
+    if (modalStaffId) modalStaffId.textContent = staffId?.substring(0, 8) || 'N/A';
+    if (modalUsername) modalUsername.textContent = username;
+    if (modalPhone) modalPhone.textContent = phone || 'Not provided';
+    
+    // Show modal
+    showModal('serviceAssignmentModal');
+    
+    // Load services
+    await loadAllServicesForAssignmentModal();
+    await loadUserAssignedServicesDataModal(userId);
+};
+
+// Make closeServiceAssignmentModal globally available
+window.closeServiceAssignmentModal = function() {
+    closeModal('serviceAssignmentModal');
+    selectedUserIdForServices = null;
+    availableServicesFilter = '';
+    assignedServicesFilter = '';
+    
+    // Clear search inputs
+    const availableSearch = document.getElementById('availableServicesSearch');
+    const assignedSearch = document.getElementById('assignedServicesSearch');
+    if (availableSearch) availableSearch.value = '';
+    if (assignedSearch) assignedSearch.value = '';
+    
+    // Refresh users table to show updated service counts
+    renderUsersTable(allUsersList);
+};
 
 // ============================================
 // GLOBAL FUNCTIONS EXPOSED
@@ -3121,4 +4846,8 @@ window.checkModalAddPasswordStrength = checkModalAddPasswordStrength;
 window.onlyNumbers = onlyNumbers;
 window.onlyNumbersAndDecimal = onlyNumbersAndDecimal;
 window.validateGCRNumber = validateGCRNumber;
-window.validateAmount = validateAmount;
+window.validateAmount = validateAmount; 
+
+
+
+

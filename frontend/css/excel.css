@@ -1,0 +1,444 @@
+:root {
+    --white: #ffffff;
+    --white-off: #fafcff;
+    --blue-500: #3b82f6;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --blue-800: #1e40af;
+    --black: #0f172a;
+    --black-soft: #1e293b;
+    --gray-light: #f8fafc;
+    --gray-border: #e2e8f0;
+    --gray-text: #64748b;
+    --dander-gray: #f97c7c; 
+     --blue-600: #2563eb;
+    --blue-400: #60a5fa;
+    --blue-700: #1d4ed8;
+    --gray-light: #f3f4f6;
+    --gray-border: #e5e7eb;
+    --gray-text: #6b7280;
+    --text-color: #1f2937;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+} 
+
+#topUserName{
+
+    text-transform: capitalize; 
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; 
+    color: var(--blue-700);  
+    font-size: 20px;   
+    transform: scale(1); 
+    transition:  transform 0.3s ease;
+
+} 
+
+#topUserName:hover{
+
+    color: var(--blue-500); 
+    font-size: 20.5px;  
+    transform: scale(1.1);
+
+}  
+
+
+
+/* ============================================
+   USER SERVICES TABLE STYLES
+   ============================================ */
+
+.user-services-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-services-table th,
+.user-services-table td {
+    padding: 14px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-border);
+    vertical-align: middle;
+}
+
+.user-services-table th {
+    background: var(--gray-light);
+    font-weight: 600;
+    color: var(--gray-text);
+    font-size: 13px;
+}
+
+.user-services-table tbody tr:hover {
+    background: var(--gray-light);
+}
+
+.user-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar-small {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.user-name-text {
+    font-weight: 600;
+    color: var(--black);
+    margin-bottom: 2px;
+}
+
+.user-email-text {
+    font-size: 11px;
+    color: var(--gray-text);
+}
+
+.services-cell {
+    max-width: 250px;
+}
+
+.services-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.service-badge-small {
+    background: #e0e7ff;
+    color: var(--blue-700);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.no-services-text {
+    color: var(--gray-text);
+    font-size: 12px;
+    font-style: italic;
+}
+
+.action-buttons-cell {
+    white-space: nowrap;
+}
+
+.assign-service-btn {
+    padding: 6px 14px;
+    background: var(--blue-600);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.assign-service-btn:hover {
+    background: var(--blue-700);
+    transform: translateY(-1px);
+}
+
+/* Search Container */
+.user-search-container {
+    margin-bottom: 20px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input-wrapper i:first-child {
+    position: absolute;
+    left: 14px;
+    color: var(--gray-text);
+    font-size: 14px;
+}
+
+.user-search-input {
+    width: 100%;
+    padding: 12px 50px 12px 42px;
+    border: 2px solid var(--gray-border);
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.user-search-input:focus {
+    outline: none;
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--gray-text);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.clear-search-btn:hover {
+    background: var(--gray-light);
+    color: var(--black);
+}
+
+/* Modal User Info */
+.modal-user-info {
+    background: var(--gray-light);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-text);
+}
+
+.info-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--black);
+}
+
+/* Service Assignment Grid */
+.service-assignment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .service-assignment-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+.services-panel {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--gray-border);
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 14px 16px;
+    background: var(--gray-light);
+    border-bottom: 1px solid var(--gray-border);
+}
+
+.panel-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.available-services .panel-header h4 i {
+    color: var(--blue-600);
+}
+
+.assigned-services .panel-header h4 i {
+    color: #10b981;
+}
+
+.panel-search {
+    position: relative;
+}
+
+.panel-search i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-text);
+    font-size: 12px;
+}
+
+.panel-search input {
+    width: 100%;
+    padding: 8px 12px 8px 32px;
+    border: 1px solid var(--gray-border);
+    border-radius: 10px;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.panel-search input:focus {
+    outline: none;
+    border-color: var(--blue-600);
+}
+
+.services-checkbox-list {
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.service-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: var(--gray-light);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+}
+
+.service-checkbox-item:hover {
+    background: #eff6ff;
+    border-color: var(--blue-600);
+}
+
+.service-checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--blue-600);
+}
+
+.service-checkbox-item .service-info {
+    flex: 1;
+}
+
+.service-checkbox-item .service-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--black);
+    margin-bottom: 2px;
+}
+
+.service-checkbox-item .service-description {
+    font-size: 10px;
+    color: var(--gray-text);
+}
+
+.service-checkbox-item .service-price {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue-600);
+    background: rgba(59, 130, 246, 0.1);
+    padding: 3px 8px;
+    border-radius: 15px;
+}
+
+.service-checkbox-item.assigned {
+    background: #d1fae5;
+    border-color: #10b981;
+}
+
+.service-checkbox-item.assigned .service-name {
+    color: #065f46;
+}
+
+.service-checkbox-item.assigned .service-price {
+    background: rgba(16, 185, 129, 0.2);
+    color: #065f46;
+}
+
+.panel-actions {
+    padding: 12px 16px;
+    border-top: 1px solid var(--gray-border);
+    background: var(--gray-light);
+}
+
+.assign-btn, .remove-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+    font-size: 13px;
+}
+
+.assign-btn:disabled, .remove-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.remove-btn {
+    background: #ef4444;
+}
+
+.remove-btn:hover:not(:disabled) {
+    background: #dc2626;
+}
+
+/* Loading & Empty States */
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray-text);
+}
+
+.loading-state i {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.empty-state-list {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray-text);
+}
+
+.empty-state-list i {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
+    opacity: 0.5;
+}
+
+/* Scrollbar */
+.services-checkbox-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.services-checkbox-list::-webkit-scrollbar-track {
+    background: var(--gray-light);
+    border-radius: 3px;
+}
+
+.services-checkbox-list::-webkit-scrollbar-thumb {
+    background: var(--blue-600);
+    border-radius: 3px;
+}

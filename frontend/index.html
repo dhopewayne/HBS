@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="/css/style.css">  
     <link rel="stylesheet" href="/css/excel.css">  
     <link rel="stylesheet" href="/css/responsive.css">  
+    <link rel="stylesheet" href="/css/serviceMangement.css">  
+    <link rel="stylesheet" href="/css/accountMangement.css">  
     <link rel="stylesheet" href="/fontawesome-free-7.2.0-web/css/all.min.css"> 
 </head>
 <body>
@@ -101,15 +103,16 @@
                         <i class="fas fa-users"></i>
                         <span>Users</span>
                     </a>
-                    <a href="#" class="nav-item" data-section="activity">
-                        <i class="fas fa-history"></i>
-                        <span>Activity Log</span>
-                    </a> 
+                   
 
                     <a href="#" class="nav-item" data-section="account">
                         <i class="fas fa-user-circle"></i>
                         <span>My Account</span>
-                    </a>
+                    </a> 
+                    <a href="#" class="nav-item" data-section="activity">
+                        <i class="fas fa-history"></i>
+                        <span>Activity Log</span>
+                    </a> 
                 </nav>
 
                 <div class="sidebar-footer">
@@ -173,13 +176,23 @@
                             <div class="profile-details">
                                 <div class="detail-row">
                                     <div class="detail-label">
-                                        <i class="fas fa-user"></i> Username
+                                        <i class="fas fa-user"></i> Name:
+                                    </div>
+                                    <div class="detail-value" id="profileFullName">-</div>
+                                    <button class="btn-icon action-btn" onclick="openProfileModal('fullname')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>    
+                                </div> 
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-user-circle"></i> Username
                                     </div>
                                     <div class="detail-value" id="profileUsername">-</div>
                                     <button class="btn-icon action-btn" onclick="openProfileModal('username')">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                </div>
+                                </div> 
+                            
                                 <div class="detail-row">
                                     <div class="detail-label">
                                         <i class="fas fa-tag"></i> Account Number
@@ -188,6 +201,23 @@
                                     <button class="btn-icon copy-btn" onclick="copyToClipboard('profileAccountNumber')">
                                         <i class="fas fa-copy"></i>
                                     </button>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-phone"></i> Phone Number
+                                    </div>
+                                    <div class="detail-value" id="profilePhone">-</div> 
+                                    <button class="btn-icon action-btn" onclick="openProfileModal('phone')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-venus-mars"></i> Gender
+                                    </div>
+                                    <div class="detail-value" id="profileSex">-</div>
+                                    
                                 </div>
                                 <div class="detail-row">
                                     <div class="detail-label">
@@ -202,6 +232,12 @@
                                         <i class="fas fa-calendar-alt"></i> Member Since
                                     </div>
                                     <div class="detail-value" id="profileMemberSince">-</div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">
+                                        <i class="fas fa-cake"></i> Birthday
+                                    </div>
+                                    <div class="detail-value" id="profileAge">-</div>
                                 </div>
                                 <div class="detail-row">
                                     <div class="detail-label">
@@ -537,57 +573,253 @@
                         </div>
                     </div>
                 </div>
-                <!-- Accounts section  -->
+                <!-- Accounts section  --> 
+                 <!-- Accounts Section - Modern Design -->
                 <div id="accountsSection" class="content-section">
                     <div class="section-header">
-                        <h2><i class="fas fa-building"></i> Account Management</h2>
-                         <button class="btn-primary add-modal-btn" onclick="openAddAccountModal()">
+                        <div class="header-title-group">
+                            <div class="title-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div>
+                                <h2>Account Management</h2>
+                                <p class="section-subtitle">Manage financial accounts and transaction categories</p>
+                            </div>
+                        </div>
+                        <button class="btn-primary add-account-btn" onclick="openAddAccountModal()">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add New Account</span>
+                        </button>
+                    </div>
+
+                    <!-- Account Stats Overview -->
+                    <div class="account-stats-grid">
+                        <div class="stat-card-account">
+                            <div class="stat-icon-account">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="stat-info-account">
+                                <span class="stat-label-account">Total Accounts</span>
+                                <span class="stat-number-account" id="totalAccountsCount">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card-account">
+                            <div class="stat-icon-account" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                            <div class="stat-info-account">
+                                <span class="stat-label-account">Drugs Accounts</span>
+                                <span class="stat-number-account" id="drugsAccountsCount">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card-account">
+                            <div class="stat-icon-account" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-notes-medical"></i>
+                            </div>
+                            <div class="stat-info-account">
+                                <span class="stat-label-account">Non-Drugs Accounts</span>
+                                <span class="stat-number-account" id="nonDrugsAccountsCount">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card-account">
+                            <div class="stat-icon-account" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info-account">
+                                <span class="stat-label-account">Active Accounts</span>
+                                <span class="stat-number-account" id="activeAccountsCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter Bar -->
+                    <div class="account-search-bar">
+                        <div class="search-wrapper-account">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="accountSearchInput" placeholder="Search accounts by name or type..." class="account-search-input">
+                            <button id="clearAccountSearch" class="clear-search-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="filter-chips" id="accountFilterChips">
+                            <button class="filter-chip active" data-filter="all">
+                                <i class="fas fa-th-large"></i> All
+                            </button>
+                            <button class="filter-chip" data-filter="drugs">
+                                <i class="fas fa-pills"></i> Drugs
+                            </button>
+                            <button class="filter-chip" data-filter="nondrugs">
+                                <i class="fas fa-notes-medical"></i> Non-Drugs
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Accounts Grid Container -->
+                    <div class="accounts-grid-container">
+                        <div id="accountsList" class="accounts-modern-grid">
+                            <!-- Accounts will be dynamically loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="accountsEmptyState" class="accounts-empty-state" style="display: none;">
+                        <div class="empty-state-icon-account">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h3>No Accounts Found</h3>
+                        <p>Get started by creating your first financial account</p>
+                        <button class="btn-primary" onclick="openAddAccountModal()">
                             <i class="fas fa-plus-circle"></i> Add Account
                         </button>
                     </div>
-                    <div class="data-card">
-                        <h3>Existing Accounts</h3>
-                        <div id="accountsList" class="data-list"></div>
-                    </div>
                 </div>
+               
 
-                <!-- Service Section -->
+                <!-- Service Section - Sleek Modern Design -->
                 <div id="servicesSection" class="content-section">
                     <div class="section-header">
-                        <h2><i class="fas fa-stethoscope"></i> Service Management</h2>
-                        <button class="btn-primary add-modal-btn" onclick="openAddServiceModal()">
+                        <div class="header-title-group">
+                            <div class="title-icon">
+                                <i class="fas fa-stethoscope"></i>
+                            </div>
+                            <div>
+                                <h2>Service Management</h2>
+                                <p class="section-subtitle">Manage healthcare services and pricing</p>
+                            </div>
+                        </div>
+                        <button class="btn-primary add-service-btn" onclick="openAddServiceModal()">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add New Service</span>
+                        </button>
+                    </div>
+
+                    <!-- Stats Overview Cards -->
+                    <div class="services-stats-grid">
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini">
+                                <i class="fas fa-notes-medical"></i>
+                            </div>
+                            <div class="stat-info-mini">
+                                <span class="stat-label">Total Services</span>
+                                <span class="stat-number" id="totalServicesCount">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <div class="stat-info-mini">
+                                <span class="stat-label">Price Range</span>
+                                <span class="stat-number" id="priceRange">GH¢0 - 0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-info-mini">
+                                <span class="stat-label">Avg Price</span>
+                                <span class="stat-number" id="avgPrice">GH¢0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="stat-info-mini">
+                                <span class="stat-label">Last Updated</span>
+                                <span class="stat-number" id="lastUpdated">Today</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter Bar -->
+                    <div class="services-search-bar">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="serviceSearchInput" placeholder="Search services by name or description..." class="service-search-input">
+                            <button id="clearServiceSearch" class="clear-search-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="filter-tabs" id="serviceFilterTabs">
+                            <button class="filter-tab active" data-filter="all">
+                                <i class="fas fa-th-large"></i> All Services
+                            </button>
+                            <button class="filter-tab" data-filter="has-price">
+                                <i class="fas fa-dollar-sign"></i> With Price
+                            </button>
+                            <button class="filter-tab" data-filter="no-price">
+                                <i class="fas fa-tag"></i> Price Pending
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Services Grid Container -->
+                    <div class="services-grid-container" id="servicesGridContainer">
+                        <div id="servicesList" class="services-modern-grid">
+                            <!-- Services will be dynamically loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="servicesEmptyState" class="services-empty-state" style="display: none;">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <h3>No Services Found</h3>
+                        <p>Get started by adding your first medical service</p>
+                        <button class="btn-primary" onclick="openAddServiceModal()">
                             <i class="fas fa-plus-circle"></i> Add Service
                         </button>
                     </div>
-                    <div class="data-card">
-                        <h3>Available Services</h3>
-                        <div id="servicesList" class="data-list"></div>
-                    </div>
                 </div>
+
+
+
                 <!-- User Services section -->
                 <div id="userServicesSection" class="content-section">
                     <div class="section-header">
                         <h2><i class="fas fa-user-tag"></i> User Service Assignments</h2>
                     </div>
+                    
+                    <!-- User Table Card -->
                     <div class="data-card">
-                        <select id="userSelectForServices" onchange="loadUserServices()">
-                            <option value="">Select a user...</option>
-                        </select>
-                    </div>
-                    <div id="userServiceManagement" style="display: none;">
-                        <div class="data-card">
-                            <select id="serviceToAssign">
-                                <option value="">Choose a service...</option>
-                            </select>
-                            <button onclick="assignServiceToUser()" class="btn-primary">Assign Service</button>
+                        <div class="card-header">
+                            <h3><i class="fas fa-users"></i> System Users</h3>
+                            <span class="badge" id="userCountBadge">0 Users</span>
                         </div>
-                        <div class="data-card">
-                            <h3>User's Assigned Services</h3>
-                            <div id="userAssignedServices" class="data-list"></div>
+                        
+                        <!-- Search Bar -->
+                        <div class="user-search-container">
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="userSearchInput" placeholder="Search by Name, Username, Staff ID or Phone..." class="user-search-input">
+                                <button id="clearUserSearch" class="clear-search-btn" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Users Table - Single wrapper -->
+                        <div class="table-wrapper">
+                            <table class="user-services-table" id="usersServicesTable">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fas fa-user"></i> User</th>
+                                        <th><i class="fas fa-id-card"></i> Staff ID</th>
+                                        <th><i class="fas fa-tag"></i> Role</th>
+                                        <th><i class="fas fa-stethoscope"></i> Assigned Services</th>
+                                        <th><i class="fas fa-cog"></i> Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersServicesTableBody">
+                                    <tr><td colspan="5" class="empty-state">Loading users...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-
                 <!-- user Section  -->
                 <div id="usersSection" class="content-section">
                     <div class="section-header">
@@ -908,7 +1140,168 @@
                     <button class="btn-primary" onclick="saveSecuritySettings()">Save Changes</button>
                 </div>
             </div>
-        </div>   
+        </div> 
+
+        <!-- Edit Full Name Modal -->
+        <div id="fullnameModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user-edit"></i> Edit Full Name</h3>
+                    <button class="close-modal" onclick="closeModal('fullnameModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateFullnameForm">
+                        <div class="form-group">
+                            <label>First Name <span class="ast">*</span></label>
+                            <input type="text" id="editFirstName" required placeholder="Enter first name">
+                        </div>
+                        <div class="form-group">
+                            <label>Middle Name (Optional)</label>
+                            <input type="text" id="editMiddleName" placeholder="Enter middle name">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="ast">*</span></label>
+                            <input type="text" id="editLastName" required placeholder="Enter last name">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="fullnameConfirmPassword" placeholder="Enter your password to confirm">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="closeModal('fullnameModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Update Full Name</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Phone Number Modal -->
+        <div id="phoneModal" class="modal">
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-phone-alt"></i> Edit Phone Number</h3>
+                    <button class="close-modal" onclick="closeModal('phoneModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="updatePhoneForm">
+                        <div class="form-group">
+                            <label>Phone Number <span class="ast">*</span></label>
+                            <input type="tel" id="editPhoneNumber" required placeholder="Enter phone number (e.g., 024XXXXXXX)">
+                            <small class="input-hint">Enter a valid phone number</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="phoneConfirmPassword" placeholder="Enter your password to confirm">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="closeModal('phoneModal')">Cancel</button>
+                            <button type="submit" class="btn-primary" >Update Phone Number</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div> 
+
+
+
+                <!-- Service Assignment Popup Modal -->
+        <div id="serviceAssignmentModal" class="modal">
+            <div class="modal-content service-assignment-modal">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fas fa-user-tag"></i> 
+                        Manage Services for <span id="modalUserName">-</span>
+                    </h3>
+                    <button class="close-modal" onclick="closeServiceAssignmentModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="modalUserId">
+                    
+                    <!-- User Info Card -->
+                    <div class="modal-user-info-card" id="modalUserInfo">
+                        <div class="user-info-avatar" id="modalUserAvatar">👤</div>
+                        <div class="user-info-details">
+                            <h4 id="modalUserNameInFull">-</h4>
+                            <div class="user-info-grid">
+                                <div class="user-info-item">
+                                    <i class="fas fa-id-card"></i>
+                                    <span>Staff ID: <strong id="modalStaffId">-</strong></span>
+                                </div>
+                                <div class="user-info-item">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>Username: <strong id="modalUsername">-</strong></span>
+                                </div>
+                                <div class="user-info-item">
+                                    <i class="fas fa-phone"></i>
+                                    <span>Phone: <strong id="modalPhone">-</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Assignment Grid -->
+                    <div class="service-assignment-grid">
+                        <!-- Available Services Panel -->
+                        <div class="services-panel available-services">
+                            <div class="panel-header">
+                                <h4>
+                                    <i class="fas fa-plus-circle"></i> 
+                                    Available Services
+                                    <span class="panel-stats" id="availableCount">0</span>
+                                </h4>
+                                <div class="panel-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="availableServicesSearch" placeholder="Search services...">
+                                </div>
+                            </div>
+                            <div class="services-checkbox-list" id="availableServicesList">
+                                <div class="modal-loading-state">
+                                    <i class="fas fa-spinner fa-pulse"></i>
+                                    Loading services...
+                                </div>
+                            </div>
+                            <div class="panel-actions">
+                                <button id="assignSelectedBtn" class="btn-primary assign-btn" disabled>
+                                    <i class="fas fa-arrow-right"></i> Assign Selected (<span id="selectedCount">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Assigned Services Panel -->
+                        <div class="services-panel assigned-services">
+                            <div class="panel-header">
+                                <h4>
+                                    <i class="fas fa-check-circle"></i> 
+                                    Assigned Services
+                                    <span class="panel-stats" id="assignedCount">0</span>
+                                </h4>
+                                <div class="panel-search">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="assignedServicesSearch" placeholder="Search services...">
+                                </div>
+                            </div>
+                            <div class="services-checkbox-list" id="assignedServicesList">
+                                <div class="modal-empty-state">
+                                    <i class="fas fa-tasks"></i>
+                                    No services assigned
+                                </div>
+                            </div>
+                            <div class="panel-actions">
+                                <button id="removeSelectedBtn" class="btn-secondary remove-btn" disabled>
+                                    <i class="fas fa-trash-alt"></i> Remove Selected (<span id="removeSelectedCount">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeServiceAssignmentModal()" class="btn-secondary">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
 
     
 

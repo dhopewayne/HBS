@@ -2268,3 +2268,814 @@ select:hover {
 }   
 
 
+ 
+
+/* ============================================
+   MANAGE SERVICES MODAL - FULLY RESPONSIVE
+   ============================================ */
+
+/* Modal Base Styles */
+#serviceAssignmentModal .modal-content {
+    max-width: 1100px;
+    width: 90%;
+    margin: 20px auto;
+    border-radius: 24px;
+    background: var(--white);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Modal Header */
+#serviceAssignmentModal .modal-header {
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--gray-border);
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border-radius: 24px 24px 0 0;
+}
+
+#serviceAssignmentModal .modal-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--black);
+}
+
+#serviceAssignmentModal .modal-header h3 i {
+    color: var(--blue-600);
+    font-size: 24px;
+}
+
+#serviceAssignmentModal .modal-header h3 span {
+    color: var(--blue-600);
+    background: rgba(59, 130, 246, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+/* Modal Body */
+#serviceAssignmentModal .modal-body {
+    padding: 24px;
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+}
+
+/* User Info Card inside Modal */
+.modal-user-info-card {
+    background: linear-gradient(135deg, #eff6ff, #ffffff);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+
+.user-info-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-info-details {
+    flex: 1;
+    min-width: 200px;
+}
+
+.user-info-details h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--black);
+}
+
+.user-info-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.user-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray-text);
+}
+
+.user-info-item i {
+    color: var(--blue-600);
+    width: 16px;
+    font-size: 13px;
+}
+
+.user-info-item strong {
+    color: var(--black);
+    font-weight: 600;
+}
+
+/* Service Assignment Grid */
+.service-assignment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 8px;
+}
+
+/* Services Panels */
+.services-panel {
+    background: var(--white);
+    border-radius: 20px;
+    border: 1px solid var(--gray-border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease;
+}
+
+.services-panel:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.panel-header {
+    padding: 18px 20px;
+    background: var(--gray-light);
+    border-bottom: 1px solid var(--gray-border);
+}
+
+.panel-header h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.available-services .panel-header h4 i {
+    color: var(--blue-600);
+}
+
+.assigned-services .panel-header h4 i {
+    color: #10b981;
+}
+
+.panel-stats {
+    display: inline-block;
+    background: rgba(59, 130, 246, 0.1);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.panel-search {
+    position: relative;
+    width: 100%;
+}
+
+.panel-search i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-text);
+    font-size: 13px;
+}
+
+.panel-search input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1px solid var(--gray-border);
+    border-radius: 14px;
+    font-size: 13px;
+    transition: all 0.3s;
+    background: var(--white);
+}
+
+.panel-search input:focus {
+    outline: none;
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Services List */
+.services-checkbox-list {
+    flex: 1;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+/* Custom Scrollbar */
+.services-checkbox-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.services-checkbox-list::-webkit-scrollbar-track {
+    background: var(--gray-light);
+    border-radius: 3px;
+}
+
+.services-checkbox-list::-webkit-scrollbar-thumb {
+    background: var(--blue-600);
+    border-radius: 3px;
+}
+
+/* Service Item */
+.service-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: var(--gray-light);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.service-checkbox-item:hover {
+    background: #eff6ff;
+    border-color: var(--blue-600);
+    transform: translateX(4px);
+}
+
+.service-checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--blue-600);
+    flex-shrink: 0;
+}
+
+.service-checkbox-item .service-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.service-checkbox-item .service-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--black);
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.service-checkbox-item .service-description {
+    font-size: 11px;
+    color: var(--gray-text);
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.service-checkbox-item .service-price {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue-600);
+    background: rgba(59, 130, 246, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Assigned Service Items */
+.service-checkbox-item.assigned {
+    background: #d1fae5;
+    border-color: #10b981;
+}
+
+.service-checkbox-item.assigned .service-name {
+    color: #065f46;
+}
+
+.service-checkbox-item.assigned .service-price {
+    background: rgba(16, 185, 129, 0.2);
+    color: #065f46;
+}
+
+.service-checkbox-item.assigned:hover {
+    background: #a7f3d0;
+    border-color: #059669;
+}
+
+/* Panel Actions */
+.panel-actions {
+    padding: 16px 20px;
+    border-top: 1px solid var(--gray-border);
+    background: var(--gray-light);
+}
+
+.assign-btn, .remove-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 14px;
+    transition: all 0.3s ease;
+}
+
+.assign-btn {
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
+}
+
+.assign-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.remove-btn {
+    background: #ef4444;
+}
+
+.remove-btn:hover:not(:disabled) {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.assign-btn:disabled, .remove-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Modal Footer */
+#serviceAssignmentModal .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--gray-border);
+    background: var(--gray-light);
+    border-radius: 0 0 24px 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+    #serviceAssignmentModal .modal-content {
+        max-width: 1100px;
+    }
+    
+    .services-checkbox-list {
+        max-height: 450px;
+    }
+}
+
+/* Desktop (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+    #serviceAssignmentModal .modal-content {
+        max-width: 95%;
+        width: 95%;
+    }
+    
+    .service-checkbox-item .service-description {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}
+
+/* Tablet Landscape (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+    #serviceAssignmentModal .modal-content {
+        width: 95%;
+        max-width: 95%;
+        margin: 30px auto;
+    }
+    
+    .service-assignment-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .services-checkbox-list {
+        max-height: 350px;
+    }
+    
+    .modal-user-info-card {
+        padding: 16px;
+    }
+    
+    .user-info-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+        border-radius: 14px;
+    }
+    
+    .user-info-details h4 {
+        font-size: 16px;
+    }
+    
+    .user-info-grid {
+        gap: 12px;
+    }
+    
+    .panel-header {
+        padding: 14px 16px;
+    }
+    
+    .panel-header h4 {
+        font-size: 15px;
+    }
+}
+
+/* Tablet Portrait (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+    #serviceAssignmentModal .modal-content {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    #serviceAssignmentModal .modal-header {
+        padding: 16px 20px;
+    }
+    
+    #serviceAssignmentModal .modal-header h3 {
+        font-size: 18px;
+    }
+    
+    #serviceAssignmentModal .modal-header h3 i {
+        font-size: 20px;
+    }
+    
+    #serviceAssignmentModal .modal-body {
+        padding: 20px;
+        max-height: calc(90vh - 120px);
+    }
+    
+    .service-assignment-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .modal-user-info-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+    }
+    
+    .user-info-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        margin: 0 auto;
+    }
+    
+    .user-info-details h4 {
+        text-align: center;
+    }
+    
+    .user-info-grid {
+        justify-content: center;
+    }
+    
+    .services-checkbox-list {
+        max-height: 320px;
+    }
+    
+    .service-checkbox-item {
+        padding: 10px 12px;
+    }
+    
+    .service-checkbox-item .service-name {
+        font-size: 13px;
+    }
+    
+    .service-checkbox-item .service-price {
+        font-size: 11px;
+        padding: 3px 10px;
+    }
+    
+    .panel-header {
+        padding: 12px 14px;
+    }
+    
+    .panel-header h4 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .panel-actions {
+        padding: 12px 16px;
+    }
+    
+    .assign-btn, .remove-btn {
+        padding: 10px;
+        font-size: 13px;
+    }
+}
+
+/* Mobile (375px - 575px) */
+@media (min-width: 375px) and (max-width: 575px) {
+    #serviceAssignmentModal .modal-content {
+        width: 98%;
+        margin: 10px auto;
+        border-radius: 20px;
+    }
+    
+    #serviceAssignmentModal .modal-header {
+        padding: 14px 16px;
+    }
+    
+    #serviceAssignmentModal .modal-header h3 {
+        font-size: 16px;
+        flex-wrap: wrap;
+    }
+    
+    #serviceAssignmentModal .modal-header h3 span {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+    
+    #serviceAssignmentModal .modal-body {
+        padding: 16px;
+        max-height: calc(85vh - 100px);
+    }
+    
+    .service-assignment-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    
+    .modal-user-info-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 14px;
+        gap: 12px;
+    }
+    
+    .user-info-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        border-radius: 12px;
+        margin: 0 auto;
+    }
+    
+    .user-info-details h4 {
+        font-size: 15px;
+        text-align: center;
+    }
+    
+    .user-info-grid {
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .user-info-item {
+        font-size: 11px;
+    }
+    
+    .user-info-item i {
+        font-size: 11px;
+    }
+    
+    .services-checkbox-list {
+        max-height: 280px;
+        padding: 12px;
+    }
+    
+    .service-checkbox-item {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .service-checkbox-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .service-checkbox-item .service-name {
+        font-size: 12px;
+    }
+    
+    .service-checkbox-item .service-description {
+        font-size: 10px;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .service-checkbox-item .service-price {
+        font-size: 10px;
+        padding: 2px 8px;
+    }
+    
+    .panel-header {
+        padding: 10px 12px;
+    }
+    
+    .panel-header h4 {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+    
+    .panel-search input {
+        padding: 8px 10px 8px 35px;
+        font-size: 12px;
+    }
+    
+    .panel-search i {
+        left: 12px;
+        font-size: 12px;
+    }
+    
+    .panel-actions {
+        padding: 10px 12px;
+    }
+    
+    .assign-btn, .remove-btn {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    #serviceAssignmentModal .modal-footer {
+        padding: 12px 16px;
+    }
+    
+    .modal-footer .btn-secondary {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+}
+
+/* Small Mobile (up to 374px) */
+@media (max-width: 374px) {
+    #serviceAssignmentModal .modal-content {
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+        height: 100vh;
+        max-height: 100vh;
+    }
+    
+    #serviceAssignmentModal .modal-body {
+        max-height: calc(100vh - 120px);
+        padding: 12px;
+    }
+    
+    #serviceAssignmentModal .modal-header {
+        padding: 12px 14px;
+    }
+    
+    #serviceAssignmentModal .modal-header h3 {
+        font-size: 14px;
+    }
+    
+    .service-assignment-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .modal-user-info-card {
+        padding: 12px;
+    }
+    
+    .user-info-avatar {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .user-info-details h4 {
+        font-size: 14px;
+    }
+    
+    .user-info-item {
+        font-size: 10px;
+    }
+    
+    .services-checkbox-list {
+        max-height: 250px;
+        padding: 10px;
+    }
+    
+    .service-checkbox-item {
+        padding: 8px 10px;
+        margin-bottom: 8px;
+    }
+    
+    .service-checkbox-item .service-name {
+        font-size: 11px;
+    }
+    
+    .service-checkbox-item .service-price {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+    
+    .panel-header h4 {
+        font-size: 12px;
+    }
+    
+    .panel-search input {
+        font-size: 11px;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .service-checkbox-item {
+        cursor: default;
+    }
+    
+    .assign-btn, .remove-btn {
+        min-height: 44px;
+    }
+    
+    .service-checkbox-item input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .panel-search input {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Loading and Empty States */
+.modal-loading-state {
+    text-align: center;
+    padding: 40px;
+}
+
+.modal-loading-state i {
+    font-size: 40px;
+    color: var(--blue-600);
+    margin-bottom: 12px;
+    display: block;
+}
+
+.modal-empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray-text);
+}
+
+.modal-empty-state i {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+    opacity: 0.5;
+}
+
+/* Animation for checkboxes */
+.service-checkbox-item {
+    animation: fadeInUp 0.3s ease backwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger animation for items */
+.service-checkbox-item:nth-child(1) { animation-delay: 0.02s; }
+.service-checkbox-item:nth-child(2) { animation-delay: 0.04s; }
+.service-checkbox-item:nth-child(3) { animation-delay: 0.06s; }
+.service-checkbox-item:nth-child(4) { animation-delay: 0.08s; }
+.service-checkbox-item:nth-child(5) { animation-delay: 0.10s; }  
+
