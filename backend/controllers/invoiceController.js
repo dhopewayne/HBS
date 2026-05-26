@@ -668,74 +668,6 @@ exports.deleteAccount = async (req, res) => {
     }
 };
 
-
-// Service Management (Admin only)
-// exports.getAllServices = async (req, res) => {
-//     try {
-//         const db = await getDatabase();
-        
-//         // Fix the JOIN syntax - get all services with their assigned prices
-//         const services = await db.all(`
-//             SELECT 
-//                 s.id,
-//                 s.service_name,
-//                 s.description,
-//                 s.category, 
-//                 us.price as assigned_price,
-//             FROM services s
-//             LEFT JOIN invoice_services us ON s.id = us.service_id
-//             WHERE us.id IS NULL OR us.id IN (
-//                 SELECT MAX(id) 
-//                 FROM invoice_services 
-//                 GROUP BY service_id
-//             )
-//             ORDER BY s.service_name
-//         `);
-        
-//         // Group services by ID and get the latest price if multiple assignments exist
-//         const groupedServices = {};
-        
-//         for (const service of services) {
-//             const serviceId = service.id;
-            
-//             if (!groupedServices[serviceId]) {
-//                 groupedServices[serviceId] = {
-//                     id: service.id,
-//                     service_name: service.service_name,
-//                     description: service.description,
-//                     category: service.category,
-//                     default_price: service.default_price,
-//                     is_active: service.is_active,
-//                     prices: [] // Array to store all assigned prices
-//                 };
-//             }
-            
-//             // Add price if exists
-//             if (service.assigned_price) {
-//                 groupedServices[serviceId].prices.push({
-//                     price: service.assigned_price,
-//                     assigned_by: service.assigned_by,
-//                     assigned_date: service.assigned_date
-//                 });
-//             }
-//         }
-        
-//         // Convert grouped object back to array
-//         const result = Object.values(groupedServices).map(service => ({
-//             ...service,
-//             current_price: service.prices.length > 0 ? 
-//                 service.prices[service.prices.length - 1].price : 
-//                 service.default_price,
-//             price_history: service.prices
-//         }));
-        
-//         res.json({ success: true, data: result });
-//     } catch (error) {
-//         console.error('Error fetching services:', error);
-//         res.status(500).json({ success: false, error: error.message });
-//     }
-// };  
-
 // Service Management (Admin only)
 exports.getAllServices = async (req, res) => {
     try {
@@ -875,8 +807,19 @@ exports.deleteService = async (req, res) => {
 exports.getUserServices = async (req, res) => {
     try {
         const db = await getDatabase();
-        const userId = req.params.userId;
+        const userId = req.params.userId; 
+
+        const user = await db.get('SELECT * FROM users WHERE id = ?', userId);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        } 
         
+        // return all services if user is master, otherwise return assigned services
+        if (user.role === 'master') {
+
+            const services = await db.all('SELECT * FROM services ORDER BY service_name');
+            return res.json({ success: true, data: services });
+        }
         const userServices = await db.all(`
             SELECT s.*, us.assigned_at, us.assigned_by
             FROM user_services us
@@ -1072,9 +1015,10 @@ exports.getAvailableServicesForUser = async (req, res) => {
     try {
         const db = await getDatabase();
         const username = req.headers['x-username'];
-        const userRole = req.headers['x-user-role'];
+        const userRole = req.headers['x-user-role']; 
+        const specialId = req.headers['x-user-special-id'];
         
-        if (userRole === 'admin') {
+        if (userRole === 'master') {
             const allServices = await db.all('SELECT * FROM services ORDER BY service_name');
             return res.json({ success: true, data: allServices });
         }
@@ -1085,7 +1029,7 @@ exports.getAvailableServicesForUser = async (req, res) => {
             return res.json({ success: true, data: servicesFromJSON });
         }
         
-        const user = await db.get('SELECT id FROM users WHERE username = ?', username);
+        const user = await db.get('SELECT id FROM users WHERE special_id = ?', specialId);
         if (!user) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
@@ -2143,7 +2087,7 @@ exports.loginUser = async (req, res) => {
             return res.status(429).json({ success: false, error: 'Too many failed login attempts. Please try again later.' });
         }
         
-        const validUser = await db.get('SELECT id, username, role, status FROM users WHERE username = ? AND password = ?', [username, password]);
+        const validUser = await db.get('SELECT id, username, special_id, role, status FROM users WHERE username = ? AND password = ?', [username, password]);
         
         if (!validUser) {
             await logPasswordAttempt(username, 'login');

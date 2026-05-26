@@ -247,8 +247,9 @@ function updateUserRoleBadge() {
 function getApiHeaders() {
     return {
         'Content-Type': 'application/json',
-        'X-User-Role': currentUser?.role || 'user',
-        'X-Username': currentUser?.username || ''
+        'X-User-Role': currentUser?.role || ' ',
+        'X-Username': currentUser?.username || '' , 
+        'X-User-Special-Id': currentUser?.special_id || ''
     };
 }
 
