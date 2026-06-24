@@ -339,7 +339,7 @@ async function generateUniqueInvoiceNumber() {
     
     while (attempts < maxAttempts) {
         const random10Digit = Math.floor(Math.random() * 9000000000 + 1000000000).toString();
-        const identificationNumber = `SIN-${random10Digit}-${dateStr}-WGMH`;
+        const identificationNumber = `INV-${random10Digit}-${dateStr}-WGMH`;
         
         const exists = await db.get(
             `SELECT 1 FROM invoices WHERE identification_number = ?`,
@@ -579,7 +579,7 @@ exports.getAllAccounts = async (req, res) => {
 exports.createAccount = async (req, res) => {
     const { accountName, accountType, description, createdBy } = req.body; 
 
-    console.log('About to create account:', accountName , accountType)
+    // console.log('About to create account:', accountName , accountType)
     
     try {
         const db = await getDatabase();
@@ -1368,7 +1368,7 @@ exports.createInvoice = async (req, res) => {
             const serviceDetails = serviceMap.get(service.name); 
 
 
-            console.log('services Print:' ,service)
+            // console.log('services Print:' ,service)
             
             if (!serviceDetails) {
                 console.warn(`Service "${service.name}" not found in database`);

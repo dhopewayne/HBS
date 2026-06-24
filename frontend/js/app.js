@@ -4457,26 +4457,239 @@ function printPrintModal() {
     }, 200);
 }
 
+// function exportToExcel() {
+//     const filteredInvoices = getCurrentFilteredInvoices();
+//     if (filteredInvoices.length === 0) { showMessageModal('No records to export. Please adjust your filters.', 'warning'); return; }
+//     const uniqueServices = buildPrintServicesList(filteredInvoices);
+//     const headers = ['Date & Time', 'Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount (GH¢)'];
+//     const rows = filteredInvoices.map(invoice => {
+//         const invoiceServiceMap = new Map();
+//         if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; invoiceServiceMap.set(serviceName, service.price || 0); }); }
+//         return [new Date(invoice.timestamp).toLocaleString(), invoice.patient_name, invoice.gcr_number, invoice.account_name || invoice.account_type || 'N/A', ...uniqueServices.map(service => invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : ''), (invoice.price || 0).toFixed(2)];
+//     });
+//     const serviceTotals = new Map();
+//     uniqueServices.forEach(service => serviceTotals.set(service.name, 0));
+//     let grandTotal = 0;
+//     filteredInvoices.forEach(invoice => { grandTotal += invoice.price || 0; if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; serviceTotals.set(serviceName, (serviceTotals.get(serviceName) || 0) + (service.price || 0)); }); } });
+//     const totalsRow = ['TOTAL', '', '', 'SERVICE SUBTOTALS:', ...uniqueServices.map(service => serviceTotals.get(service.name)?.toFixed(2) || '0.00'), grandTotal.toFixed(2)];
+//     const grandTotalRow = ['GRAND TOTAL', '', '', '', ...Array(uniqueServices.length).fill(''), grandTotal.toFixed(2)];
+//     const allRows = [headers, ...rows, totalsRow, grandTotalRow];
+//     const csvContent = allRows.map(row => row.map(cell => { if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) return `"${cell.replace(/"/g, '""')}"`; return cell; }).join(',')).join('\n');
+//     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+//     const link = document.createElement('a'); const url = URL.createObjectURL(blob); link.setAttribute('href', url); link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+
+//     showMessageModal(`Exported ${filteredInvoices.length} records to Excel/CSV successfully!`, 'success');
+// } 
+
+// function exportToExcel() {
+//     const filteredInvoices = getCurrentFilteredInvoices();
+//     if (filteredInvoices.length === 0) { 
+//         showMessageModal('No records to export. Please adjust your filters.', 'warning'); 
+//         return; 
+//     }
+    
+//     const uniqueServices = buildPrintServicesList(filteredInvoices);
+    
+//     // Build headers with better formatting
+//     const headers = ['Date & Time', 'Patient Name', 'GCR Number', 'Account Type'];
+    
+//     // Add service columns
+//     uniqueServices.forEach(s => {
+//         headers.push(s.name);
+//     });
+    
+//     // Add total column
+//     headers.push('Total Amount (GH¢)');
+    
+//     // Build rows
+//     const rows = filteredInvoices.map(invoice => {
+//         const invoiceServiceMap = new Map();
+//         if (invoice.services && invoice.services.length > 0) { 
+//             invoice.services.forEach(service => { 
+//                 const serviceName = service.service_name || service.name; 
+//                 invoiceServiceMap.set(serviceName, service.price || 0); 
+//             }); 
+//         }
+        
+//         const row = [
+//             new Date(invoice.timestamp).toLocaleString(),
+//             invoice.patient_name,
+//             invoice.gcr_number,
+//             invoice.account_name || invoice.account_type || 'N/A'
+//         ];
+        
+//         // Add service values
+//         uniqueServices.forEach(service => {
+//             row.push(invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : '');
+//         });
+        
+//         // Add total
+//         row.push((invoice.price || 0).toFixed(2));
+        
+//         return row;
+//     });
+    
+//     // Calculate service totals
+//     const serviceTotals = new Map();
+//     uniqueServices.forEach(service => serviceTotals.set(service.name, 0));
+//     let grandTotal = 0;
+    
+//     filteredInvoices.forEach(invoice => { 
+//         grandTotal += invoice.price || 0; 
+//         if (invoice.services && invoice.services.length > 0) { 
+//             invoice.services.forEach(service => { 
+//                 const serviceName = service.service_name || service.name; 
+//                 serviceTotals.set(serviceName, (serviceTotals.get(serviceName) || 0) + (service.price || 0)); 
+//             }); 
+//         } 
+//     });
+    
+//     // Build totals row
+//     const totalsRow = ['TOTAL', '', '', 'SERVICE SUBTOTALS:'];
+//     uniqueServices.forEach(service => {
+//         totalsRow.push(serviceTotals.get(service.name)?.toFixed(2) || '0.00');
+//     });
+//     totalsRow.push(grandTotal.toFixed(2));
+    
+//     // Build grand total row
+//     const grandTotalRow = ['GRAND TOTAL', '', '', ''];
+//     uniqueServices.forEach(() => grandTotalRow.push(''));
+//     grandTotalRow.push(grandTotal.toFixed(2));
+    
+//     // Combine all rows
+//     const allRows = [headers, ...rows, totalsRow, grandTotalRow];
+    
+//     // Create CSV content with proper escaping
+//     const csvContent = allRows.map(row => 
+//         row.map(cell => {
+//             if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+//                 return `"${cell.replace(/"/g, '""')}"`;
+//             }
+//             return cell;
+//         }).join(',')
+//     ).join('\n');
+    
+//     // Create and download file
+//     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+//     const link = document.createElement('a');
+//     const url = URL.createObjectURL(blob);
+//     link.setAttribute('href', url);
+//     link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`);
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     URL.revokeObjectURL(url);
+
+//     showMessageModal(`Exported ${filteredInvoices.length} records to Excel/CSV successfully!`, 'success');
+// } 
+
+
+
+
 function exportToExcel() {
     const filteredInvoices = getCurrentFilteredInvoices();
-    if (filteredInvoices.length === 0) { showMessageModal('No records to export. Please adjust your filters.', 'warning'); return; }
+    if (filteredInvoices.length === 0) { 
+        showMessageModal('No records to export. Please adjust your filters.', 'warning'); 
+        return; 
+    }
+    
     const uniqueServices = buildPrintServicesList(filteredInvoices);
-    const headers = ['Date & Time', 'Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount (GH¢)'];
+    
+    // Build headers
+    const headers = ['Date & Time', 'Patient Name', 'GCR Number', 'Account Type'];
+    
+    // Add service columns
+    uniqueServices.forEach(s => {
+        headers.push(s.name);
+    });
+    
+    // Add total column
+    headers.push('Total Amount (GH¢)');
+    
+    // Build data rows
     const rows = filteredInvoices.map(invoice => {
         const invoiceServiceMap = new Map();
-        if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; invoiceServiceMap.set(serviceName, service.price || 0); }); }
-        return [new Date(invoice.timestamp).toLocaleString(), invoice.patient_name, invoice.gcr_number, invoice.account_name || invoice.account_type || 'N/A', ...uniqueServices.map(service => invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : ''), (invoice.price || 0).toFixed(2)];
+        if (invoice.services && invoice.services.length > 0) { 
+            invoice.services.forEach(service => { 
+                const serviceName = service.service_name || service.name; 
+                invoiceServiceMap.set(serviceName, service.price || 0); 
+            }); 
+        }
+        
+        const row = [
+            new Date(invoice.timestamp).toLocaleString(),
+            invoice.patient_name,
+            invoice.gcr_number,
+            invoice.account_name || invoice.account_type || 'N/A'
+        ];
+        
+        // Add service values
+        uniqueServices.forEach(service => {
+            row.push(invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : '');
+        });
+        
+        // Add total
+        row.push((invoice.price || 0).toFixed(2));
+        
+        return row;
     });
-    const serviceTotals = new Map();
-    uniqueServices.forEach(service => serviceTotals.set(service.name, 0));
+    
+    // Calculate service subtotals (sum of each service across all invoices)
+    const serviceSubtotals = new Map();
+    uniqueServices.forEach(service => serviceSubtotals.set(service.name, 0));
+    
+    filteredInvoices.forEach(invoice => { 
+        if (invoice.services && invoice.services.length > 0) { 
+            invoice.services.forEach(service => { 
+                const serviceName = service.service_name || service.name; 
+                serviceSubtotals.set(serviceName, (serviceSubtotals.get(serviceName) || 0) + (service.price || 0)); 
+            }); 
+        } 
+    });
+    
+    // Calculate grand total (sum of all invoice totals)
     let grandTotal = 0;
-    filteredInvoices.forEach(invoice => { grandTotal += invoice.price || 0; if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; serviceTotals.set(serviceName, (serviceTotals.get(serviceName) || 0) + (service.price || 0)); }); } });
-    const totalsRow = ['TOTAL', '', '', 'SERVICE SUBTOTALS:', ...uniqueServices.map(service => serviceTotals.get(service.name)?.toFixed(2) || '0.00'), grandTotal.toFixed(2)];
-    const grandTotalRow = ['GRAND TOTAL', '', '', '', ...Array(uniqueServices.length).fill(''), grandTotal.toFixed(2)];
-    const allRows = [headers, ...rows, totalsRow, grandTotalRow];
-    const csvContent = allRows.map(row => row.map(cell => { if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) return `"${cell.replace(/"/g, '""')}"`; return cell; }).join(',')).join('\n');
+    filteredInvoices.forEach(invoice => { 
+        grandTotal += invoice.price || 0; 
+    });
+    
+    // Build subtotal row - shows sum of each service
+    const subtotalRow = ['SUBTOTAL', '', '', ''];
+    uniqueServices.forEach(service => {
+        subtotalRow.push(serviceSubtotals.get(service.name)?.toFixed(2) || '0.00');
+    });
+    subtotalRow.push(''); // Empty total column for subtotal row
+    
+    // Build grand total row - only the total amount column
+    const grandTotalRow = ['GRAND TOTAL', '', '', ''];
+    // Empty cells for service columns
+    uniqueServices.forEach(() => grandTotalRow.push(''));
+    // Grand total in the last column
+    grandTotalRow.push(grandTotal.toFixed(2));
+    
+    // Combine all rows
+    const allRows = [headers, ...rows, subtotalRow, grandTotalRow];
+    
+    // Create CSV content with proper escaping
+    const csvContent = allRows.map(row => 
+        row.map(cell => {
+            if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+                return `"${cell.replace(/"/g, '""')}"`;
+            }
+            return cell;
+        }).join(',')
+    ).join('\n');
+    
+    // Create and download file
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a'); const url = URL.createObjectURL(blob); link.setAttribute('href', url); link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
     showMessageModal(`Exported ${filteredInvoices.length} records to Excel/CSV successfully!`, 'success');
 }
