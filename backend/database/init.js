@@ -317,8 +317,8 @@ db.serialize(() => {
                         const userSpecialId = await generateUserSpecialId('user');
                         
                         // Insert admin user
-                        db.run(`INSERT OR IGNORE INTO users (first_name , middle_name , last_name , username, password, role, special_id, services) VALUES (?,?,?,?, ?, ?, ?, ?)`, 
-                            ['Kofi' , 'Monique','owusu','Kofi1', 'admin123', 'master', masterSpecialId, '[]'], (err) => {
+                        db.run(`INSERT OR IGNORE INTO users (first_name , middle_name , last_name , username, password, role, sex, special_id, services) VALUES (?,?,?,?, ?, ?, ?, ?, ?)`, 
+                            ['NII' , 'Monique','owusu','nii', 'admin123', 'master', 'Male', masterSpecialId, '[]'], (err) => {
                             if (err) {
                                 console.error('Error inserting admin user:', err);
                             } else {
@@ -327,8 +327,8 @@ db.serialize(() => {
                         });
                         
                         // Insert regular user
-                        db.run(`INSERT OR IGNORE INTO users ( first_name , middle_name , last_name , username, password, role, special_id, services) VALUES (?, ?,?,?,?, ?, ?, ?)`, 
-                            ['Mannuel' , 'entwi','prempreh','user', 'user123', 'user', userSpecialId, '[]'], (err) => {
+                        db.run(`INSERT OR IGNORE INTO users ( first_name , middle_name , last_name , username, password, role, sex , special_id, services) VALUES (?, ?,?,?,?, ?, ?, ? ,?)`, 
+                            ['Mannuel' , 'entwi','prempreh','mannuel', 'user123', 'user', 'Male', userSpecialId, '[]'], (err) => {
                             if (err) {
                                 console.error('Error inserting user:', err);
                             } else {

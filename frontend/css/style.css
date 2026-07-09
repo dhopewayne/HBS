@@ -645,7 +645,8 @@ body {
     background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
     align-items: center;
-    justify-content: center;
+    justify-content: center; 
+    backdrop-filter: blur(4px);
 }
 
 .modal.active { display: flex; }
@@ -4118,4 +4119,351 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .action-btn-row.block { background: #dc2626; color: white; }  
 
 .modal-body.modal-footer{ display:flex ; 
-    width: 100%; justify-content: flex-end; align-items: center;}
+    width: 100%; justify-content: flex-end; align-items: center;}  
+
+
+
+    /* add services assignment to add user */ 
+
+    /* Services Container */
+.services-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Individual checkbox items */
+.service-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.service-checkbox-item:hover {
+    background-color: #e9ecef;
+}
+
+.service-checkbox-item.select-all {
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+/* Checkbox styling */
+.service-checkbox {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #007bff;
+}
+
+.service-checkbox-label {
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.service-checkbox-label i {
+    color: #007bff;
+    width: 20px;
+}
+
+.select-all-label {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.select-all-label i {
+    color: #28a745;
+}
+
+/* Loading state */
+.loading-text {
+    color: #6c757d;
+    font-style: italic;
+    padding: 10px;
+    text-align: center;
+}
+
+.error-text {
+    color: #dc3545;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Selected count badge (optional) */
+.services-selected-count {
+    display: inline-block;
+    background: #007bff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+}  
+
+
+/* Make the form group take full width */
+.form-group.move-next-full {
+    grid-column: 1 / -1; /* Takes full width in a grid layout */
+    width: 100%;
+    display: block;
+    clear: both;
+}
+
+/* Or if using flexbox */
+.form-group.move-next-full {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+/* Services Container - Full width */
+.services-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    max-height: 250px;
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.services-container:hover {
+    border-color: #007bff;
+    background: #f0f7ff;
+}
+
+/* Service checkbox items */
+.service-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.service-checkbox-item:hover {
+    background-color: #e9ecef;
+}
+
+.service-checkbox-item.select-all {
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+}
+
+/* Checkbox styling */
+.service-checkbox {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #007bff;
+    flex-shrink: 0;
+}
+
+.service-checkbox-label {
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    word-break: break-word;
+}
+
+.service-checkbox-label i {
+    color: #007bff;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.select-all-label {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.select-all-label i {
+    color: #28a745;
+}
+
+/* Loading and error states */
+.loading-text {
+    color: #6c757d;
+    font-style: italic;
+    padding: 15px;
+    text-align: center;
+}
+
+.error-text {
+    color: #dc3545;
+    padding: 15px;
+    text-align: center;
+}
+
+/* Selected count badge */
+.services-selected-count {
+    display: inline-block;
+    background: #007bff;
+    color: white;
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+    font-weight: normal;
+}
+
+.services-selected-count:empty {
+    display: none;
+}
+
+/* Label styling for the services section */
+.form-group.move-next-full label {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    width: 100%;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-group.move-next-full label i {
+    color: #007bff;
+}
+
+/* Input hint styling */
+.input-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+/* Scrollbar styling for the services container */
+.services-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.services-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.services-container::-webkit-scrollbar-thumb {
+    background: #c1c7cd;
+    border-radius: 4px;
+}
+
+.services-container::-webkit-scrollbar-thumb:hover {
+    background: #a8b0b8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .services-container {
+        max-height: 200px;
+        padding: 10px;
+    }
+    
+    .service-checkbox-item {
+        padding: 6px 10px;
+    }
+    
+    .service-checkbox-label {
+        font-size: 13px;
+    }
+} 
+
+
+
+
+
+
+/* Edit and add modals update css */ 
+
+/* Detail rows for view modals */
+.detail-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+    gap: 12px;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #4b5563;
+    min-width: 140px;
+    font-size: 14px;
+}
+
+.detail-value {
+    flex: 1;
+    color: #1f2937;
+    font-size: 14px;
+    word-break: break-word;
+}
+
+#serviceDetailsContainer, #accountDetailsContainer {
+    padding: 8px 0;
+}
+
+/* Modal header colors for warning modals */
+.modal-header.danger {
+    background: #fee2e2;
+    border-bottom: 2px solid #ef4444;
+}
+
+.modal-header.danger h3 {
+    color: #dc2626;
+}
+
+/* Service/Account detail view styles */
+.view-detail-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    text-align: center;
+}
+
+.view-detail-icon.service {
+    color: #3b82f6;
+}
+
+.view-detail-icon.account {
+    color: #10b981;
+}  
+
+.modal-footer {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;  
+    padding: 12px 7px;
+} 

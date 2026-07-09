@@ -392,8 +392,7 @@ function switchSection(section) {
     }
     if (section === 'users' && hasPermission.canViewUsersList()) {
         loadUsers();
-        addUserServiceSelect(); 
-        loadAssignmentToAddUserModal();
+        addUserServiceSelect();
     }
     if (section === 'activity') loadActivityLog();
     if (section === 'dashboard') {
@@ -1726,62 +1725,7 @@ function onlyNumbersAndDecimal(event) {
     }
     event.preventDefault();
     return false;
-}  
-
-// Format phone number to 024-293-1112
-function formatPhoneNumber(value) {
-    // Remove all non-numeric characters
-    const cleaned = value.replace(/\D/g, '');
-    
-    // Format based on length
-    if (cleaned.length >= 7) {
-        return cleaned.slice(0, 3) + '-' + cleaned.slice(3, 6) + '-' + cleaned.slice(6, 10);
-    } else if (cleaned.length >= 4) {
-        return cleaned.slice(0, 3) + '-' + cleaned.slice(3);
-    } else {
-        return cleaned;
-    }
 }
-
-// validate phone input to only allow numbers and 10digits  
-function phoneNumberValidate(inputId){ 
-    const phoneNumber = document.getElementById(`${inputId}`);
-    
-    phoneNumber.addEventListener('input', function() {
-        // Format the input
-        this.value = formatPhoneNumber(this.value);
-        
-        // Get raw digits
-        const rawDigits = this.value.replace(/\D/g, '');
-        this.dataset.rawDigits = rawDigits;
-        
-        // Validate
-        const isValid = rawDigits.length === 10;
-        this.style.borderColor = isValid ? 'green' : 'red';
-        
-        // Show message
-        const messageEl = document.getElementById(`${inputId}-message`);
-        if (messageEl) {
-            if (rawDigits.length === 0) {
-                messageEl.textContent = '';
-            } else if (isValid) {
-                messageEl.textContent = '✓ Valid';
-                messageEl.style.color = 'green';
-            } else {
-                messageEl.textContent = `${rawDigits.length}/10 digits`;
-                messageEl.style.color = 'red';
-            }
-        }
-    });
-}
-
-phoneNumberValidate('modalNewPhone') ;  
-phoneNumberValidate('editPhoneNumber');
-
- 
-
-
-
 
 function validateGCRNumber(input) {
     input.value = input.value.replace(/[^\d]/g, '');
@@ -2482,137 +2426,37 @@ function filterServices(filter, searchTerm) {
     renderServicesGrid(filtered);
 }
 
-
-
-
-// Update the editService function to use the dedicated EditServiceModal
-window.editService = async function(id) {
-    const service = services.find(s => s.id === id);
-    if (!service) {
-        showMessageModal('Service not found', 'error');
-        return;
-    }
+// Edit service function
+// window.editService = async function(id) {
+//     const service = services.find(s => s.id === id);
+//     if (!service) return;
     
-    // Populate edit modal
-    document.getElementById('modalServiceName').value = service.service_name;
-    document.getElementById('modalServiceDescription').value = service.description || '';
-    document.getElementById('modalServicePrice').value = service.price || '';
+//     // Populate edit modal
+//     document.getElementById('modalServiceName').value = service.service_name;
+//     document.getElementById('modalServiceDescription').value = service.description || '';
+//     document.getElementById('modalServicePrice').value = service.price || '';
     
-    // Store service ID for update
-    document.getElementById('editServiceForm').dataset.serviceId = id;
+//     // Change form submission to update mode
+//     const addForm = document.getElementById('addServiceForm');
+//     const originalSubmit = addForm.onsubmit;
     
-    showModal('EditServiceModal');
-};
-
-// Update the editService form submission handler
-document.getElementById('editServiceForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const id = this.dataset.serviceId;
-    await updateService(id);
-});
-
-// Update updateService function to close correct modal
-async function updateService(id) {
-    const serviceName = document.getElementById('modalServiceName').value.trim();
-    const description = document.getElementById('modalServiceDescription').value.trim();
-    const price = document.getElementById('modalServicePrice').value.trim();
+//     addForm.onsubmit = async (e) => {
+//         e.preventDefault();
+//         await updateService(id);
+//     };
     
-    if (!serviceName) {
-        showMessageModal('Please enter service name', 'warning');
-        return;
-    }
+//     showModal('addServiceModal');
     
-    const serviceData = { serviceName, description, updatedBy: currentUser.username };
-    if (price) {
-        const priceNum = parseFloat(price);
-        if (!isNaN(priceNum) && priceNum > 0) serviceData.price = priceNum;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/services/${id}`, {
-            method: 'PUT',
-            headers: getApiHeaders(),
-            body: JSON.stringify(serviceData)
-        });
-        const result = await response.json();
-        if (result.success) {
-            showMessageModal('Service updated successfully!', 'success');
-            closeModal('EditServiceModal');
-            document.getElementById('editServiceForm').reset();
-            loadServicesList();
-            loadAllServicesForAssignment();
-            logActivity(`Updated service: ${serviceName}`);
-        } else {
-            showMessageModal('Error: ' + result.error, 'error');
-        }
-    } catch (error) {
-        console.error('Error updating service:', error);
-        showMessageModal('Error updating service', 'error');
-    }
-}
-
-// Update editAccount function
-window.editAccount = async function(id) {
-    const account = accounts.find(a => a.id === id);
-    if (!account) {
-        showMessageModal('Account not found', 'error');
-        return;
-    }
-    
-    // Populate edit modal
-    document.getElementById('editAccountId').value = account.id;
-    document.getElementById('editModalAccountName').value = account.account_name;
-    document.getElementById('editModalAccountDescription').value = account.description || '';
-    document.getElementById('editModalAccountTypeSelect').value = account.account_type;
-    
-    showModal('EditAccountModal');
-};
-
-// Add editAccount form submission handler
-document.getElementById('editAccountForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const id = document.getElementById('editAccountId').value;
-    await updateAccount(id);
-});
-
-// Update updateAccount function to close correct modal
-async function updateAccount(id) {
-    const accountName = document.getElementById('editModalAccountName').value.trim();
-    const accountType = document.getElementById('editModalAccountTypeSelect').value;
-    const description = document.getElementById('editModalAccountDescription').value.trim();
-    
-    if (!accountName) {
-        showMessageModal('Please enter account name', 'warning');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/accounts/${id}`, {
-            method: 'PUT',
-            headers: getApiHeaders(),
-            body: JSON.stringify({ 
-                accountName, 
-                accountType, 
-                description,
-                updatedBy: currentUser.username 
-            })
-        });
-        const result = await response.json();
-        if (result.success) {
-            showMessageModal('Account updated successfully!', 'success');
-            closeModal('EditAccountModal');
-            document.getElementById('editAccountForm').reset();
-            loadAccounts();
-            loadAccountsForSelect();
-            logActivity(`Updated account: ${accountName}`);
-        } else {
-            showMessageModal('Error: ' + result.error, 'error');
-        }
-    } catch (error) {
-        console.error('Error updating account:', error);
-        showMessageModal('Error updating account', 'error');
-    }
-}
+//     // Restore original submit after modal closes
+//     const modal = document.getElementById('addServiceModal');
+//     const observer = new MutationObserver((mutations) => {
+//         if (!modal.classList.contains('active')) {
+//             addForm.onsubmit = originalSubmit;
+//             observer.disconnect();
+//         }
+//     });
+//     observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+// };
 
 // Update service function
 async function updateService(id) {
@@ -2738,116 +2582,7 @@ async function loadAllServicesForAssignment() {
     } catch (error) {
         console.error('Error loading services:', error);
     }
-}  
-
-
-// load all avilable assignments 
-
-
-// // Optional: Add "Select All" checkbox
-function addSelectAllCheckbox(container) {
-    const selectAllContainer = document.createElement('div');
-    selectAllContainer.className = 'service-checkbox-item select-all';
-    
-    const selectAllCheckbox = document.createElement('input');
-    selectAllCheckbox.type = 'checkbox';
-    selectAllCheckbox.id = 'selectAllServices';
-    selectAllCheckbox.className = 'service-checkbox';
-    selectAllCheckbox.addEventListener('change', function() {
-        const checkboxes = container.querySelectorAll('.service-checkbox:not(#selectAllServices)');
-        checkboxes.forEach(cb => cb.checked = this.checked);
-    });
-    
-    const selectAllLabel = document.createElement('label');
-    selectAllLabel.htmlFor = 'selectAllServices';
-    selectAllLabel.className = 'service-checkbox-label select-all-label';
-    selectAllLabel.innerHTML = '<i class="fas fa-check-double"></i> Select All';
-    
-    selectAllContainer.appendChild(selectAllCheckbox);
-    selectAllContainer.appendChild(selectAllLabel);
-    
-    // Insert at the beginning
-    container.insertBefore(selectAllContainer, container.firstChild);
-}
-
-// // Function to get selected service IDs from checkboxes
-function getSelectedServices() {
-    const checkboxes = document.querySelectorAll('#servicesAssignAddUser .service-checkbox:checked');
-    const selectedIds = [];
-    checkboxes.forEach(cb => {
-        if (cb.id !== 'selectAllServices') {
-            selectedIds.push(parseInt(cb.value));
-        }
-    });
-    return selectedIds;
 } 
- 
-
-
-
-
-// Function to update selected services count
-function updateServicesCount() {
-    const selected = getSelectedServices();
-    const countDisplay = document.getElementById('servicesSelectedCount');
-    if (countDisplay) {
-        countDisplay.textContent = `${selected.length} selected`;
-    }
-}
-
-// Call this after loading services
-// Add event listeners to checkboxes
-function attachServiceCheckboxListeners() {
-    const checkboxes = document.querySelectorAll('#servicesAssignAddUser .service-checkbox');
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', updateServicesCount);
-    });
-}
-
-// Update loadAssignmentToAddUserModal to include this
-async function loadAssignmentToAddUserModal() {    
-    const displayServices = document.getElementById('servicesAssignAddUser');
-    
-    try {   
-        const response = await fetch(`${API_BASE_URL}/services`, {
-            headers: getApiHeaders()
-        });
-        const result = await response.json();  
-
-        console.log('services in add user return' , result)
-        
-        if (result.success) {
-            displayServices.innerHTML = '';
-            
-            result.data.forEach(service => {
-                const checkboxContainer = document.createElement('div');
-                checkboxContainer.className = 'service-checkbox-item';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `service_${service.id}`;
-                checkbox.value = service.id;
-                checkbox.className = 'service-checkbox';
-                
-                const label = document.createElement('label');
-                label.htmlFor = `service_${service.id}`;
-                label.className = 'service-checkbox-label';
-                label.innerHTML = `<i class="fas fa-stethoscope"></i> ${service.service_name}`;
-                
-                checkboxContainer.appendChild(checkbox);
-                checkboxContainer.appendChild(label);
-                displayServices.appendChild(checkboxContainer);
-            });
-            
-            addSelectAllCheckbox(displayServices);
-            attachServiceCheckboxListeners();
-            updateServicesCount();
-        }
-    } catch(error) {
-        console.error('Error loading Assignment to add user modal', error);
-        displayServices.innerHTML = '<span class="error-text">Failed to load services</span>';
-    }
-}
 
 
 // Load users for service assignment - Make sure this is the only version
@@ -4680,7 +4415,7 @@ function renderPrintTable(invoices) {
             if (hasService) { const servicePrice = invoiceServiceMap.get(service.name); html += `<td style="padding:10px 10px;text-align:center;border-right:1px solid var(--gray-border);"><span style="color:#10b981;font-size:16px;font-weight:bold;display:inline-block;">✓</span><small style="display:block;font-size:10px;color:var(--blue-600);">GH¢${servicePrice.toFixed(2)}</small></td>`; }
             else { html += `<td style="padding:10px 10px;text-align:center;border-right:1px solid var(--gray-border);"><span style="color:#ef4444;font-size:16px;font-weight:bold;">✗</span></td>`; }
         });
-        html += `<td style="padding:10px 10px;text-align:right;font-weight:bold;">${(invoice.price || 0).toFixed(2)}</td></tr>`;
+        html += `<td style="padding:10px 10px;text-align:right;font-weight:bold;">GH¢${(invoice.price || 0).toFixed(2)}</td></tr>`;
     });
     html += `</tbody><tfoot><tr style="background:#eef2ff;font-weight:bold;border-top:2px solid var(--blue-600);border-bottom:1px solid var(--blue-300);"><td colspan="4" style="padding:12px 10px;text-align:right;font-weight:bold;border-right:1px solid var(--gray-border);"><strong>SERVICE SUBTOTALS:</strong></td>`;
     uniqueServices.forEach(service => { const subtotal = serviceTotals.get(service.name) || 0; html += `<td style="padding:12px 10px;text-align:center;color:var(--blue-600);font-weight:bold;border-right:1px solid var(--gray-border);">GH¢${subtotal.toFixed(2)}</td>`; });
@@ -4722,26 +4457,239 @@ function printPrintModal() {
     }, 200);
 }
 
+// function exportToExcel() {
+//     const filteredInvoices = getCurrentFilteredInvoices();
+//     if (filteredInvoices.length === 0) { showMessageModal('No records to export. Please adjust your filters.', 'warning'); return; }
+//     const uniqueServices = buildPrintServicesList(filteredInvoices);
+//     const headers = ['Date & Time', 'Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount (GH¢)'];
+//     const rows = filteredInvoices.map(invoice => {
+//         const invoiceServiceMap = new Map();
+//         if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; invoiceServiceMap.set(serviceName, service.price || 0); }); }
+//         return [new Date(invoice.timestamp).toLocaleString(), invoice.patient_name, invoice.gcr_number, invoice.account_name || invoice.account_type || 'N/A', ...uniqueServices.map(service => invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : ''), (invoice.price || 0).toFixed(2)];
+//     });
+//     const serviceTotals = new Map();
+//     uniqueServices.forEach(service => serviceTotals.set(service.name, 0));
+//     let grandTotal = 0;
+//     filteredInvoices.forEach(invoice => { grandTotal += invoice.price || 0; if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; serviceTotals.set(serviceName, (serviceTotals.get(serviceName) || 0) + (service.price || 0)); }); } });
+//     const totalsRow = ['TOTAL', '', '', 'SERVICE SUBTOTALS:', ...uniqueServices.map(service => serviceTotals.get(service.name)?.toFixed(2) || '0.00'), grandTotal.toFixed(2)];
+//     const grandTotalRow = ['GRAND TOTAL', '', '', '', ...Array(uniqueServices.length).fill(''), grandTotal.toFixed(2)];
+//     const allRows = [headers, ...rows, totalsRow, grandTotalRow];
+//     const csvContent = allRows.map(row => row.map(cell => { if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) return `"${cell.replace(/"/g, '""')}"`; return cell; }).join(',')).join('\n');
+//     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+//     const link = document.createElement('a'); const url = URL.createObjectURL(blob); link.setAttribute('href', url); link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+
+//     showMessageModal(`Exported ${filteredInvoices.length} records to Excel/CSV successfully!`, 'success');
+// } 
+
+// function exportToExcel() {
+//     const filteredInvoices = getCurrentFilteredInvoices();
+//     if (filteredInvoices.length === 0) { 
+//         showMessageModal('No records to export. Please adjust your filters.', 'warning'); 
+//         return; 
+//     }
+    
+//     const uniqueServices = buildPrintServicesList(filteredInvoices);
+    
+//     // Build headers with better formatting
+//     const headers = ['Date & Time', 'Patient Name', 'GCR Number', 'Account Type'];
+    
+//     // Add service columns
+//     uniqueServices.forEach(s => {
+//         headers.push(s.name);
+//     });
+    
+//     // Add total column
+//     headers.push('Total Amount (GH¢)');
+    
+//     // Build rows
+//     const rows = filteredInvoices.map(invoice => {
+//         const invoiceServiceMap = new Map();
+//         if (invoice.services && invoice.services.length > 0) { 
+//             invoice.services.forEach(service => { 
+//                 const serviceName = service.service_name || service.name; 
+//                 invoiceServiceMap.set(serviceName, service.price || 0); 
+//             }); 
+//         }
+        
+//         const row = [
+//             new Date(invoice.timestamp).toLocaleString(),
+//             invoice.patient_name,
+//             invoice.gcr_number,
+//             invoice.account_name || invoice.account_type || 'N/A'
+//         ];
+        
+//         // Add service values
+//         uniqueServices.forEach(service => {
+//             row.push(invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : '');
+//         });
+        
+//         // Add total
+//         row.push((invoice.price || 0).toFixed(2));
+        
+//         return row;
+//     });
+    
+//     // Calculate service totals
+//     const serviceTotals = new Map();
+//     uniqueServices.forEach(service => serviceTotals.set(service.name, 0));
+//     let grandTotal = 0;
+    
+//     filteredInvoices.forEach(invoice => { 
+//         grandTotal += invoice.price || 0; 
+//         if (invoice.services && invoice.services.length > 0) { 
+//             invoice.services.forEach(service => { 
+//                 const serviceName = service.service_name || service.name; 
+//                 serviceTotals.set(serviceName, (serviceTotals.get(serviceName) || 0) + (service.price || 0)); 
+//             }); 
+//         } 
+//     });
+    
+//     // Build totals row
+//     const totalsRow = ['TOTAL', '', '', 'SERVICE SUBTOTALS:'];
+//     uniqueServices.forEach(service => {
+//         totalsRow.push(serviceTotals.get(service.name)?.toFixed(2) || '0.00');
+//     });
+//     totalsRow.push(grandTotal.toFixed(2));
+    
+//     // Build grand total row
+//     const grandTotalRow = ['GRAND TOTAL', '', '', ''];
+//     uniqueServices.forEach(() => grandTotalRow.push(''));
+//     grandTotalRow.push(grandTotal.toFixed(2));
+    
+//     // Combine all rows
+//     const allRows = [headers, ...rows, totalsRow, grandTotalRow];
+    
+//     // Create CSV content with proper escaping
+//     const csvContent = allRows.map(row => 
+//         row.map(cell => {
+//             if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+//                 return `"${cell.replace(/"/g, '""')}"`;
+//             }
+//             return cell;
+//         }).join(',')
+//     ).join('\n');
+    
+//     // Create and download file
+//     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+//     const link = document.createElement('a');
+//     const url = URL.createObjectURL(blob);
+//     link.setAttribute('href', url);
+//     link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`);
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     URL.revokeObjectURL(url);
+
+//     showMessageModal(`Exported ${filteredInvoices.length} records to Excel/CSV successfully!`, 'success');
+// } 
+
+
+
+
 function exportToExcel() {
     const filteredInvoices = getCurrentFilteredInvoices();
-    if (filteredInvoices.length === 0) { showMessageModal('No records to export. Please adjust your filters.', 'warning'); return; }
+    if (filteredInvoices.length === 0) { 
+        showMessageModal('No records to export. Please adjust your filters.', 'warning'); 
+        return; 
+    }
+    
     const uniqueServices = buildPrintServicesList(filteredInvoices);
-    const headers = ['Date & Time', 'Name', 'GCR Number', 'Account Type', ...uniqueServices.map(s => s.name), 'Total Amount (GH¢)'];
+    
+    // Build headers
+    const headers = ['Date & Time', 'Patient Name', 'GCR Number', 'Account Type'];
+    
+    // Add service columns
+    uniqueServices.forEach(s => {
+        headers.push(s.name);
+    });
+    
+    // Add total column
+    headers.push('Total Amount (GH¢)');
+    
+    // Build data rows
     const rows = filteredInvoices.map(invoice => {
         const invoiceServiceMap = new Map();
-        if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; invoiceServiceMap.set(serviceName, service.price || 0); }); }
-        return [new Date(invoice.timestamp).toLocaleString(), invoice.patient_name, invoice.gcr_number, invoice.account_name || invoice.account_type || 'N/A', ...uniqueServices.map(service => invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : ''), (invoice.price || 0).toFixed(2)];
+        if (invoice.services && invoice.services.length > 0) { 
+            invoice.services.forEach(service => { 
+                const serviceName = service.service_name || service.name; 
+                invoiceServiceMap.set(serviceName, service.price || 0); 
+            }); 
+        }
+        
+        const row = [
+            new Date(invoice.timestamp).toLocaleString(),
+            invoice.patient_name,
+            invoice.gcr_number,
+            invoice.account_name || invoice.account_type || 'N/A'
+        ];
+        
+        // Add service values
+        uniqueServices.forEach(service => {
+            row.push(invoiceServiceMap.has(service.name) ? invoiceServiceMap.get(service.name).toFixed(2) : '');
+        });
+        
+        // Add total
+        row.push((invoice.price || 0).toFixed(2));
+        
+        return row;
     });
-    const serviceTotals = new Map();
-    uniqueServices.forEach(service => serviceTotals.set(service.name, 0));
+    
+    // Calculate service subtotals (sum of each service across all invoices)
+    const serviceSubtotals = new Map();
+    uniqueServices.forEach(service => serviceSubtotals.set(service.name, 0));
+    
+    filteredInvoices.forEach(invoice => { 
+        if (invoice.services && invoice.services.length > 0) { 
+            invoice.services.forEach(service => { 
+                const serviceName = service.service_name || service.name; 
+                serviceSubtotals.set(serviceName, (serviceSubtotals.get(serviceName) || 0) + (service.price || 0)); 
+            }); 
+        } 
+    });
+    
+    // Calculate grand total (sum of all invoice totals)
     let grandTotal = 0;
-    filteredInvoices.forEach(invoice => { grandTotal += invoice.price || 0; if (invoice.services && invoice.services.length > 0) { invoice.services.forEach(service => { const serviceName = service.service_name || service.name; serviceTotals.set(serviceName, (serviceTotals.get(serviceName) || 0) + (service.price || 0)); }); } });
-    const totalsRow = ['TOTAL', '', '', 'SERVICE SUBTOTALS:', ...uniqueServices.map(service => serviceTotals.get(service.name)?.toFixed(2) || '0.00'), grandTotal.toFixed(2)];
-    const grandTotalRow = ['GRAND TOTAL', '', '', '', ...Array(uniqueServices.length).fill(''), grandTotal.toFixed(2)];
-    const allRows = [headers, ...rows, totalsRow, grandTotalRow];
-    const csvContent = allRows.map(row => row.map(cell => { if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) return `"${cell.replace(/"/g, '""')}"`; return cell; }).join(',')).join('\n');
+    filteredInvoices.forEach(invoice => { 
+        grandTotal += invoice.price || 0; 
+    });
+    
+    // Build subtotal row - shows sum of each service
+    const subtotalRow = ['SUBTOTAL', '', '', ''];
+    uniqueServices.forEach(service => {
+        subtotalRow.push(serviceSubtotals.get(service.name)?.toFixed(2) || '0.00');
+    });
+    subtotalRow.push(''); // Empty total column for subtotal row
+    
+    // Build grand total row - only the total amount column
+    const grandTotalRow = ['GRAND TOTAL', '', '', ''];
+    // Empty cells for service columns
+    uniqueServices.forEach(() => grandTotalRow.push(''));
+    // Grand total in the last column
+    grandTotalRow.push(grandTotal.toFixed(2));
+    
+    // Combine all rows
+    const allRows = [headers, ...rows, subtotalRow, grandTotalRow];
+    
+    // Create CSV content with proper escaping
+    const csvContent = allRows.map(row => 
+        row.map(cell => {
+            if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+                return `"${cell.replace(/"/g, '""')}"`;
+            }
+            return cell;
+        }).join(',')
+    ).join('\n');
+    
+    // Create and download file
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a'); const url = URL.createObjectURL(blob); link.setAttribute('href', url); link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `WGMH_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 
     showMessageModal(`Exported ${filteredInvoices.length} records to Excel/CSV successfully!`, 'success');
 }
@@ -4816,47 +4764,8 @@ async function handleModalAddService(e) {
     } catch (error) { console.error('Error adding service:', error); showMessageModal('Error adding service', 'error'); }
 }
 
-// async function handleModalAddUser(e) {
-//     e.preventDefault();
-//     const firstName = document.getElementById('modalNewFirstName').value;
-//     const middleName = document.getElementById('modalNewMiddleName').value;
-//     const lastName = document.getElementById('modalNewLastName').value;
-//     const Sex = document.getElementById('modalNewSex').value;
-//     const DOB = document.getElementById('modalNewDob').value;
-//     const phone = document.getElementById('modalNewPhone').value;
-//     const username = document.getElementById('modalNewUsername').value.trim();
-//     const password = document.getElementById('modalNewPassword').value;
-//     const role = document.getElementById('modalUserRoleSelect').value;
-//     const serviceId = document.getElementById('modalUserServicesListSelect').value;
-//     const passwordHint = document.getElementById('modalPasswordHint').value;
-//     if (!username) { showMessageModal('Please enter username', 'warning'); return; }
-//     if (username.length < 3) { showMessageModal('Username must be at least 3 characters', 'warning'); return; }
-//     if (!password) { showMessageModal('Please enter password', 'warning'); return; }
-//     if (password.length < 6) { showMessageModal('Password must be at least 6 characters', 'warning'); return; }
-//     const userServices = serviceId ? [parseInt(serviceId)] : [];
-//     try {
-//         const response = await fetch(`${API_BASE_URL}/users`, { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ firstName, middleName, lastName, Sex, DOB, phone, username, password, role, userServices, passwordHint, createdBy: currentUser.username }) });
-//         const result = await response.json();
-//         if (result.success) { 
-//             showMessageModal(`User "${username}" added successfully!`, 'success');
-//              closeModal('addUserModal');
-//               document.getElementById('addUserForm').reset();
-//                loadUsers(); 
-//                loadUsersForServiceAssignment();
-//                logActivity(`Added new user: ${username} with role: ${role}`);
-//              }
-//         else { 
-//              showMessageModal('Error: ' + result.error, 'error'); 
-//             }
-//     } catch (error) { 
-//         console.error('Error adding user:', error); 
-//         showMessageModal('Error adding user', 'error');
-//      }
-// } 
-
 async function handleModalAddUser(e) {
     e.preventDefault();
-    
     const firstName = document.getElementById('modalNewFirstName').value;
     const middleName = document.getElementById('modalNewMiddleName').value;
     const lastName = document.getElementById('modalNewLastName').value;
@@ -4866,71 +4775,31 @@ async function handleModalAddUser(e) {
     const username = document.getElementById('modalNewUsername').value.trim();
     const password = document.getElementById('modalNewPassword').value;
     const role = document.getElementById('modalUserRoleSelect').value;
+    const serviceId = document.getElementById('modalUserServicesListSelect').value;
     const passwordHint = document.getElementById('modalPasswordHint').value;
-    
-    // Get selected services from checkboxes
-    const selectedServices = getSelectedServices();
-    
-    // Validations
-    if (!username) { 
-        showMessageModal('Please enter username', 'warning'); 
-        return; 
-    }
-    if (username.length < 3) { 
-        showMessageModal('Username must be at least 3 characters', 'warning'); 
-        return; 
-    }
-    if (!password) { 
-        showMessageModal('Please enter password', 'warning'); 
-        return; 
-    }
-    if (password.length < 6) { 
-        showMessageModal('Password must be at least 6 characters', 'warning'); 
-        return; 
-    }
-    
-    // Validate phone number
-    if (!phone || phone.replace(/\D/g, '').length !== 10) {
-        showMessageModal('Please enter a valid 10-digit phone number', 'warning');
-        return;
-    }
-    
+    if (!username) { showMessageModal('Please enter username', 'warning'); return; }
+    if (username.length < 3) { showMessageModal('Username must be at least 3 characters', 'warning'); return; }
+    if (!password) { showMessageModal('Please enter password', 'warning'); return; }
+    if (password.length < 6) { showMessageModal('Password must be at least 6 characters', 'warning'); return; }
+    const userServices = serviceId ? [parseInt(serviceId)] : [];
     try {
-        const response = await fetch(`${API_BASE_URL}/users`, { 
-            method: 'POST', 
-            headers: getApiHeaders(), 
-            body: JSON.stringify({ 
-                firstName, 
-                middleName, 
-                lastName, 
-                Sex, 
-                DOB, 
-                phone, 
-                username, 
-                password, 
-                role, 
-                userServices: selectedServices, 
-                passwordHint, 
-                createdBy: currentUser.username 
-            }) 
-        });
-        
+        const response = await fetch(`${API_BASE_URL}/users`, { method: 'POST', headers: getApiHeaders(), body: JSON.stringify({ firstName, middleName, lastName, Sex, DOB, phone, username, password, role, userServices, passwordHint, createdBy: currentUser.username }) });
         const result = await response.json();
-        
         if (result.success) { 
-            showMessageModal(`User "${username}" added successfully with ${selectedServices.length} service(s)!`, 'success');
-            closeModal('addUserModal');
-            document.getElementById('addUserForm').reset();
-            loadUsers(); 
-            loadUsersForServiceAssignment();
-            logActivity(`Added new user: ${username} with role: ${role} and ${selectedServices.length} services`);
-        } else { 
-            showMessageModal('Error: ' + result.error, 'error'); 
-        }
+            showMessageModal(`User "${username}" added successfully!`, 'success');
+             closeModal('addUserModal');
+              document.getElementById('addUserForm').reset();
+               loadUsers(); 
+               loadUsersForServiceAssignment();
+               logActivity(`Added new user: ${username} with role: ${role}`);
+             }
+        else { 
+             showMessageModal('Error: ' + result.error, 'error'); 
+            }
     } catch (error) { 
         console.error('Error adding user:', error); 
         showMessageModal('Error adding user', 'error');
-    }
+     }
 }
 
 // ============================================
@@ -4972,26 +4841,26 @@ window.deleteInvoice = async function(id) {
         };
 
 
-window.deleteAccount = async function(id) {
-        showConfirmModal('Delete this account?', async () => { 
-        try { 
-            const response = await fetch(`${API_BASE_URL}/accounts/${id}`, 
-                { method: 'DELETE', 
-                    headers: getApiHeaders(),
-                        body: JSON.stringify({ deletedBy: currentUser.username })
-                        }); 
-                        const result = await response.json();
-                        if (result.success) { 
-                        showMessageModal('Account deleted', 'success'); loadAccounts(); 
-                        loadAccountsForSelect();
-                        } else {
-                            showMessageModal('Error: ' + result.error, 'error'); 
-                        } 
-                    } catch (error) { 
-                        console.error('Error deleting account:', error); showMessageModal('Error deleting account', 'error');
-                        } 
-                    }); 
-}; 
+        window.deleteAccount = async function(id) {
+             showConfirmModal('Delete this account?', async () => { 
+                try { 
+                    const response = await fetch(`${API_BASE_URL}/accounts/${id}`, 
+                        { method: 'DELETE', 
+                            headers: getApiHeaders(),
+                             body: JSON.stringify({ deletedBy: currentUser.username })
+                             }); 
+                             const result = await response.json();
+                              if (result.success) { 
+                                showMessageModal('Account deleted', 'success'); loadAccounts(); 
+                                loadAccountsForSelect();
+                             } else {
+                                 showMessageModal('Error: ' + result.error, 'error'); 
+                                } 
+                            } catch (error) { 
+                                console.error('Error deleting account:', error); showMessageModal('Error deleting account', 'error');
+                             } 
+                            }); 
+                         }; 
 
 
 window.deleteService = async function(id) { 
@@ -5051,15 +4920,11 @@ window.editAccount = async function(id) {
 };
 
 
-// GH1700 
-// 3MONTHS
-
 
 
 // ============================================
 // MOBILE SIDEBAR FUNCTIONALITY
 // ============================================
-
 function closeMobileSidebar() { 
     
     if (window.innerWidth <= 992) { sidebar.classList.remove('mobile-open'); document.body.classList.remove('sidebar-open'); if (sidebarOverlay) sidebarOverlay.classList.remove('active'); } 
