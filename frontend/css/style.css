@@ -597,15 +597,16 @@ body {
 .service-checkbox {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 8px; 
+    width: 20%;
     padding: 8px;
     background: var(--white);
-    border-radius: 8px;
+    /* border-radius: 8px; */
     cursor: pointer;
     transition: all 0.3s;
 }
 
-.service-checkbox:hover { background: var(--blue-500); color: var(--white); }
+.service-checkbox:hover { background: var(--blue-500); color: var(--black-soft); }
 
 .table-wrapper {
     overflow-x: auto;
@@ -999,10 +1000,10 @@ body {
     gap: 8px;
     padding: 8px 12px;
     background: var(--gray-light);
-    border-radius: 8px;
+    /* border-radius: 8px; */
     cursor: pointer;
     transition: all 0.3s;
-    border: 1px solid transparent;
+    /* border: 1px solid transparent; */
 }
 
 .service-checkbox:hover {
@@ -1761,7 +1762,7 @@ body {
     gap: 8px;
     padding: 8px 12px;
     background: var(--white);
-    border-radius: 8px;
+    /* border-radius: 8px; */
     cursor: pointer;
     transition: all 0.3s;
     border: 1px solid var(--gray-border);
@@ -1769,7 +1770,7 @@ body {
 
 .service-checkbox:hover {
     background: var(--blue-600);
-    color: var(--white);
+    color: var(--white-off);
     border-color: var(--blue-600);
 }
 
@@ -4275,11 +4276,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* Checkbox styling */
 .service-checkbox {
     margin-right: 12px;
-    width: 18px;
-    height: 18px;
+    width: 100%;
+    height: 30px;
     cursor: pointer;
     accent-color: #007bff;
-    flex-shrink: 0;
+    flex-shrink: 0; 
+    border: none;
 }
 
 .service-checkbox-label {
@@ -4290,7 +4292,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     align-items: center;
     gap: 8px;
     flex: 1;
-    word-break: break-word;
+    word-break: break-word; 
+    
 }
 
 .service-checkbox-label i {

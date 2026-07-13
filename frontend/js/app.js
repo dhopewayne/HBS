@@ -626,11 +626,10 @@ async function showDashboard() {
      
     let pre ;
     
-    const user = await getCurrentUser(); 
-    user.sex === 'male'? pre ='Mr.': pre = 'Mrs.' ;
-    const accountName = `${pre}${user.first_name} ` ;  
-
-  
+    const user = await getCurrentUser();  
+    const userSex = user.sex.toLowerCase() ; 
+    userSex === 'male'? pre ='Mr.': pre = 'Mrs.' ; 
+    const accountName = `${pre}${user.first_name} ` ;    
     
     // Update user info in UI
     document.getElementById('topUserName').textContent = accountName; 
@@ -640,14 +639,7 @@ async function showDashboard() {
        switchSection('account');    
     })
     updateTopHeaderAvatar(currentUser.username);
-    updateUserRoleBadge();
-    
-   
-
-    
-
-    //  console.log('User details:', current_user)
-    
+    updateUserRoleBadge();    
     // Update UI based on role
     updateUIByRole();
     
@@ -655,11 +647,12 @@ async function showDashboard() {
     await loadUserAssignedServices();
     await loadInvoices();
     await loadActivityLog();
-    await loadSummary();
+    await loadSummary();  
+    await loadAccountsForSelect();
     
     // Load role-specific data
     if (hasPermission.canManageAccounts()) {
-        await loadAccountsForSelect();
+        await loadAccounts();
     }
     
     if (hasPermission.canManageServices()) {
@@ -1830,33 +1823,6 @@ function displayServicesReadOnly(services) {
 // ============================================
 // ACCOUNT MANAGEMENT FUNCTIONS
 // ============================================
-// async function loadAccounts() {
-//     if (!hasPermission.canManageAccounts()) return;
-//     try {
-//         const response = await fetch(`${API_BASE_URL}/accounts`, { headers: getApiHeaders() });
-//         const result = await response.json();
-//         if (result.success) {
-//             accounts = result.data;
-//             const container = document.getElementById('accountsList');
-//             if (container) {
-//                 container.innerHTML = accounts.map(acc => `
-//                     <div class="data-item">
-//                         <div class="data-info">
-//                             <strong>${escapeHtml(acc.account_name)}</strong>
-//                             <small>${acc.account_type} | ${acc.description || 'No description'}</small>
-//                         </div>
-//                         <div class="data-actions">
-//                             <button onclick="deleteAccount(${acc.id})" class="btn-secondary" style="background:#ef4444;">Delete</button>
-//                         </div>
-//                     </div>
-//                 `).join('');
-//             }
-//         }
-//     } catch (error) {
-//         console.error('Error loading accounts:', error);
-//     }
-// }
-
 
 async function loadAccounts() {
     if (!hasPermission.canManageAccounts()) return;
@@ -2018,56 +1984,6 @@ function filterAccounts(filter, searchTerm) {
     renderAccountsGrid(filtered);
 }
 
-
-// Update account function
-async function updateAccount(id) {
-    const accountName = document.getElementById('modalAccountName').value.trim();
-    const accountType = document.getElementById('modalAccountTypeSelect').value;
-    const description = document.getElementById('modalAccountDescription').value.trim();
-    
-    if (!accountName) {
-        showMessageModal('Please enter account name', 'warning');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/accounts/${id}`, {
-            method: 'PUT',
-            headers: getApiHeaders(),
-            body: JSON.stringify({ 
-                accountName, 
-                accountType, 
-                description,
-                updatedBy: currentUser.username 
-            })
-        });
-        const result = await response.json();
-        if (result.success) {
-            showMessageModal('Account updated successfully!', 'success');
-            closeModal('addAccountModal');
-            document.getElementById('addAccountForm').reset();
-            loadAccounts();
-            logActivity(`Updated account: ${accountName}`);
-        } else {
-            showMessageModal('Error: ' + result.error, 'error');
-        }
-    } catch (error) {
-        console.error('Error updating account:', error);
-        showMessageModal('Error updating account', 'error');
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
 async function loadAccountsForSelect() {
     if (!hasPermission.canManageAccounts()) return;
     try {
@@ -2104,33 +2020,6 @@ async function loadAccountsForEditSelect(selectedAccountId) {
 // ============================================
 // SERVICE MANAGEMENT FUNCTIONS
 // ============================================
-// async function loadServicesList() {
-//     if (!hasPermission.canManageServices()) return;
-//     try {
-//         const response = await fetch(`${API_BASE_URL}/services`, { headers: getApiHeaders() });
-//         const result = await response.json();
-//         if (result.success) {
-//             services = result.data;
-//             const container = document.getElementById('servicesList');
-//             if (container) {
-//                 container.innerHTML = services.map(svc => `
-//                     <div class="data-item">
-//                         <div class="data-info">
-//                             <strong>${escapeHtml(svc.service_name)}</strong>
-//                             <small>${svc.category || 'Uncategorized'}</small>
-//                         </div>
-//                         <div class="data-actions">
-//                             <button onclick="deleteService(${svc.id})" class="btn-secondary" style="background:#ef4444;">Delete</button>
-//                         </div>
-//                     </div>
-//                 `).join('');
-//             }
-//         }
-//     } catch (error) {
-//         console.error('Error loading services:', error);
-//     }
-// } 
-
 
 async function loadServicesList() {
     if (!hasPermission.canManageServices()) return;
@@ -2160,95 +2049,8 @@ async function loadServicesList() {
     }
 }   
 
-// function updateServicesStats(services) {
-//     // Flatten the services to get all price entries for statistics
-//     const allPriceEntries = [];
-    
-//     services.forEach(service => {
-//         // Add the current price
-//         if (service.current_price && service.current_price > 0) {
-//             allPriceEntries.push({
-//                 price: service.current_price,
-//                 service_name: service.service_name,
-//                 category: service.category
-//             });
-//         }
-        
-//         // Add historical prices if you want to include them
-//         if (service.price_history && service.price_history.length > 0) {
-//             service.price_history.forEach(priceEntry => {
-//                 if (priceEntry.price && priceEntry.price > 0) {
-//                     allPriceEntries.push({
-//                         price: priceEntry.price,
-//                         service_name: service.service_name,
-//                         category: service.category,
-//                         is_historical: true
-//                     });
-//                 }
-//             });
-//         }
-//     });
-    
-//     // Calculate statistics
-//     const totalCount = services.length; // Unique services count
-//     const withPrice = allPriceEntries.filter(s => s.price && s.price > 0);
-//     const prices = withPrice.map(s => s.price);
-//     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-//     const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-//     const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
-    
-//     // Group by category for additional stats
-//     const categoryStats = {};
-//     services.forEach(service => {
-//         const category = service.category || 'Uncategorized';
-//         if (!categoryStats[category]) {
-//             categoryStats[category] = {
-//                 count: 0,
-//                 prices: []
-//             };
-//         }
-//         categoryStats[category].count++;
-//         if (service.current_price && service.current_price > 0) {
-//             categoryStats[category].prices.push(service.current_price);
-//         }
-//     });
-    
-//     // Calculate average price per category
-//     Object.keys(categoryStats).forEach(category => {
-//         const prices = categoryStats[category].prices;
-//         categoryStats[category].avgPrice = prices.length > 0 ? 
-//             prices.reduce((a, b) => a + b, 0) / prices.length : 0;
-//     });
-    
-//     // Update DOM elements
-//     document.getElementById('totalServicesCount').textContent = totalCount;
-//     document.getElementById('priceRange').textContent = prices.length > 0 ? 
-//         `GH¢${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}` : 'GH¢0 - 0';
-//     document.getElementById('avgPrice').textContent = `GH¢${avgPrice.toFixed(2)}`;
-//     document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
-    
-//     // Optional: Display category breakdown
-//     if (document.getElementById('categoryBreakdown')) {
-//         let categoryHtml = '<h4>Category Breakdown:</h4><ul>';
-//         for (const [category, stats] of Object.entries(categoryStats)) {
-//             categoryHtml += `<li>${category}: ${stats.count} services, Avg: GH¢${stats.avgPrice.toFixed(2)}</li>`;
-//         }
-//         categoryHtml += '</ul>';
-//         document.getElementById('categoryBreakdown').innerHTML = categoryHtml;
-//     }
-    
-//     // Return stats for potential other uses
-//     return {
-//         totalCount,
-//         minPrice,
-//         maxPrice,
-//         avgPrice,
-//         categoryStats,
-//         allPriceEntries
-//     };
-// }
 
-// Update services statistics
+
 function updateServicesStats(services) {
     const totalCount = services.length; 
     const withPrice = services.filter(s => s.prices && s.prices.length > 0);
@@ -2268,95 +2070,7 @@ function updateServicesStats(services) {
     document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
 }  
 
-// function updateServicesStats(services) {
-//     // Flatten the services to get all price entries for statistics
-//     const allPriceEntries = [];
-    
-//     services.forEach(service => {
-//         // Add the current price
-//         if (service.current_price && service.current_price > 0) {
-//             allPriceEntries.push({
-//                 price: service.current_price,
-//                 service_name: service.service_name,
-//                 category: service.category
-//             });
-//         }
-        
-//         // Add historical prices if you want to include them
-//         if (service.price_history && service.price_history.length > 0) {
-//             service.price_history.forEach(priceEntry => {
-//                 if (priceEntry.price && priceEntry.price > 0) {
-//                     allPriceEntries.push({
-//                         price: priceEntry.price,
-//                         service_name: service.service_name,
-//                         category: service.category,
-//                         is_historical: true
-//                     });
-//                 }
-//             });
-//         }
-//     });
-    
-//     // Calculate statistics
-//     const totalCount = services.length; // Unique services count
-//     const withPrice = allPriceEntries.filter(s => s.price && s.price > 0);
-//     const prices = withPrice.map(s => s.price);
-//     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-//     const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-//     const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
-    
-//     // Group by category for additional stats
-//     const categoryStats = {};
-//     services.forEach(service => {
-//         const category = service.category || 'Uncategorized';
-//         if (!categoryStats[category]) {
-//             categoryStats[category] = {
-//                 count: 0,
-//                 prices: []
-//             };
-//         }
-//         categoryStats[category].count++;
-//         if (service.current_price && service.current_price > 0) {
-//             categoryStats[category].prices.push(service.current_price);
-//         }
-//     });
-    
-//     // Calculate average price per category
-//     Object.keys(categoryStats).forEach(category => {
-//         const prices = categoryStats[category].prices;
-//         categoryStats[category].avgPrice = prices.length > 0 ? 
-//             prices.reduce((a, b) => a + b, 0) / prices.length : 0;
-//     });
-    
-//     // Update DOM elements
-//     document.getElementById('totalServicesCount').textContent = totalCount;
-//     document.getElementById('priceRange').textContent = prices.length > 0 ? 
-//         `GH¢${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}` : 'GH¢0 - 0';
-//     document.getElementById('avgPrice').textContent = `GH¢${avgPrice.toFixed(2)}`;
-//     document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString();
-    
-//     // Optional: Display category breakdown
-//     if (document.getElementById('categoryBreakdown')) {
-//         let categoryHtml = '<h4>Category Breakdown:</h4><ul>';
-//         for (const [category, stats] of Object.entries(categoryStats)) {
-//             categoryHtml += `<li>${category}: ${stats.count} services, Avg: GH¢${stats.avgPrice.toFixed(2)}</li>`;
-//         }
-//         categoryHtml += '</ul>';
-//         document.getElementById('categoryBreakdown').innerHTML = categoryHtml;
-//     }
-    
-//     // Return stats for potential other uses
-//     return {
-//         totalCount,
-//         minPrice,
-//         maxPrice,
-//         avgPrice,
-//         categoryStats,
-//         allPriceEntries
-//     };
-// }
 
-// Render services in modern grid
 function renderServicesGrid(servicesToRender) {
     const container = document.getElementById('servicesList');
     const emptyState = document.getElementById('servicesEmptyState');
@@ -2482,9 +2196,6 @@ function filterServices(filter, searchTerm) {
     renderServicesGrid(filtered);
 }
 
-
-
-
 // Update the editService function to use the dedicated EditServiceModal
 window.editService = async function(id) {
     const service = services.find(s => s.id === id);
@@ -2557,7 +2268,10 @@ window.editAccount = async function(id) {
     if (!account) {
         showMessageModal('Account not found', 'error');
         return;
-    }
+    } 
+
+
+    showModal('EditAccountModal');
     
     // Populate edit modal
     document.getElementById('editAccountId').value = account.id;
@@ -2565,7 +2279,7 @@ window.editAccount = async function(id) {
     document.getElementById('editModalAccountDescription').value = account.description || '';
     document.getElementById('editModalAccountTypeSelect').value = account.account_type;
     
-    showModal('EditAccountModal');
+    
 };
 
 // Add editAccount form submission handler
@@ -2598,6 +2312,8 @@ async function updateAccount(id) {
             })
         });
         const result = await response.json();
+
+        console.log('Edit account results:' , result)
         if (result.success) {
             showMessageModal('Account updated successfully!', 'success');
             closeModal('EditAccountModal');
@@ -2685,10 +2401,7 @@ async function loadServicesForUserSelect() {
     }
 }
 
-// ============================================
-// USER SERVICE ASSIGNMENT FUNCTIONS
-// ============================================
-// =======================================================================//////
+// =======================================================================//////  
 // =======================================================================//////
 // =======================================================================//////
 // =======================================================================//////
@@ -4108,7 +3821,8 @@ async function handleUpdateFullname(e) {
         console.error('Error updating full name:', error);
         showMessageModal('Error updating full name', 'error');
     }
-}
+} 
+
 
 // Add function to update phone number
 async function handleUpdatePhone(e) {
@@ -4124,9 +3838,12 @@ async function handleUpdatePhone(e) {
     }
     
     // Basic phone number validation (Ghana format)
-    const phoneRegex = /^(0[2-9]\d{7,8})$/;
-    if (!phoneRegex.test(phoneNumber)) {
-        showMessageModal('Please enter a valid phone number (e.g., 024XXXXXXX)', 'warning');
+    const phoneRegex = /^(0[2-9]\d{7,8})$/;  
+    // remove "-" from phone number 
+    const NPN =  phoneNumber.replace( /-/g , "") 
+
+    if (!phoneRegex.test(NPN)) {
+        showMessageModal('Please enter a valid phone number (e.g., 024-XXX-XXXX)', 'warning');
         return;
     }
     
@@ -4136,9 +3853,6 @@ async function handleUpdatePhone(e) {
     }
     
     try {       
-
-        // alert('user phone update !!!') ; 
-
         const response = await fetch(`${API_BASE_URL}/users/update-profile-details`, {
             method: 'PUT',
             headers: getApiHeaders(),
@@ -4982,7 +4696,8 @@ window.deleteAccount = async function(id) {
                         }); 
                         const result = await response.json();
                         if (result.success) { 
-                        showMessageModal('Account deleted', 'success'); loadAccounts(); 
+                        showMessageModal('Account deleted', 'success');
+                         loadAccounts(); 
                         loadAccountsForSelect();
                         } else {
                             showMessageModal('Error: ' + result.error, 'error'); 
@@ -5018,37 +4733,39 @@ window.deleteService = async function(id) {
             };  
 
 
-// Edit account function
-window.editAccount = async function(id) {
-    const account = accounts.find(a => a.id === id);
-    if (!account) return;
+// // Edit account function
+// window.editAccount = async function(id) {
+//     const account = accounts.find(a => a.id === id);
+//     if (!account) return;
+     
+
+//     console.log("Account to edit details:" , account)
+//     // Populate edit modal
+//     document.getElementById('modalAccountName').value = account.account_name;
+//     document.getElementById('modalAccountDescription').value = account.description || '';
+//     document.getElementById('modalAccountTypeSelect').value = account.account_type;
+     
+//     // Change form submission to update mode
+//     const addForm = document.getElementById('addAccountForm');
+//     const originalSubmit = addForm.onsubmit;
     
-    // Populate edit modal
-    document.getElementById('modalAccountName').value = account.account_name;
-    document.getElementById('modalAccountDescription').value = account.description || '';
-    document.getElementById('modalAccountTypeSelect').value = account.account_type;
+//     addForm.onsubmit = async (e) => {
+//         e.preventDefault();
+//         await updateAccount(account.id);
+//     };
     
-    // Change form submission to update mode
-    const addForm = document.getElementById('addAccountForm');
-    const originalSubmit = addForm.onsubmit;
+//     showModal('EditAccountModal');
     
-    addForm.onsubmit = async (e) => {
-        e.preventDefault();
-        await updateAccount(id);
-    };
-    
-    showModal('addAccountModal');
-    
-    // Restore original submit after modal closes
-    const modal = document.getElementById('addAccountModal');
-    const observer = new MutationObserver((mutations) => {
-        if (!modal.classList.contains('active')) {
-            addForm.onsubmit = originalSubmit;
-            observer.disconnect();
-        }
-    });
-    observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
-};
+//     // Restore original submit after modal closes
+//     const modal = document.getElementById('EditAccountModal');
+//     const observer = new MutationObserver((mutations) => {
+//         if (!modal.classList.contains('active')) {
+//             addForm.onsubmit = originalSubmit;
+//             observer.disconnect();
+//         }
+//     });
+//     observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+// };
 
 
 // GH1700 

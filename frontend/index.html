@@ -962,59 +962,59 @@
 <!-- End of Edit modal -->  
 
 
-<!-- User Edit Modal -->
-<div id="userEditModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3 id="userEditModalTitle">Edit User</h3>
-            <span class="close-modal">&times;</span>
-        </div>
-        <div class="modal-body">
-            <div id="userEditContent">
-                <!-- Dynamic content will be loaded here -->
+    <!-- User Edit Modal -->
+    <div id="userEditModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="userEditModalTitle">Edit User</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="userEditContent">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="userEditCancelBtn" class="btn-secondary">Cancel</button>
+                <button id="userEditConfirmBtn" class="btn-primary">Confirm</button>
             </div>
         </div>
-        <div class="modal-footer">
-            <button id="userEditCancelBtn" class="btn-secondary">Cancel</button>
-            <button id="userEditConfirmBtn" class="btn-primary">Confirm</button>
-        </div>
-    </div>
-</div>  
-<!-- End of User Edit Modal -->
+    </div>  
+    <!-- End of User Edit Modal -->
 
-<!-- print records -->
- <!-- Print Modal for View Records -->
-<div id="printModal" class="modal">
-    <div class="modal-content" style="max-width: 1200px; width: 95%;">
-        <div class="modal-header">
-            <h3><i class="fas fa-print"></i> Filtered Records - Print/Excel View</h3>
-            <button class="close-modal" onclick="closePrintModal()">&times;</button>
-        </div>
-        <div class="modal-body" style="padding: 20px;">
-            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                <div>
-                    <span class="badge" style="background: var(--blue-600);" id="printRecordCount">0 Records</span>
-                    <span class="badge" style="background: var(--secondary); margin-left: 8px;" id="printGrandTotal">GH¢0.00</span>
+        <!-- print records -->
+     <!-- Print Modal for View Records -->
+    <div id="printModal" class="modal">
+        <div class="modal-content" style="max-width: 1200px; width: 95%;">
+            <div class="modal-header">
+                <h3><i class="fas fa-print"></i> Filtered Records - Print/Excel View</h3>
+                <button class="close-modal" onclick="closePrintModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <span class="badge" style="background: var(--blue-600);" id="printRecordCount">0 Records</span>
+                        <span class="badge" style="background: var(--secondary); margin-left: 8px;" id="printGrandTotal">GH¢0.00</span>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="exportToExcel()" class="btn-primary" style="background: #10b981;">
+                            <i class="fas fa-file-excel"></i> Export to Excel
+                        </button>
+                        <button onclick="printPrintModal()" class="btn-primary">
+                            <i class="fas fa-print"></i> Print / Save as PDF
+                        </button>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 12px;">
-                    <button onclick="exportToExcel()" class="btn-primary" style="background: #10b981;">
-                        <i class="fas fa-file-excel"></i> Export to Excel
-                    </button>
-                    <button onclick="printPrintModal()" class="btn-primary">
-                        <i class="fas fa-print"></i> Print / Save as PDF
-                    </button>
+                <div class="table-wrapper" id="printTableContainer" style="max-height: 70vh; overflow: auto;">
+                    <!-- Dynamic print table will be inserted here -->
                 </div>
             </div>
-            <div class="table-wrapper" id="printTableContainer" style="max-height: 70vh; overflow: auto;">
-                <!-- Dynamic print table will be inserted here -->
+            <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--gray-border); display: flex; justify-content: flex-end;">
+                <button onclick="closePrintModal()" class="btn-secondary">Close</button>
             </div>
         </div>
-        <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--gray-border); display: flex; justify-content: flex-end;">
-            <button onclick="closePrintModal()" class="btn-secondary">Close</button>
-        </div>
-    </div>
-</div> 
-<!-- End of Print Modal  -->  
+    </div> 
+    <!-- End of Print Modal  -->  
 
  <!-- Account Update Modals -->
         <!-- Change Username Modal -->
@@ -1305,353 +1305,353 @@
 
     
 
- <!-- End Of account modal -->  
+            <!-- End Of account modal -->  
 
 
 
- <!-- Add Account Modal -->
-<div id="addAccountModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-building"></i> Add New Account</h3>
-            <button class="close-modal" onclick="closeModal('addAccountModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="addAccountForm">
-                <div class="form-group">
-                    <label><i class="fas fa-tag"></i> Account Name <span class="ast">*</span></label>
-                    <input type="text" id="modalAccountName" required placeholder="e.g., Pharmacy Account">
+        <!-- Add Account Modal -->
+        <div id="addAccountModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-building"></i> Add New Account</h3>
+                    <button class="close-modal" onclick="closeModal('addAccountModal')">&times;</button>
                 </div>
-                <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Description</label>
-                    <input type="text" id="modalAccountDescription" placeholder="Brief description">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-chart-pie"></i> Account Type <span class="ast">*</span></label>
-                    <select id="modalAccountTypeSelect" required>
-                        <option value="drugs">Drugs Account</option>
-                        <option value="nondrugs">Non-Drugs Account</option>
-                    </select>
-                </div>
-                <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addAccountModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Create Account</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div> 
-<!-- End of Add Account Modal    -->
-
-<!-- Add Service Modal -->
-<div id="addServiceModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-stethoscope"></i> Add New Service</h3>
-            <button class="close-modal" onclick="closeModal('addServiceModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="addServiceForm">
-                <div class="form-group">
-                    <label><i class="fas fa-tag"></i> Service Name <span class="ast">*</span></label>
-                    <input type="text" id="modalServiceName" required placeholder="e.g., Consultation, Lab Test">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Description</label>
-                    <input type="text" id="modalServiceDescription" placeholder="Brief description">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-dollar-sign"></i> Default Price (GH¢)</label>
-                    <input type="text" id="modalServicePrice" placeholder="0.00" onkeypress="return onlyNumbersAndDecimal(event)" oninput="validateAmount(this)">
-                    <small class="input-hint">Optional - can be set per invoice</small>
-                </div>
-                <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addServiceModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Create Service</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div> 
-
-<!-- End of Add Service Modal -->
-
-<!-- Add User Modal -->
-<div id="addUserModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-user-plus"></i> Add New User</h3>
-            <button class="close-modal" onclick="closeModal('addUserModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="addUserForm">
-                <div class="form-row"> 
-                    <!-- First Name  -->
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> First Name <span class="ast">*</span></label>
-                        <input type="text" id="modalNewFirstName" required placeholder="Enter first name">
-                    </div> 
-                    <!-- middle Name -->
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Middle Name (optional)</label>
-                        <input type="text" id="modalNewMiddleName" placeholder="Enter middle name">
-                    </div>
-                    <!-- last Name -->
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Last Name <span class="ast">*</span></label>
-                        <input type="text" id="modalNewLastName" required placeholder="Enter last name">
-                    </div> 
-                    <!-- gender -->
-                    <div class="form-group">
-                        <label><i class="fas fa-genderless"></i> SEX <span class="ast">*</span></label>
-                        <select id="modalNewSex" required>
-                            <option value="">--Select SEX--</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                        </select>
-                    </div> 
-                    <!-- Date of birth -->
-                    <div class="form-group">
-                        <label><i class="fas fa-birthday-cake"></i> D.O.B </label>
-                        <input type="date" id="modalNewDob" placeholder="select date of birth">
-                    </div>
-                    <!-- Phone Number -->
-                    <div class="form-group">
-                        <label><i class="fas fa-phone"></i> Phone <span class="ast">*</span></label>
-                        <input type="text" id="modalNewPhone" required placeholder="Enter phone number">
-                    </div>
-                    <!-- User Name -->
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Username <span class="ast">*</span></label>
-                        <input type="text" id="modalNewUsername" required placeholder="Enter username">
-                    </div>   
-                    <!-- Role -->
-                    <div class="form-group">
-                        <label><i class="fas fa-user-tag"></i> Role <span class="ast">*</span></label>
-                        <select id="modalUserRoleSelect" required> 
-                            <option value="user">User</option>
-                            <option value="user-admin">User Admin</option>
-                            <option value="admin">Administrator</option>
-                            <option value="master">Master</option>
-                        </select>
-                    </div> 
-                    <!-- password -->
-                    <div class="form-group">
-                        <label><i class="fas fa-key"></i> Password <span class="ast">*</span></label>
-                        <input type="password" id="modalNewPassword" required placeholder="Enter password">
-                        <div class="password-strength">
-                        <div class="password-strength-bar" id="modalAddPasswordStrengthBar"></div>
+                <div class="modal-body">
+                    <form id="addAccountForm">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Account Name <span class="ast">*</span></label>
+                            <input type="text" id="modalAccountName" required placeholder="e.g., Pharmacy Account">
                         </div>
-                        <small class="input-hint">Minimum 6 characters</small>
-                    </div> 
-                    <!-- confirm password -->
-                    <div class="form-group">
-                        <label><i class="fas fa-key"></i>Confirm Password <span class="ast">*</span></label>
-                        <input type="password" id="modalNewConfirmPassword" required placeholder="Enter password">
-                        <small class="passComfirmMessage passDontMatch">passwords don't match.....</small>
-                    </div> 
-                    <!-- Password Hint -->
-                     <div class="form-group">
-                        <label><i class="fas fa-info-circle"></i> Password Hint (Optional)</label>
-                        <input type="text" id="modalPasswordHint" placeholder="e.g., First pet's name">
-                    </div> 
-                    <!-- Assign Services -->
-                     <!-- <div class="form-group">
-                        <label><i class="fas fa-stethoscope"></i> Assign Service</label>
-                        <select id="modalUserServicesListSelect" required>
-                            <option value="">-- Select Service (Optional) --</option>
-                        </select>
-                        <small class="input-hint">Service will be assigned to this user</small>
-                    </div>  -->
-                    <!-- Empty group -->
-                    <!-- Assign Services -->
-                    <div class="form-group move-next-full" >
-                        <label>
-                            <i class="fas fa-stethoscope"></i> Assign Services 
-                            <span id="servicesSelectedCount" class="services-selected-count"></span>
-                        </label>
-                        <div id="servicesAssignAddUser" class="services-container">
-                            <div class="loading-text">Loading services...</div>
+                        <div class="form-group">
+                            <label><i class="fas fa-align-left"></i> Description</label>
+                            <input type="text" id="modalAccountDescription" placeholder="Brief description">
                         </div>
-                        <small class="input-hint">Select one or more services to assign to this user</small>
+                        <div class="form-group">
+                            <label><i class="fas fa-chart-pie"></i> Account Type <span class="ast">*</span></label>
+                            <select id="modalAccountTypeSelect" required>
+                                <option value="drugs">Drugs Account</option>
+                                <option value="nondrugs">Non-Drugs Account</option>
+                            </select>
+                        </div>
+                        <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn-secondary" onclick="closeModal('addAccountModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div> 
+        <!-- End of Add Account Modal    -->
+
+        <!-- Add Service Modal -->
+        <div id="addServiceModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-stethoscope"></i> Add New Service</h3>
+                    <button class="close-modal" onclick="closeModal('addServiceModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addServiceForm">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Service Name <span class="ast">*</span></label>
+                            <input type="text" id="modalServiceName" required placeholder="e.g., Consultation, Lab Test">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-align-left"></i> Description</label>
+                            <input type="text" id="modalServiceDescription" placeholder="Brief description">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign"></i> Default Price (GH¢)</label>
+                            <input type="text" id="modalServicePrice" placeholder="0.00" onkeypress="return onlyNumbersAndDecimal(event)" oninput="validateAmount(this)">
+                            <small class="input-hint">Optional - can be set per invoice</small>
+                        </div>
+                        <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn-secondary" onclick="closeModal('addServiceModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Create Service</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div> 
+
+        <!-- End of Add Service Modal -->
+
+        <!-- Add User Modal -->
+        <div id="addUserModal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user-plus"></i> Add New User</h3>
+                    <button class="close-modal" onclick="closeModal('addUserModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="form-row"> 
+                            <!-- First Name  -->
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> First Name <span class="ast">*</span></label>
+                                <input type="text" id="modalNewFirstName" required placeholder="Enter first name">
+                            </div> 
+                            <!-- middle Name -->
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> Middle Name (optional)</label>
+                                <input type="text" id="modalNewMiddleName" placeholder="Enter middle name">
+                            </div>
+                            <!-- last Name -->
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> Last Name <span class="ast">*</span></label>
+                                <input type="text" id="modalNewLastName" required placeholder="Enter last name">
+                            </div> 
+                            <!-- gender -->
+                            <div class="form-group">
+                                <label><i class="fas fa-genderless"></i> SEX <span class="ast">*</span></label>
+                                <select id="modalNewSex" required>
+                                    <option value="">--Select SEX--</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div> 
+                            <!-- Date of birth -->
+                            <div class="form-group">
+                                <label><i class="fas fa-birthday-cake"></i> D.O.B </label>
+                                <input type="date" id="modalNewDob" placeholder="select date of birth">
+                            </div>
+                            <!-- Phone Number -->
+                            <div class="form-group">
+                                <label><i class="fas fa-phone"></i> Phone <span class="ast">*</span></label>
+                                <input type="text" id="modalNewPhone" required placeholder="Enter phone number">
+                            </div>
+                            <!-- User Name -->
+                            <div class="form-group">
+                                <label><i class="fas fa-user"></i> Username <span class="ast">*</span></label>
+                                <input type="text" id="modalNewUsername" required placeholder="Enter username">
+                            </div>   
+                            <!-- Role -->
+                            <div class="form-group">
+                                <label><i class="fas fa-user-tag"></i> Role <span class="ast">*</span></label>
+                                <select id="modalUserRoleSelect" required> 
+                                    <option value="user">User</option>
+                                    <option value="user-admin">User Admin</option>
+                                    <option value="admin">Administrator</option>
+                                    <option value="master">Master</option>
+                                </select>
+                            </div> 
+                            <!-- password -->
+                            <div class="form-group">
+                                <label><i class="fas fa-key"></i> Password <span class="ast">*</span></label>
+                                <input type="password" id="modalNewPassword" required placeholder="Enter password">
+                                <div class="password-strength">
+                                <div class="password-strength-bar" id="modalAddPasswordStrengthBar"></div>
+                                </div>
+                                <small class="input-hint">Minimum 6 characters</small>
+                            </div> 
+                            <!-- confirm password -->
+                            <div class="form-group">
+                                <label><i class="fas fa-key"></i>Confirm Password <span class="ast">*</span></label>
+                                <input type="password" id="modalNewConfirmPassword" required placeholder="Enter password">
+                                <small class="passComfirmMessage passDontMatch">passwords don't match.....</small>
+                            </div> 
+                            <!-- Password Hint -->
+                            <div class="form-group">
+                                <label><i class="fas fa-info-circle"></i> Password Hint (Optional)</label>
+                                <input type="text" id="modalPasswordHint" placeholder="e.g., First pet's name">
+                            </div> 
+                            <!-- Assign Services -->
+                            <!-- <div class="form-group">
+                                <label><i class="fas fa-stethoscope"></i> Assign Service</label>
+                                <select id="modalUserServicesListSelect" required>
+                                    <option value="">-- Select Service (Optional) --</option>
+                                </select>
+                                <small class="input-hint">Service will be assigned to this user</small>
+                            </div>  -->
+                            <!-- Empty group -->
+                            <!-- Assign Services -->
+                            <div class="form-group move-next-full" >
+                                <label>
+                                    <i class="fas fa-stethoscope"></i> Assign Services 
+                                    <span id="servicesSelectedCount" class="services-selected-count"></span>
+                                </label>
+                                <div id="servicesAssignAddUser" class="services-container">
+                                    <div class="loading-text">Loading services...</div>
+                                </div>
+                                <small class="input-hint">Select one or more services to assign to this user</small>
+                            </div>
+                            
+                        </div>
+                        <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Create User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>   
+
+        <!-- End of Add User Modal   --> 
+
+
+        <!-- Edit Service Modal -->
+        <div id="EditServiceModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-edit"></i> Edit Service</h3>
+                    <button class="close-modal" onclick="closeModal('EditServiceModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editServiceForm">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Service Name <span class="ast">*</span></label>
+                            <input type="text" id="modalServiceName" required placeholder="e.g., Consultation, Lab Test">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-align-left"></i> Description</label>
+                            <input type="text" id="modalServiceDescription" placeholder="Brief description">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-dollar-sign"></i> Default Price (GH¢)</label>
+                            <input type="text" id="modalServicePrice" placeholder="0.00" onkeypress="return onlyNumbersAndDecimal(event)" oninput="validateAmount(this)">
+                            <small class="input-hint">Optional - can be set per invoice</small>
+                        </div>
+                        <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn-secondary" onclick="closeModal('EditServiceModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Update Service</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Account Modal -->
+        <div id="EditAccountModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-edit"></i> Edit Account</h3>
+                    <button class="close-modal" onclick="closeModal('EditAccountModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAccountForm">
+                        <input type="hidden" id="editAccountId">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> Account Name <span class="ast">*</span></label>
+                            <input type="text" id="editModalAccountName" required placeholder="e.g., Pharmacy Account">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-align-left"></i> Description</label>
+                            <input type="text" id="editModalAccountDescription" placeholder="Brief description">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-chart-pie"></i> Account Type <span class="ast">*</span></label>
+                            <select id="editModalAccountTypeSelect" required>
+                                <option value="drugs">Drugs Account</option>
+                                <option value="nondrugs">Non-Drugs Account</option>
+                            </select>
+                        </div>
+                        <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn-secondary" onclick="closeModal('EditAccountModal')">Cancel</button>
+                            <button type="submit" class="btn-primary">Update Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Delete Modal (Generic) -->
+        <div id="confirmDeleteModal" class="modal">
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="modal-header" style="background: #fee2e2; border-bottom: 2px solid #ef4444;">
+                    <h3 style="color: #dc2626;"><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h3>
+                    <button class="close-modal" onclick="closeModal('confirmDeleteModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="deleteMessage" style="text-align: center; padding: 20px 0;">
+                        <i class="fas fa-trash-alt" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
+                        <p id="deleteConfirmationText" style="font-size: 16px; margin-bottom: 20px;">Are you sure you want to delete this item?</p>
+                        <p style="font-size: 13px; color: #6b7280;">This action cannot be undone.</p>
                     </div>
-                    
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label><i class="fas fa-shield-alt"></i> Type "DELETE" to confirm</label>
+                        <input type="text" id="deleteConfirmTextInput" placeholder="Type DELETE here" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db;">
+                    </div>
                 </div>
-                <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Create User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>   
-
-<!-- End of Add User Modal   --> 
-
-
-<!-- Edit Service Modal -->
-<div id="EditServiceModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Edit Service</h3>
-            <button class="close-modal" onclick="closeModal('EditServiceModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="editServiceForm">
-                <div class="form-group">
-                    <label><i class="fas fa-tag"></i> Service Name <span class="ast">*</span></label>
-                    <input type="text" id="modalServiceName" required placeholder="e.g., Consultation, Lab Test">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Description</label>
-                    <input type="text" id="modalServiceDescription" placeholder="Brief description">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-dollar-sign"></i> Default Price (GH¢)</label>
-                    <input type="text" id="modalServicePrice" placeholder="0.00" onkeypress="return onlyNumbersAndDecimal(event)" oninput="validateAmount(this)">
-                    <small class="input-hint">Optional - can be set per invoice</small>
-                </div>
-                <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('EditServiceModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Update Service</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Account Modal -->
-<div id="EditAccountModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Edit Account</h3>
-            <button class="close-modal" onclick="closeModal('EditAccountModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="editAccountForm">
-                <input type="hidden" id="editAccountId">
-                <div class="form-group">
-                    <label><i class="fas fa-tag"></i> Account Name <span class="ast">*</span></label>
-                    <input type="text" id="editModalAccountName" required placeholder="e.g., Pharmacy Account">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-align-left"></i> Description</label>
-                    <input type="text" id="editModalAccountDescription" placeholder="Brief description">
-                </div>
-                <div class="form-group">
-                    <label><i class="fas fa-chart-pie"></i> Account Type <span class="ast">*</span></label>
-                    <select id="editModalAccountTypeSelect" required>
-                        <option value="drugs">Drugs Account</option>
-                        <option value="nondrugs">Non-Drugs Account</option>
-                    </select>
-                </div>
-                <div class="form-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('EditAccountModal')">Cancel</button>
-                    <button type="submit" class="btn-primary">Update Account</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Confirm Delete Modal (Generic) -->
-<div id="confirmDeleteModal" class="modal">
-    <div class="modal-content" style="max-width: 450px;">
-        <div class="modal-header" style="background: #fee2e2; border-bottom: 2px solid #ef4444;">
-            <h3 style="color: #dc2626;"><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h3>
-            <button class="close-modal" onclick="closeModal('confirmDeleteModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div id="deleteMessage" style="text-align: center; padding: 20px 0;">
-                <i class="fas fa-trash-alt" style="font-size: 48px; color: #ef4444; margin-bottom: 16px;"></i>
-                <p id="deleteConfirmationText" style="font-size: 16px; margin-bottom: 20px;">Are you sure you want to delete this item?</p>
-                <p style="font-size: 13px; color: #6b7280;">This action cannot be undone.</p>
-            </div>
-            <div class="form-group" style="margin-top: 16px;">
-                <label><i class="fas fa-shield-alt"></i> Type "DELETE" to confirm</label>
-                <input type="text" id="deleteConfirmTextInput" placeholder="Type DELETE here" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db;">
-            </div>
-        </div>
-        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #e5e7eb;">
-            <button type="button" class="btn-secondary" onclick="closeModal('confirmDeleteModal')">Cancel</button>
-            <button id="confirmDeleteBtn" class="btn-primary" style="background: #dc2626;">Delete</button>
-        </div>
-    </div>
-</div>
-
-<!-- View Service Details Modal -->
-<div id="viewServiceModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-stethoscope"></i> Service Details</h3>
-            <button class="close-modal" onclick="closeModal('viewServiceModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div id="serviceDetailsContainer">
-                <div class="detail-row">
-                    <span class="detail-label">Service Name:</span>
-                    <span class="detail-value" id="viewServiceName">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Description:</span>
-                    <span class="detail-value" id="viewServiceDescription">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Price:</span>
-                    <span class="detail-value" id="viewServicePrice">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Created:</span>
-                    <span class="detail-value" id="viewServiceCreated">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Last Updated:</span>
-                    <span class="detail-value" id="viewServiceUpdated">-</span>
+                <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #e5e7eb;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('confirmDeleteModal')">Cancel</button>
+                    <button id="confirmDeleteBtn" class="btn-primary" style="background: #dc2626;">Delete</button>
                 </div>
             </div>
         </div>
-        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #e5e7eb;">
-            <button type="button" class="btn-secondary" onclick="closeModal('viewServiceModal')">Close</button>
-        </div>
-    </div>
-</div>
 
-<!-- View Account Details Modal -->
-<div id="viewAccountModal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3><i class="fas fa-building"></i> Account Details</h3>
-            <button class="close-modal" onclick="closeModal('viewAccountModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div id="accountDetailsContainer">
-                <div class="detail-row">
-                    <span class="detail-label">Account Name:</span>
-                    <span class="detail-value" id="viewAccountName">-</span>
+        <!-- View Service Details Modal -->
+        <div id="viewServiceModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-stethoscope"></i> Service Details</h3>
+                    <button class="close-modal" onclick="closeModal('viewServiceModal')">&times;</button>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">Type:</span>
-                    <span class="detail-value" id="viewAccountType">-</span>
+                <div class="modal-body">
+                    <div id="serviceDetailsContainer">
+                        <div class="detail-row">
+                            <span class="detail-label">Service Name:</span>
+                            <span class="detail-value" id="viewServiceName">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Description:</span>
+                            <span class="detail-value" id="viewServiceDescription">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Price:</span>
+                            <span class="detail-value" id="viewServicePrice">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Created:</span>
+                            <span class="detail-value" id="viewServiceCreated">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Last Updated:</span>
+                            <span class="detail-value" id="viewServiceUpdated">-</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">Description:</span>
-                    <span class="detail-value" id="viewAccountDescription">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Created:</span>
-                    <span class="detail-value" id="viewAccountCreated">-</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Status:</span>
-                    <span class="detail-value" id="viewAccountStatus">-</span>
+                <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #e5e7eb;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('viewServiceModal')">Close</button>
                 </div>
             </div>
         </div>
-        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #e5e7eb;">
-            <button type="button" class="btn-secondary" onclick="closeModal('viewAccountModal')">Close</button>
+
+        <!-- View Account Details Modal -->
+        <div id="viewAccountModal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-building"></i> Account Details</h3>
+                    <button class="close-modal" onclick="closeModal('viewAccountModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="accountDetailsContainer">
+                        <div class="detail-row">
+                            <span class="detail-label">Account Name:</span>
+                            <span class="detail-value" id="viewAccountName">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Type:</span>
+                            <span class="detail-value" id="viewAccountType">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Description:</span>
+                            <span class="detail-value" id="viewAccountDescription">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Created:</span>
+                            <span class="detail-value" id="viewAccountCreated">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" id="viewAccountStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #e5e7eb;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('viewAccountModal')">Close</button>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
             
     <script src="/js/app.js"></script>
 </body>
